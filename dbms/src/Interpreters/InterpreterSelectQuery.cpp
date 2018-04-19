@@ -353,17 +353,17 @@ void InterpreterSelectQuery::executeImpl(Pipeline & pipeline, const BlockInputSt
      */
 
     const Settings & settings = context.getSettingsRef();
-    AnalysisResult expressions;
 
 
     QueryProcessingStage::Enum from_stage = QueryProcessingStage::FetchColumns;
 
-    if (storage)
-        from_stage = storage->getQueryProcessingStage(context);
+    query_analyzer->makeSetsForIndex();
 
     /// PREWHERE optimization
     if (storage)
     {
+        from_stage = storage->getQueryProcessingStage(context);
+
         auto optimize_prewhere = [&](auto & merge_tree)
         {
             SelectQueryInfo query_info;
@@ -381,7 +381,7 @@ void InterpreterSelectQuery::executeImpl(Pipeline & pipeline, const BlockInputSt
             optimize_prewhere(*merge_tree);
     }
 
-    expressions = analyzeExpressions(from_stage);
+    AnalysisResult expressions = analyzeExpressions(from_stage);
 
     /** Read the data from Storage. from_stage - to what stage the request was completed in Storage. */
     executeFetchColumns(from_stage, pipeline, dry_run, expressions.prewhere_info);
@@ -673,8 +673,6 @@ void InterpreterSelectQuery::executeFetchColumns(QueryProcessingStage::Enum proc
         max_block_size = limit_length + limit_offset;
         max_streams = 1;
     }
-
-    query_analyzer->makeSetsForIndex();
 
     /// Initialize the initial data streams to which the query transforms are superimposed. Table or subquery or prepared input?
     if (!pipeline.streams.empty())
