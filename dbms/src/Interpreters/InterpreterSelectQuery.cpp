@@ -535,7 +535,7 @@ static void getLimitLengthAndOffset(ASTSelectQuery & query, size_t & length, siz
     }
 }
 
-void InterpreterSelectQuery::executeFetchColumns(QueryProcessingStage::Enum from_stage, Pipeline & pipeline,
+void InterpreterSelectQuery::executeFetchColumns(QueryProcessingStage::Enum processing_stage, Pipeline & pipeline,
                                                  bool dry_run, const PrewhereInfoPtr & prewhere_info)
 {
     /// List of columns to read to execute the query.
@@ -702,7 +702,7 @@ void InterpreterSelectQuery::executeFetchColumns(QueryProcessingStage::Enum from
         }
 
         if (!dry_run)
-            pipeline.streams = storage->read(required_columns, query_info, context, from_stage, max_block_size, max_streams);
+            pipeline.streams = storage->read(required_columns, query_info, context, processing_stage, max_block_size, max_streams);
 
         if (pipeline.streams.empty())
         {
@@ -759,15 +759,13 @@ void InterpreterSelectQuery::executeFetchColumns(QueryProcessingStage::Enum from
         throw Exception("Logical error in InterpreterSelectQuery: nowhere to read", ErrorCodes::LOGICAL_ERROR);
 
     /// Aliases in table declaration.
-    if (from_stage == QueryProcessingStage::FetchColumns && alias_actions)
+    if (processing_stage == QueryProcessingStage::FetchColumns && alias_actions)
     {
         pipeline.transform([&](auto & stream)
         {
             stream = std::make_shared<ExpressionBlockInputStream>(stream, alias_actions);
         });
     }
-
-    return from_stage;
 }
 
 
