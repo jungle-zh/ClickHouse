@@ -24,7 +24,7 @@ StorageSystemMetrics::StorageSystemMetrics(const std::string & name_)
 BlockInputStreams StorageSystemMetrics::read(
     const Names & column_names,
     const SelectQueryInfo &,
-    const Context &,
+    const Context & context,
     QueryProcessingStage::Enum processed_stage,
     const size_t /*max_block_size*/,
     const unsigned /*num_streams*/)

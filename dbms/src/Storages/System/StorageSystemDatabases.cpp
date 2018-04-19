@@ -30,7 +30,7 @@ BlockInputStreams StorageSystemDatabases::read(
     const size_t /*max_block_size*/,
     const unsigned /*num_streams*/)
 {
-    check(column_names)
+    check(column_names);
     checkQueryProcessingStage(processed_stage, context);
 
     MutableColumns res_columns = getSampleBlock().cloneEmptyColumns();
