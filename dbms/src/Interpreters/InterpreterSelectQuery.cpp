@@ -352,27 +352,47 @@ void InterpreterSelectQuery::executeImpl(Pipeline & pipeline, const BlockInputSt
      *  then perform the remaining operations with one resulting stream.
      */
 
+    const Settings & settings = context.getSettingsRef();
     AnalysisResult expressions;
+
+
+    QueryProcessingStage::Enum from_stage = QueryProcessingStage::FetchColumns;
+
+    if (storage)
+        from_stage = storage->getQueryProcessingStage(context);
+
+    /// PREWHERE optimization
+    if (storage)
     {
-        QueryProcessingStage::Enum from_stage = QueryProcessingStage::FetchColumns;
-        if (storage)
-            from_stage = storage->getQueryProcessingStage(context);
+        auto optimize_prewhere = [&](auto & merge_tree)
+        {
+            SelectQueryInfo query_info;
+            query_info.query = query_ptr;
+            query_info.sets = query_analyzer->getPreparedSets();
 
-        expressions = analyzeExpressions(from_stage);
+            /// Try transferring some condition from WHERE to PREWHERE if enabled and viable
+            if (settings.optimize_move_to_prewhere && query.where_expression && !query.prewhere_expression && !query.final())
+                MergeTreeWhereOptimizer{query_info, context, merge_tree.getData(), query_analyzer->getRequiredSourceColumns(), log};
+        };
 
-        /** Read the data from Storage. from_stage - to what stage the request was completed in Storage. */
-        executeFetchColumns(from_stage, pipeline, dry_run, expressions.prewhere_info);
-
-        if (from_stage == QueryProcessingStage::WithMergeableState &&
-            to_stage == QueryProcessingStage::WithMergeableState)
-            throw Exception("Distributed on Distributed is not supported", ErrorCodes::NOT_IMPLEMENTED);
-
-        if (!dry_run)
-            LOG_TRACE(log,
-                      QueryProcessingStage::toString(from_stage) << " -> " << QueryProcessingStage::toString(to_stage));
+        if (const StorageMergeTree * merge_tree = dynamic_cast<const StorageMergeTree *>(storage.get()))
+            optimize_prewhere(*merge_tree);
+        else if (const StorageReplicatedMergeTree * merge_tree = dynamic_cast<const StorageReplicatedMergeTree *>(storage.get()))
+            optimize_prewhere(*merge_tree);
     }
 
-    const Settings & settings = context.getSettingsRef();
+    expressions = analyzeExpressions(from_stage);
+
+    /** Read the data from Storage. from_stage - to what stage the request was completed in Storage. */
+    executeFetchColumns(from_stage, pipeline, dry_run, expressions.prewhere_info);
+
+    if (from_stage == QueryProcessingStage::WithMergeableState &&
+        to_stage == QueryProcessingStage::WithMergeableState)
+        throw Exception("Distributed on Distributed is not supported", ErrorCodes::NOT_IMPLEMENTED);
+
+    if (!dry_run)
+        LOG_TRACE(log, QueryProcessingStage::toString(from_stage) << " -> " << QueryProcessingStage::toString(to_stage));
+
 
     if (to_stage > QueryProcessingStage::FetchColumns)
     {
@@ -685,21 +705,6 @@ void InterpreterSelectQuery::executeFetchColumns(QueryProcessingStage::Enum proc
         query_info.query = query_ptr;
         query_info.sets = query_analyzer->getPreparedSets();
         query_info.prewhere_info = prewhere_info;
-
-        /// PREWHERE optimization
-        {
-            auto optimize_prewhere = [&](auto & merge_tree)
-            {
-                /// Try transferring some condition from WHERE to PREWHERE if enabled and viable
-                if (settings.optimize_move_to_prewhere && query.where_expression && !query.prewhere_expression && !query.final())
-                    MergeTreeWhereOptimizer{query_info, context, merge_tree.getData(), required_columns, log};
-            };
-
-            if (const StorageMergeTree * merge_tree = dynamic_cast<const StorageMergeTree *>(storage.get()))
-                optimize_prewhere(*merge_tree);
-            else if (const StorageReplicatedMergeTree * merge_tree = dynamic_cast<const StorageReplicatedMergeTree *>(storage.get()))
-                optimize_prewhere(*merge_tree);
-        }
 
         if (!dry_run)
             pipeline.streams = storage->read(required_columns, query_info, context, processing_stage, max_block_size, max_streams);
