@@ -24,7 +24,12 @@ public:
     /// Returns true if shutdown signaled.
     virtual bool isCancelled() const = 0;
 
+    virtual std::map<std::string,StoragePtr> & getGlobalShuffleTable() { return global_shuffle_table; }
+
     virtual ~IServer() {}
+
+private:
+    std::map<std::string,StoragePtr> global_shuffle_table;
 };
 
 }

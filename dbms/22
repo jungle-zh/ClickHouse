@@ -1,0 +1,905 @@
+2018.11.15 14:58:35.045416 [ 25 ] <Trace> TCPHandlerFactory: TCP Request. Address: [::1]:50276
+2018.11.15 14:58:35.045498 [ 25 ] <Debug> TCPHandler: Connected ClickHouse client version 1.1.54378, user: default.
+2018.11.15 14:58:36.675052 [ 25 ] <Debug> executeQuery: (from [::1]:50276, query_id: 723d168b-c190-4d50-bdb9-33521b196a28) select arrayMap(x -> x != -1 ? x:0,arr )  from user
+2018.11.15 14:58:36.675102 [ 25 ] <Debug> executeQuery: parsered ast:
+SelectWithUnionQuery, 0xa1dfe70
+-ExpressionList, 0xcbd2190
+--SelectQuery, 0xa1efcd0
+---ExpressionList, 0xcbd2670
+----Function_arrayMap, 0xa272c40
+-----ExpressionList, 0xcbd22b0
+------Function_lambda, 0xa2731f0
+-------ExpressionList, 0xcbd21f0
+--------Function_tuple, 0xa272280
+---------ExpressionList, 0xcbd20d0
+----------Identifier_x, 0xa246530
+--------Function_if, 0xa2732c0
+---------ExpressionList, 0xcbd2250
+----------Function_notEquals, 0xa273460
+-----------ExpressionList, 0xcbd2070
+------------Identifier_x, 0xa246a00
+------------Literal_Int64_-1, 0xa246c10
+----------Identifier_x, 0xa2470e0
+----------Literal_UInt64_0, 0xa247030
+------Identifier_arr, 0xa2465e0
+---TablesInSelectQuery, 0xcbd2130
+----TablesInSelectQueryElement, 0xa1dfc30
+-----TableExpression, 0xa251a50
+------Identifier_user, 0xa246740
+
+ , start to get interpreter
+2018.11.15 14:58:36.675115 [ 25 ] <Debug> InterpreterSelectWithUnionQuery: InterpreterSelectWithUnionQuery construct
+2018.11.15 14:58:36.675125 [ 25 ] <Debug> InterpreterSelectWithUnionQuery: num_selects is 1
+2018.11.15 14:58:36.675144 [ 25 ] <Debug> InterpreterSelectWithUnionQuery: in InterpreterSelectWithUnionQuery constructor,  add InterpreterSelectQuery to nested_interpreters ,father query tree:
+SelectWithUnionQuery, 0xa1dfe70
+-ExpressionList, 0xcbd2190
+--SelectQuery, 0xa1efcd0
+---ExpressionList, 0xcbd2670
+----Function_arrayMap, 0xa272c40
+-----ExpressionList, 0xcbd22b0
+------Function_lambda, 0xa2731f0
+-------ExpressionList, 0xcbd21f0
+--------Function_tuple, 0xa272280
+---------ExpressionList, 0xcbd20d0
+----------Identifier_x, 0xa246530
+--------Function_if, 0xa2732c0
+---------ExpressionList, 0xcbd2250
+----------Function_notEquals, 0xa273460
+-----------ExpressionList, 0xcbd2070
+------------Identifier_x, 0xa246a00
+------------Literal_Int64_-1, 0xa246c10
+----------Identifier_x, 0xa2470e0
+----------Literal_UInt64_0, 0xa247030
+------Identifier_arr, 0xa2465e0
+---TablesInSelectQuery, 0xcbd2130
+----TablesInSelectQueryElement, 0xa1dfc30
+-----TableExpression, 0xa251a50
+------Identifier_user, 0xa246740
+ 
+child InterpreterSelectQuery query tree :
+SelectQuery, 0xa1efcd0
+-ExpressionList, 0xcbd2670
+--Function_arrayMap, 0xa272c40
+---ExpressionList, 0xcbd22b0
+----Function_lambda, 0xa2731f0
+-----ExpressionList, 0xcbd21f0
+------Function_tuple, 0xa272280
+-------ExpressionList, 0xcbd20d0
+--------Identifier_x, 0xa246530
+------Function_if, 0xa2732c0
+-------ExpressionList, 0xcbd2250
+--------Function_notEquals, 0xa273460
+---------ExpressionList, 0xcbd2070
+----------Identifier_x, 0xa246a00
+----------Literal_Int64_-1, 0xa246c10
+--------Identifier_x, 0xa2470e0
+--------Literal_UInt64_0, 0xa247030
+----Identifier_arr, 0xa2465e0
+-TablesInSelectQuery, 0xcbd2130
+--TablesInSelectQueryElement, 0xa1dfc30
+---TableExpression, 0xa251a50
+----Identifier_user, 0xa246740
+
+2018.11.15 14:58:36.675167 [ 25 ] <Debug> InterpreterSelectQuery: InterpreterSelectQuery construct1
+2018.11.15 14:58:36.675209 [ 25 ] <Debug> InterpreterSelectQuery: create ExpressionAnalyzer
+
+2018.11.15 14:58:36.675226 [ 25 ] <Debug> ExpressionAnalyzer: ExpressionAnalyzer construct
+2018.11.15 14:58:36.675270 [ 25 ] <Debug> ExpressionAnalyzer: executeScalarSubqueries
+2018.11.15 14:58:36.675306 [ 25 ] <Debug> InterpreterSelectQuery: start of getSampleBlock
+
+2018.11.15 14:58:36.675314 [ 25 ] <Debug> InterpreterSelectQuery: executeImpl ,dry_run is :true
+2018.11.15 14:58:36.675321 [ 25 ] <Debug> InterpreterSelectQuery: start to executeFetchColumns
+2018.11.15 14:58:36.675329 [ 25 ] <Debug> InterpreterSelectQuery: ###### before read from storage :
+
+2018.11.15 14:58:36.675335 [ 25 ] <Debug> InterpreterSelectQuery: start to print stream 
+2018.11.15 14:58:36.675354 [ 25 ] <Debug> InterpreterSelectQuery: ###### after read from storage :
+
+2018.11.15 14:58:36.675360 [ 25 ] <Debug> InterpreterSelectQuery: start to print stream 
+2018.11.15 14:58:36.675367 [ 25 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Null
+
+2018.11.15 14:58:36.675373 [ 25 ] <Debug> InterpreterSelectQuery: end  of executeFetchColumns
+2018.11.15 14:58:36.675379 [ 25 ] <Debug> InterpreterSelectQuery: start of analyzeExpressions 
+2018.11.15 14:58:36.675385 [ 25 ] <Debug> InterpreterSelectQuery: first_stage:1 , second_stage:1
+2018.11.15 14:58:36.675396 [ 25 ] <Debug> ExpressionAnalyzer: appendSelect 
+2018.11.15 14:58:36.675421 [ 25 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:0,only_consts:0, ast tree:
+ExpressionList, 0xcbd25b0
+-Function_arrayMap, 0xa272b70
+--ExpressionList, 0xcbd2550
+---Function_lambda, 0xa272eb0
+----ExpressionList, 0xcbd2310
+-----Function_tuple, 0xa272350
+------ExpressionList, 0xcbd2010
+-------Identifier_x, 0xa246b60
+-----Function_if, 0xa272de0
+------ExpressionList, 0xcbd2610
+-------Function_notEquals, 0xa272760
+--------ExpressionList, 0xcbd2730
+---------Identifier_x, 0xa246950
+---------Literal_Int64_-1, 0xa246d70
+-------Identifier_x, 0xa246ab0
+-------Literal_UInt64_0, 0xa2467f0
+---Identifier_arr, 0xa247500
+
+2018.11.15 14:58:36.675438 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.15 14:58:36.675449 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.15 14:58:36.675465 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.15 14:58:36.675473 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.15 14:58:36.675480 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.15 14:58:36.675487 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.15 14:58:36.675502 [ 25 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD -1 Int8 Const(Int8) at level :0
+2018.11.15 14:58:36.675516 [ 25 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION notEquals(x, -1) (no type) = (no function)(x, -1) at level :1
+2018.11.15 14:58:36.675538 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.15 14:58:36.675544 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.15 14:58:36.675554 [ 25 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 0 UInt8 Const(UInt8) at level :0
+2018.11.15 14:58:36.675566 [ 25 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION if(notEquals(x, -1), x, 0) (no type) = (no function)(notEquals(x, -1), x, 0) at level :1
+2018.11.15 14:58:36.675603 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :-1
+2018.11.15 14:58:36.675615 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :notEquals(x, -1)
+2018.11.15 14:58:36.675621 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :x
+2018.11.15 14:58:36.675628 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :0
+2018.11.15 14:58:36.675645 [ 25 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION __lambda1 (no type) = (no function)(-1, 0) at level :0
+2018.11.15 14:58:36.675664 [ 25 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) (no type) = (no function)(__lambda1, arr) at level :0
+2018.11.15 14:58:36.675686 [ 25 ] <Debug> ExpressionAnalyzer: appendProjectResult 
+2018.11.15 14:58:36.675717 [ 25 ] <Debug> InterpreterSelectQuery: # chain:
+step 0
+required output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+
+output:
+arr Array(Int32)
+-1 Int8
+0 UInt8
+__lambda1 Function(Int32 -> Int32)
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+step 1
+required output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+input:
+arr Array(Int32)
+-1 Int8
+0 UInt8
+__lambda1 Function(Int32 -> Int32)
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+
+2018.11.15 14:58:36.675742 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :-1
+2018.11.15 14:58:36.675750 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :0
+2018.11.15 14:58:36.675761 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :__lambda1
+2018.11.15 14:58:36.675771 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :arr
+2018.11.15 14:58:36.675785 [ 25 ] <Debug> InterpreterSelectQuery: end of analyzeExpressions 
+2018.11.15 14:58:36.675805 [ 25 ] <Debug> InterpreterSelectQuery: executeExpression pipeline add ExpressionBlockInputStream:
+input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+REMOVE -1
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.675816 [ 25 ] <Debug> InterpreterSelectQuery: executeProjection pipeline add ExpressionBlockInputStream:
+input:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.675822 [ 25 ] <Debug> InterpreterSelectQuery: after execute expression 
+2018.11.15 14:58:36.675828 [ 25 ] <Debug> InterpreterSelectQuery: start to print stream 
+2018.11.15 14:58:36.675867 [ 25 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Expression : expressionActions 
+input:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+ Expression : expressionActions 
+input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+REMOVE -1
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+  Null
+
+2018.11.15 14:58:36.675874 [ 25 ] <Debug> InterpreterSelectQuery: start of  getHeader
+
+2018.11.15 14:58:36.675881 [ 25 ] <Debug> ExpressionBlockInputStream: start getHeader
+2018.11.15 14:58:36.675886 [ 25 ] <Debug> ExpressionBlockInputStream: start getHeader
+2018.11.15 14:58:36.675893 [ 25 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.15 14:58:36.675906 [ 25 ] <Debug> ExpressionAction: add column -1, block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), -1 Int8 Const(size = 0, Int8(size = 1))
+2018.11.15 14:58:36.675912 [ 25 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.15 14:58:36.675920 [ 25 ] <Debug> ExpressionAction: add column 0, block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), -1 Int8 Const(size = 0, Int8(size = 1)), 0 UInt8 Const(size = 0, UInt8(size = 1))
+2018.11.15 14:58:36.675926 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.675937 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.675953 [ 25 ] <Debug> ExpressionAction: remove column -1 ,block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), 0 UInt8 Const(size = 0, UInt8(size = 1)), __lambda1 Function(Int32 -> Int32) Function(size = 0)
+2018.11.15 14:58:36.675963 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.675997 [ 25 ] <Debug> ExpressionAction: remove column 0 ,block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), __lambda1 Function(Int32 -> Int32) Function(size = 0)
+2018.11.15 14:58:36.676017 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.676034 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.676048 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.676057 [ 25 ] <Debug> ExpressionAction: remove column -1 ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), x Int32 Int32(size = 0), notEquals(x, -1) UInt8 UInt8(size = 0)
+2018.11.15 14:58:36.676062 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.676076 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.676084 [ 25 ] <Debug> ExpressionAction: remove column notEquals(x, -1) ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), x Int32 Int32(size = 0), if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.676089 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.676096 [ 25 ] <Debug> ExpressionAction: remove column x ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.676101 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.676107 [ 25 ] <Debug> ExpressionAction: remove column 0 ,block info:if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.676115 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.676128 [ 25 ] <Debug> ExpressionAction: remove column __lambda1 ,block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0))
+2018.11.15 14:58:36.676139 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.676150 [ 25 ] <Debug> ExpressionAction: remove column arr ,block info:arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0))
+2018.11.15 14:58:36.676158 [ 25 ] <Debug> ExpressionBlockInputStream: end  getHeader
+2018.11.15 14:58:36.676164 [ 25 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.15 14:58:36.676170 [ 25 ] <Debug> ExpressionBlockInputStream: end  getHeader
+2018.11.15 14:58:36.676176 [ 25 ] <Debug> InterpreterSelectQuery: end of  getHeader
+
+2018.11.15 14:58:36.676181 [ 25 ] <Debug> InterpreterSelectQuery: end  of getSampleBlock
+
+2018.11.15 14:58:36.676207 [ 25 ] <Debug> InterpreterSelectWithUnionQuery: ############ fill the  nested_interpreters and get result_header by child's getSampleBlock ,father ast : SelectWithUnionQuery, 0xa1dfe70
+-ExpressionList, 0xcbd2190
+--SelectQuery, 0xa1efcd0
+---ExpressionList, 0xcbd2670
+----Function_arrayMap, 0xa272c40
+-----ExpressionList, 0xcbd22b0
+------Function_lambda, 0xa2731f0
+-------ExpressionList, 0xcbd21f0
+--------Function_tuple, 0xa272280
+---------ExpressionList, 0xcbd20d0
+----------Identifier_x, 0xa246530
+--------Function_if, 0xa2732c0
+---------ExpressionList, 0xcbd2250
+----------Function_notEquals, 0xa273460
+-----------ExpressionList, 0xcbd2070
+------------Identifier_x, 0xa246a00
+------------Literal_Int64_-1, 0xa246c10
+----------Identifier_x, 0xa2470e0
+----------Literal_UInt64_0, 0xa247030
+------Identifier_arr, 0xa2465e0
+---TablesInSelectQuery, 0xcbd2130
+----TablesInSelectQueryElement, 0xa1dfc30
+-----TableExpression, 0xa251a50
+------Identifier_user, 0xa246740
+
+2018.11.15 14:58:36.676215 [ 25 ] <Debug> executeQuery: ******** after get interpreter ,start to execute 
+2018.11.15 14:58:36.676221 [ 25 ] <Debug> InterpreterSelectWithUnionQuery: start execute 
+
+2018.11.15 14:58:36.676227 [ 25 ] <Debug> InterpreterSelectWithUnionQuery: executeWithMultipleStreams
+2018.11.15 14:58:36.676233 [ 25 ] <Debug> InterpreterSelectQuery: executeImpl ,dry_run is :false
+2018.11.15 14:58:36.676238 [ 25 ] <Debug> InterpreterSelectQuery: start to executeFetchColumns
+2018.11.15 14:58:36.676250 [ 25 ] <Debug> InterpreterSelectQuery: ###### before read from storage :
+
+2018.11.15 14:58:36.676255 [ 25 ] <Debug> InterpreterSelectQuery: start to print stream 
+2018.11.15 14:58:36.676264 [ 25 ] <Debug> MergeTreeDataSelectExecutor: start read
+2018.11.15 14:58:36.676285 [ 25 ] <Debug> ExpressionAnalyzer: ExpressionAnalyzer construct
+2018.11.15 14:58:36.676324 [ 25 ] <Debug> ExpressionAnalyzer: executeScalarSubqueries
+2018.11.15 14:58:36.676352 [ 25 ] <Debug> ExpressionAnalyzer: getConstActions
+2018.11.15 14:58:36.676367 [ 25 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:1,only_consts:1, ast tree:
+SelectQuery, 0xa1efe10
+-ExpressionList, 0xcbd25b0
+--Function_arrayMap, 0xa272b70
+---ExpressionList, 0xcbd2550
+----Function_lambda, 0xa272eb0
+-----ExpressionList, 0xcbd2310
+------Function_tuple, 0xa272350
+-------ExpressionList, 0xcbd2010
+--------Identifier_x, 0xa246b60
+------Function_if, 0xa272de0
+-------ExpressionList, 0xcbd2610
+--------Function_notEquals, 0xa272760
+---------ExpressionList, 0xcbd2730
+----------Identifier_x, 0xa246950
+----------Literal_Int64_-1, 0xa246d70
+--------Identifier_x, 0xa246ab0
+--------Literal_UInt64_0, 0xa2467f0
+----Identifier_arr, 0xa247500
+-TablesInSelectQuery, 0xcbd2790
+--TablesInSelectQueryElement, 0xa1dfb10
+---TableExpression, 0xa251d50
+----Identifier_user, 0xa247450
+
+2018.11.15 14:58:36.676378 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.15 14:58:36.676386 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.15 14:58:36.676399 [ 25 ] <Debug> default.user (SelectExecutor): Key condition: unknown
+2018.11.15 14:58:36.676407 [ 25 ] <Debug> default.user (SelectExecutor): Selected 2 parts by date, 2 parts by key, 2 marks to read from 2 ranges
+2018.11.15 14:58:36.676708 [ 25 ] <Trace> default.user (SelectExecutor): Reading approx. 16384 rows
+2018.11.15 14:58:36.676725 [ 25 ] <Debug> InterpreterSelectQuery: ###### after read from storage :
+
+2018.11.15 14:58:36.676731 [ 25 ] <Debug> InterpreterSelectQuery: start to print stream 
+2018.11.15 14:58:36.676737 [ 25 ] <Debug> InterpreterSelectQuery: pipeline streams:
+MergeTreeThread
+
+2018.11.15 14:58:36.676743 [ 25 ] <Debug> InterpreterSelectQuery: ipeline streams:
+MergeTreeThread
+MergeTreeThread
+
+2018.11.15 14:58:36.676751 [ 25 ] <Debug> InterpreterSelectQuery: end  of executeFetchColumns
+2018.11.15 14:58:36.676756 [ 25 ] <Trace> InterpreterSelectQuery: FetchColumns -> Complete
+2018.11.15 14:58:36.676762 [ 25 ] <Debug> InterpreterSelectQuery: start of analyzeExpressions 
+2018.11.15 14:58:36.676767 [ 25 ] <Debug> InterpreterSelectQuery: first_stage:1 , second_stage:1
+2018.11.15 14:58:36.676774 [ 25 ] <Debug> ExpressionAnalyzer: appendSelect 
+2018.11.15 14:58:36.676788 [ 25 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:0,only_consts:0, ast tree:
+ExpressionList, 0xcbd25b0
+-Function_arrayMap, 0xa272b70
+--ExpressionList, 0xcbd2550
+---Function_lambda, 0xa272eb0
+----ExpressionList, 0xcbd2310
+-----Function_tuple, 0xa272350
+------ExpressionList, 0xcbd2010
+-------Identifier_x, 0xa246b60
+-----Function_if, 0xa272de0
+------ExpressionList, 0xcbd2610
+-------Function_notEquals, 0xa272760
+--------ExpressionList, 0xcbd2730
+---------Identifier_x, 0xa246950
+---------Literal_Int64_-1, 0xa246d70
+-------Identifier_x, 0xa246ab0
+-------Literal_UInt64_0, 0xa2467f0
+---Identifier_arr, 0xa247500
+
+2018.11.15 14:58:36.676798 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.15 14:58:36.676806 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.15 14:58:36.676817 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.15 14:58:36.676825 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.15 14:58:36.676832 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.15 14:58:36.676844 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.15 14:58:36.676862 [ 25 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD -1 Int8 Const(Int8) at level :0
+2018.11.15 14:58:36.676886 [ 25 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION notEquals(x, -1) (no type) = (no function)(x, -1) at level :1
+2018.11.15 14:58:36.676900 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.15 14:58:36.676906 [ 25 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.15 14:58:36.676915 [ 25 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 0 UInt8 Const(UInt8) at level :0
+2018.11.15 14:58:36.676926 [ 25 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION if(notEquals(x, -1), x, 0) (no type) = (no function)(notEquals(x, -1), x, 0) at level :1
+2018.11.15 14:58:36.676947 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :-1
+2018.11.15 14:58:36.676955 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :notEquals(x, -1)
+2018.11.15 14:58:36.676961 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :x
+2018.11.15 14:58:36.676967 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :0
+2018.11.15 14:58:36.676981 [ 25 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION __lambda1 (no type) = (no function)(-1, 0) at level :0
+2018.11.15 14:58:36.676998 [ 25 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) (no type) = (no function)(__lambda1, arr) at level :0
+2018.11.15 14:58:36.677019 [ 25 ] <Debug> ExpressionAnalyzer: appendProjectResult 
+2018.11.15 14:58:36.677060 [ 25 ] <Debug> InterpreterSelectQuery: # chain:
+step 0
+required output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+
+output:
+arr Array(Int32)
+-1 Int8
+0 UInt8
+__lambda1 Function(Int32 -> Int32)
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+step 1
+required output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+input:
+arr Array(Int32)
+-1 Int8
+0 UInt8
+__lambda1 Function(Int32 -> Int32)
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+
+2018.11.15 14:58:36.677079 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :-1
+2018.11.15 14:58:36.677085 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :0
+2018.11.15 14:58:36.677092 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :__lambda1
+2018.11.15 14:58:36.677098 [ 25 ] <Debug> ExpressionActions: finalize ,removeColumn :arr
+2018.11.15 14:58:36.677105 [ 25 ] <Debug> InterpreterSelectQuery: end of analyzeExpressions 
+2018.11.15 14:58:36.677120 [ 25 ] <Debug> InterpreterSelectQuery: executeExpression pipeline add ExpressionBlockInputStream:
+input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+REMOVE -1
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.677130 [ 25 ] <Debug> InterpreterSelectQuery: executeProjection pipeline add ExpressionBlockInputStream:
+input:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.677136 [ 25 ] <Debug> InterpreterSelectQuery: after execute expression 
+2018.11.15 14:58:36.677141 [ 25 ] <Debug> InterpreterSelectQuery: start to print stream 
+2018.11.15 14:58:36.677187 [ 25 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Expression : expressionActions 
+input:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+ Expression : expressionActions 
+input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+REMOVE -1
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+  MergeTreeThread
+
+2018.11.15 14:58:36.677248 [ 25 ] <Debug> InterpreterSelectQuery: ipeline streams:
+Expression : expressionActions 
+input:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+ Expression : expressionActions 
+input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+REMOVE -1
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+  MergeTreeThread
+Expression : expressionActions 
+input:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+ Expression : expressionActions 
+input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+REMOVE -1
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+  MergeTreeThread
+
+2018.11.15 14:58:36.677260 [ 25 ] <Debug> InterpreterSelectWithUnionQuery: execute finished,nested_streams size 2
+2018.11.15 14:58:36.677270 [ 25 ] <Debug> ExpressionBlockInputStream: start getHeader
+2018.11.15 14:58:36.677276 [ 25 ] <Debug> ExpressionBlockInputStream: start getHeader
+2018.11.15 14:58:36.677284 [ 25 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.15 14:58:36.677294 [ 25 ] <Debug> ExpressionAction: add column -1, block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), -1 Int8 Const(size = 0, Int8(size = 1))
+2018.11.15 14:58:36.677300 [ 25 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.15 14:58:36.677309 [ 25 ] <Debug> ExpressionAction: add column 0, block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), -1 Int8 Const(size = 0, Int8(size = 1)), 0 UInt8 Const(size = 0, UInt8(size = 1))
+2018.11.15 14:58:36.677315 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.677323 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677332 [ 25 ] <Debug> ExpressionAction: remove column -1 ,block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), 0 UInt8 Const(size = 0, UInt8(size = 1)), __lambda1 Function(Int32 -> Int32) Function(size = 0)
+2018.11.15 14:58:36.677338 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677345 [ 25 ] <Debug> ExpressionAction: remove column 0 ,block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), __lambda1 Function(Int32 -> Int32) Function(size = 0)
+2018.11.15 14:58:36.677350 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.677361 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.677371 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677390 [ 25 ] <Debug> ExpressionAction: remove column -1 ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), x Int32 Int32(size = 0), notEquals(x, -1) UInt8 UInt8(size = 0)
+2018.11.15 14:58:36.677400 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.677415 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677424 [ 25 ] <Debug> ExpressionAction: remove column notEquals(x, -1) ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), x Int32 Int32(size = 0), if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.677438 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677445 [ 25 ] <Debug> ExpressionAction: remove column x ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.677450 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677456 [ 25 ] <Debug> ExpressionAction: remove column 0 ,block info:if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.677463 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677471 [ 25 ] <Debug> ExpressionAction: remove column __lambda1 ,block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0))
+2018.11.15 14:58:36.677482 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677489 [ 25 ] <Debug> ExpressionAction: remove column arr ,block info:arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0))
+2018.11.15 14:58:36.677495 [ 25 ] <Debug> ExpressionBlockInputStream: end  getHeader
+2018.11.15 14:58:36.677500 [ 25 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.15 14:58:36.677506 [ 25 ] <Debug> ExpressionBlockInputStream: end  getHeader
+2018.11.15 14:58:36.677512 [ 25 ] <Debug> ExpressionBlockInputStream: start getHeader
+2018.11.15 14:58:36.677517 [ 25 ] <Debug> ExpressionBlockInputStream: start getHeader
+2018.11.15 14:58:36.677523 [ 25 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.15 14:58:36.677531 [ 25 ] <Debug> ExpressionAction: add column -1, block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), -1 Int8 Const(size = 0, Int8(size = 1))
+2018.11.15 14:58:36.677537 [ 25 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.15 14:58:36.677544 [ 25 ] <Debug> ExpressionAction: add column 0, block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), -1 Int8 Const(size = 0, Int8(size = 1)), 0 UInt8 Const(size = 0, UInt8(size = 1))
+2018.11.15 14:58:36.677550 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.677559 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677574 [ 25 ] <Debug> ExpressionAction: remove column -1 ,block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), 0 UInt8 Const(size = 0, UInt8(size = 1)), __lambda1 Function(Int32 -> Int32) Function(size = 0)
+2018.11.15 14:58:36.677584 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677595 [ 25 ] <Debug> ExpressionAction: remove column 0 ,block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), __lambda1 Function(Int32 -> Int32) Function(size = 0)
+2018.11.15 14:58:36.677601 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.677610 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.677619 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677626 [ 25 ] <Debug> ExpressionAction: remove column -1 ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), x Int32 Int32(size = 0), notEquals(x, -1) UInt8 UInt8(size = 0)
+2018.11.15 14:58:36.677631 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.677645 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677652 [ 25 ] <Debug> ExpressionAction: remove column notEquals(x, -1) ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), x Int32 Int32(size = 0), if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.677657 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677664 [ 25 ] <Debug> ExpressionAction: remove column x ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.677670 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677676 [ 25 ] <Debug> ExpressionAction: remove column 0 ,block info:if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.677682 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677689 [ 25 ] <Debug> ExpressionAction: remove column __lambda1 ,block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0))
+2018.11.15 14:58:36.677695 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677702 [ 25 ] <Debug> ExpressionAction: remove column arr ,block info:arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0))
+2018.11.15 14:58:36.677708 [ 25 ] <Debug> ExpressionBlockInputStream: end  getHeader
+2018.11.15 14:58:36.677713 [ 25 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.15 14:58:36.677719 [ 25 ] <Debug> ExpressionBlockInputStream: end  getHeader
+2018.11.15 14:58:36.677727 [ 25 ] <Debug> executeQuery: interpreter finish to execute
+2018.11.15 14:58:36.677842 [ 25 ] <Debug> executeQuery: Query pipeline:
+Union
+ Expression : expressionActions 
+input:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+ × 2
+  Expression : expressionActions 
+input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+REMOVE -1
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+   MergeTreeThread
+
+2018.11.15 14:58:36.677866 [ 25 ] <Debug> executeQuery: 1end  of executeQueryImpl and get streams 
+
+2018.11.15 14:58:36.677874 [ 25 ] <Debug> TCPHandler: start processOrdinaryQuery
+
+2018.11.15 14:58:36.677880 [ 25 ] <Debug> ExpressionBlockInputStream: start getHeader
+2018.11.15 14:58:36.677886 [ 25 ] <Debug> ExpressionBlockInputStream: start getHeader
+2018.11.15 14:58:36.677893 [ 25 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.15 14:58:36.677902 [ 25 ] <Debug> ExpressionAction: add column -1, block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), -1 Int8 Const(size = 0, Int8(size = 1))
+2018.11.15 14:58:36.677908 [ 25 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.15 14:58:36.677917 [ 25 ] <Debug> ExpressionAction: add column 0, block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), -1 Int8 Const(size = 0, Int8(size = 1)), 0 UInt8 Const(size = 0, UInt8(size = 1))
+2018.11.15 14:58:36.677926 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.677940 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677953 [ 25 ] <Debug> ExpressionAction: remove column -1 ,block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), 0 UInt8 Const(size = 0, UInt8(size = 1)), __lambda1 Function(Int32 -> Int32) Function(size = 0)
+2018.11.15 14:58:36.677961 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.677973 [ 25 ] <Debug> ExpressionAction: remove column 0 ,block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), __lambda1 Function(Int32 -> Int32) Function(size = 0)
+2018.11.15 14:58:36.677979 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.677989 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.677998 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678005 [ 25 ] <Debug> ExpressionAction: remove column -1 ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), x Int32 Int32(size = 0), notEquals(x, -1) UInt8 UInt8(size = 0)
+2018.11.15 14:58:36.678011 [ 25 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.678019 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678026 [ 25 ] <Debug> ExpressionAction: remove column notEquals(x, -1) ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), x Int32 Int32(size = 0), if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.678032 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678039 [ 25 ] <Debug> ExpressionAction: remove column x ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.678045 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678051 [ 25 ] <Debug> ExpressionAction: remove column 0 ,block info:if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.678057 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678065 [ 25 ] <Debug> ExpressionAction: remove column __lambda1 ,block info:arr Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0)), arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0))
+2018.11.15 14:58:36.678071 [ 25 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678077 [ 25 ] <Debug> ExpressionAction: remove column arr ,block info:arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) Array(size = 0, UInt64(size = 0), Int32(size = 0))
+2018.11.15 14:58:36.678083 [ 25 ] <Debug> ExpressionBlockInputStream: end  getHeader
+2018.11.15 14:58:36.678089 [ 25 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.15 14:58:36.678095 [ 25 ] <Debug> ExpressionBlockInputStream: end  getHeader
+2018.11.15 14:58:36.678164 [ 25 ] <Debug> AsynchronousBlockInputStream: poll ..
+2018.11.15 14:58:36.678379 [ 28 ] <Debug> AsynchronousBlockInputStream: calculate ,in AsyncBlockInput thread
+2018.11.15 14:58:36.678484 [ 29 ] <Debug> ExpressionBlockInputStream: start readImpl ,expression:  input:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.678539 [ 29 ] <Debug> ExpressionBlockInputStream: start readImpl ,expression:  input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+REMOVE -1
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.678704 [ 29 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.15 14:58:36.678720 [ 29 ] <Debug> ExpressionAction: add column -1, block info:arr Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 2)), -1 Int8 Const(size = 1, Int8(size = 1))
+2018.11.15 14:58:36.678727 [ 29 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.15 14:58:36.678738 [ 29 ] <Debug> ExpressionAction: add column 0, block info:arr Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 2)), -1 Int8 Const(size = 1, Int8(size = 1)), 0 UInt8 Const(size = 1, UInt8(size = 1))
+2018.11.15 14:58:36.678751 [ 29 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.678761 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678773 [ 29 ] <Debug> ExpressionAction: remove column -1 ,block info:arr Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 2)), 0 UInt8 Const(size = 1, UInt8(size = 1)), __lambda1 Function(Int32 -> Int32) Function(size = 1)
+2018.11.15 14:58:36.678779 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678786 [ 29 ] <Debug> ExpressionAction: remove column 0 ,block info:arr Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 2)), __lambda1 Function(Int32 -> Int32) Function(size = 1)
+2018.11.15 14:58:36.678792 [ 29 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.678805 [ 29 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.678817 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678825 [ 29 ] <Debug> ExpressionAction: remove column -1 ,block info:0 UInt8 Const(size = 2, UInt8(size = 1)), x Int32 Int32(size = 2), notEquals(x, -1) UInt8 UInt8(size = 2)
+2018.11.15 14:58:36.678831 [ 29 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.678841 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678849 [ 29 ] <Debug> ExpressionAction: remove column notEquals(x, -1) ,block info:0 UInt8 Const(size = 2, UInt8(size = 1)), x Int32 Int32(size = 2), if(notEquals(x, -1), x, 0) Int32 Int32(size = 2)
+2018.11.15 14:58:36.678855 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678862 [ 29 ] <Debug> ExpressionAction: remove column x ,block info:0 UInt8 Const(size = 2, UInt8(size = 1)), if(notEquals(x, -1), x, 0) Int32 Int32(size = 2)
+2018.11.15 14:58:36.678867 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678873 [ 29 ] <Debug> ExpressionAction: remove column 0 ,block info:if(notEquals(x, -1), x, 0) Int32 Int32(size = 2)
+2018.11.15 14:58:36.678881 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678890 [ 29 ] <Debug> ExpressionAction: remove column __lambda1 ,block info:arr Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 2)), arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 2))
+2018.11.15 14:58:36.678897 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.678904 [ 29 ] <Debug> ExpressionAction: remove column arr ,block info:arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 2))
+2018.11.15 14:58:36.678921 [ 29 ] <Debug> ExpressionBlockInputStream: end readImpl ,expression:  input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+REMOVE -1
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.678928 [ 29 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.15 14:58:36.678937 [ 29 ] <Debug> ExpressionBlockInputStream: end readImpl ,expression:  input:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.678959 [ 29 ] <Debug> ExpressionBlockInputStream: start readImpl ,expression:  input:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.678981 [ 29 ] <Debug> ExpressionBlockInputStream: start readImpl ,expression:  input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+REMOVE -1
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.678997 [ 25 ] <Debug> AsynchronousBlockInputStream: polled block from child and readImpl ...
+2018.11.15 14:58:36.679040 [ 28 ] <Debug> AsynchronousBlockInputStream: calculate ,in AsyncBlockInput thread
+2018.11.15 14:58:36.679108 [ 29 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.15 14:58:36.679128 [ 29 ] <Debug> ExpressionAction: add column -1, block info:arr Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 0)), -1 Int8 Const(size = 1, Int8(size = 1))
+2018.11.15 14:58:36.679134 [ 29 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.15 14:58:36.679142 [ 29 ] <Debug> ExpressionAction: add column 0, block info:arr Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 0)), -1 Int8 Const(size = 1, Int8(size = 1)), 0 UInt8 Const(size = 1, UInt8(size = 1))
+2018.11.15 14:58:36.679148 [ 29 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.679156 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.679166 [ 29 ] <Debug> ExpressionAction: remove column -1 ,block info:arr Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 0)), 0 UInt8 Const(size = 1, UInt8(size = 1)), __lambda1 Function(Int32 -> Int32) Function(size = 1)
+2018.11.15 14:58:36.679172 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.679182 [ 29 ] <Debug> ExpressionAction: remove column 0 ,block info:arr Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 0)), __lambda1 Function(Int32 -> Int32) Function(size = 1)
+####
+2018.11.15 14:58:36.679193 [ 29 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.679211 [ 29 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.679226 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.679248 [ 29 ] <Debug> ExpressionAction: remove column -1 ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), x Int32 Int32(size = 0), notEquals(x, -1) UInt8 UInt8(size = 0)
+2018.11.15 14:58:36.679255 [ 29 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.15 14:58:36.679270 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.679284 [ 29 ] <Debug> ExpressionAction: remove column notEquals(x, -1) ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), x Int32 Int32(size = 0), if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.679296 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.679304 [ 25 ] <Debug> AsynchronousBlockInputStream: poll ..
+2018.11.15 14:58:36.679322 [ 30 ] <Debug> ExpressionBlockInputStream: start readImpl ,expression:  input:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.679353 [ 29 ] <Debug> ExpressionAction: remove column x ,block info:0 UInt8 Const(size = 0, UInt8(size = 1)), if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.679377 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.679385 [ 30 ] <Debug> ExpressionBlockInputStream: start readImpl ,expression:  input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+REMOVE -1
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.679414 [ 29 ] <Debug> ExpressionAction: remove column 0 ,block info:if(notEquals(x, -1), x, 0) Int32 Int32(size = 0)
+2018.11.15 14:58:36.679428 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.679440 [ 29 ] <Debug> ExpressionAction: remove column __lambda1 ,block info:arr Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 0)), arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 0))
+2018.11.15 14:58:36.679446 [ 29 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.15 14:58:36.679454 [ 29 ] <Debug> ExpressionAction: remove column arr ,block info:arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) Array(size = 1, UInt64(size = 1), Int32(size = 0))
+2018.11.15 14:58:36.679472 [ 29 ] <Debug> ExpressionBlockInputStream: end readImpl ,expression:  input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+REMOVE -1
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.679479 [ 29 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.15 14:58:36.679489 [ 29 ] <Debug> ExpressionBlockInputStream: end readImpl ,expression:  input:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.679511 [ 29 ] <Debug> ExpressionBlockInputStream: start readImpl ,expression:  input:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.679538 [ 29 ] <Debug> ExpressionBlockInputStream: start readImpl ,expression:  input:
+arr Array(Int32)
+
+actions:
+ADD -1 Int8 Const(Int8)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(Int32 -> Int32) = Capture[Int8, UInt8](Int32) -> Int32(-1, 0)
+REMOVE -1
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(x, -1), x, 0)), arr) Array(Int32)
+
+2018.11.15 14:58:36.679550 [ 25 ] <Debug> AsynchronousBlockInputStream: polled block from child and readImpl ...
+2018.11.15 14:58:36.679592 [ 28 ] <Debug> AsynchronousBlockInputStream: calculate ,in AsyncBlockInput thread
+2018.11.15 14:58:36.679624 [ 25 ] <Debug> AsynchronousBlockInputStream: poll ..
+2018.11.15 14:58:36.679653 [ 25 ] <Debug> AsynchronousBlockInputStream: polled block from child and readImpl ...
+2018.11.15 14:58:36.679761 [ 25 ] <Debug> TCPHandler: block all sends to client , job finished 
+2018.11.15 14:58:36.679772 [ 25 ] <Trace> UnionBlockInputStream: Waiting for threads to finish
+2018.11.15 14:58:36.679778 [ 25 ] <Trace> UnionBlockInputStream: Waited for threads to finish
+2018.11.15 14:58:36.679861 [ 25 ] <Information> executeQuery: Read 2 rows, 24.00 B in 0.005 sec., 420 rows/sec., 4.92 KiB/sec.
+2018.11.15 14:58:36.679911 [ 25 ] <Trace> UnionBlockInputStream: Waiting for threads to finish
+2018.11.15 14:58:36.679920 [ 25 ] <Trace> UnionBlockInputStream: Waited for threads to finish
+2018.11.15 14:58:36.679946 [ 25 ] <Debug> MemoryTracker: Peak memory usage (for query): 4.17 MiB.
+2018.11.15 14:58:36.679955 [ 25 ] <Debug> MemoryTracker: Peak memory usage (total): 4.17 MiB.
+2018.11.15 14:58:36.679967 [ 25 ] <Information> TCPHandler: Processed in 0.005 sec.
+2018.11.15 14:58:38.325642 [ 25 ] <Information> TCPHandler: Done processing connection.

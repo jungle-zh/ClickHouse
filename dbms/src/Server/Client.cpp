@@ -52,6 +52,7 @@
 #include "InterruptListener.h"
 #include <Functions/registerFunctions.h>
 #include <AggregateFunctions/registerAggregateFunctions.h>
+#include <Parsers/ASTSelectQuery.h>
 
 
 /// http://en.wikipedia.org/wiki/ANSI_escape_code
@@ -112,6 +113,7 @@ private:
     std::unique_ptr<Connection> connection;    /// Connection to DB.
     String query_id;                     /// Current query_id.
     String query;                        /// Current query.
+    Protocol::Client::Enum query_type;
 
     String format;                       /// Query results output format.
     bool is_default_format = true;       /// false, if format is set in the config or command line.
@@ -731,6 +733,8 @@ private:
         /// Thus we need to parse the query.
         parsed_query = parsed_query_;
 
+
+
         if (!parsed_query)
         {
             const char * begin = query.data();
@@ -750,6 +754,25 @@ private:
         const ASTUseQuery * use_query = typeid_cast<const ASTUseQuery *>(&*parsed_query);
         /// INSERT query for which data transfer is needed (not an INSERT SELECT) is processed separately.
         const ASTInsertQuery * insert = typeid_cast<const ASTInsertQuery *>(&*parsed_query);
+
+
+
+
+        if(ASTSelectWithUnionQuery *  ast = dynamic_cast<ASTSelectWithUnionQuery * >(parsed_query.get()) ){
+            size_t num_selects = ast->list_of_selects->children.size();
+            if(num_selects == 1){
+                if(dynamic_cast<ASTSelectQuery * >( ast->list_of_selects->children.at(0).get())->join() ){
+                    query_type = Protocol::Client::ShuffleJoinMasterQuery;
+                    LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"query type is ShuffleJoinMasterQuery ");
+                }
+            }
+        }
+
+
+        //const ASTSetQuery * set_query = nullptr;
+        //const ASTUseQuery * use_query = nullptr;
+        //const ASTInsertQuery * insert = nullptr;
+
 
         connection->forceConnected();
 
@@ -820,7 +843,7 @@ private:
     /// Process the query that doesn't require transfering data blocks to the server.
     void processOrdinaryQuery()
     {
-        connection->sendQuery(query, query_id, QueryProcessingStage::Complete, &context.getSettingsRef(), nullptr, true);
+        connection->sendQuery(query, query_id, QueryProcessingStage::Complete, &context.getSettingsRef(), nullptr, true,query_type);
         sendExternalTables();
         receiveResult();
     }

@@ -56,8 +56,19 @@ BlockInputStreams executeQuery(
     else
         throttler = user_level_throttler;
 
-    for (const auto & shard_info : cluster->getShardsInfo())
+    for (const auto & shard_info : cluster->getShardsInfo()){
+
+        String info_s = "local address :";
+        for(auto & e :  shard_info.local_addresses){
+            info_s +=   e.toString();
+            info_s +=   ",";
+        }
+
+
+        LOG_DEBUG(&Logger::get("ClusterProxy.executeQuery") , "..shard info :" + info_s + "\n");
         stream_factory.createForShard(shard_info, query, query_ast, new_context, throttler, res);
+    }
+
 
     return res;
 }

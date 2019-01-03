@@ -4,6 +4,7 @@
 #include <common/logger_useful.h>
 #include "IServer.h"
 #include "TCPHandler.h"
+#include "TCPHandlerForFirstStageExec.h"
 
 namespace Poco { class Logger; }
 
@@ -30,7 +31,8 @@ public:
                 << "Address: "
                 << socket.peerAddress().toString());
 
-        return new TCPHandler(server, socket);
+        //return new TCPHandler(server, socket);
+        return  new TCPHandlerForFirstStageExec(server,socket);
     }
 };
 

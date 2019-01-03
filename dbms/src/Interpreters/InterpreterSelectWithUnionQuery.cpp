@@ -9,6 +9,8 @@
 #include <DataTypes/getLeastSupertype.h>
 #include <Columns/ColumnConst.h>
 #include <Common/typeid_cast.h>
+#include <Parsers/queryToString.h>
+#include "InterpreterEnhanceJoinSelectQuery.h"
 
 
 namespace DB
@@ -26,12 +28,17 @@ InterpreterSelectWithUnionQuery::InterpreterSelectWithUnionQuery(
     const Context & context_,
     const Names & required_result_column_names,
     QueryProcessingStage::Enum to_stage_,
-    size_t subquery_depth_)
+    size_t subquery_depth_,
+    Protocol::Client::Enum query_type_,
+    std::shared_ptr<std::map<String,StoragePtr >> shuffle_table_ )
     : query_ptr(query_ptr_),
     context(context_),
     to_stage(to_stage_),
-    subquery_depth(subquery_depth_)
+    subquery_depth(subquery_depth_),
+    query_type(query_type_),
+    shuffle_table(shuffle_table_)
 {
+    LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"InterpreterSelectWithUnionQuery construct ,query is : " + queryToString(query_ptr_) + " ,query_type is " + std::to_string(query_type));
     if (!context.hasQueryContext())
         context.setQueryContext(context);
 
@@ -48,6 +55,7 @@ InterpreterSelectWithUnionQuery::InterpreterSelectWithUnionQuery(
     ///  because names could be different.
 
     nested_interpreters.reserve(num_selects);
+    LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),("num_selects is " +  std::to_string(num_selects)));
 
     std::vector<Names> required_result_column_names_for_other_selects(num_selects);
     if (!required_result_column_names.empty() && num_selects > 1)
@@ -82,15 +90,45 @@ InterpreterSelectWithUnionQuery::InterpreterSelectWithUnionQuery(
             ? required_result_column_names
             : required_result_column_names_for_other_selects[query_num];
 
-        nested_interpreters.emplace_back(std::make_unique<InterpreterSelectQuery>(
-            ast.list_of_selects->children.at(query_num), context, current_required_result_column_names, to_stage, subquery_depth));
+
+
+        LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),( "in InterpreterSelectWithUnionQuery constructor,  add InterpreterSelectQuery to nested_interpreters ,father query " + queryToString(ast)  + " \n child InterpreterSelectQuery query :"  + queryToString(*ast.list_of_selects->children.at(query_num).get() )  ) );
+
+        //  use  InterpreterEnhanceJoinSelectQuery  to enhanceJoin
+
+        /*
+        Protocol::Client::Enum  query_type ;
+
+        if(dynamic_cast<ASTSelectQuery * >( ast.list_of_selects->children.at(query_num).get())->join() ){
+            query_type = Protocol::Client::ShuffleJoinMasterQuery;
+            LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"query type is ShuffleJoinMasterQuery ");
+        } else{
+            LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"query type is Query ");
+            query_type = Protocol::Client::Query;
+        }
+
+         */
+
+        nested_interpreters.emplace_back(std::make_unique<InterpreterEnhanceJoinSelectQuery>(
+             ast.list_of_selects->children.at(query_num), context, current_required_result_column_names, to_stage,query_type ,subquery_depth,
+             nullptr, false,shuffle_table));
+
+        // nested_interpreters.emplace_back(std::make_unique<InterpreterSelectQuery>(
+        //     ast.list_of_selects->children.at(query_num), context, current_required_result_column_names, to_stage, subquery_depth));
+
+
+        LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),( "in InterpreterSelectWithUnionQuery constructor, child query create done : " +  queryToString(*ast.list_of_selects->children.at(query_num).get() )   ));
+
     }
 
     /// Determine structure of result.
 
+
     if (num_selects == 1)
     {
+        LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"InterpreterSelectWithUnionQuery :" + queryToString(query_ptr_) + " start getting sample from child to get result_header " );
         result_header = nested_interpreters.front()->getSampleBlock();
+        LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"InterpreterSelectWithUnionQuery :" +  queryToString(query_ptr_) + " finish getting sample from child to get result_header" );
     }
     else
     {
@@ -142,6 +180,8 @@ InterpreterSelectWithUnionQuery::InterpreterSelectWithUnionQuery(
             /// BTW, result column names are from first SELECT.
         }
     }
+
+    LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"############ fill the  nested_interpreters and get result_header by child's getSampleBlock , father query : " + queryToString(ast));
 }
 
 
@@ -157,18 +197,24 @@ Block InterpreterSelectWithUnionQuery::getSampleBlock(
     const ASTPtr & query_ptr,
     const Context & context)
 {
+    LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"getSampleBlock ,query :" + queryToString(query_ptr));
     return InterpreterSelectWithUnionQuery(query_ptr, context).getSampleBlock();
 }
 
 
 BlockInputStreams InterpreterSelectWithUnionQuery::executeWithMultipleStreams()
 {
+
     BlockInputStreams nested_streams;
 
+    int index = 0 ;
     for (auto & interpreter : nested_interpreters)
     {
+        LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"number " + std::to_string(index) + " InterpreterSelectQuery start to executeImpl ");
         BlockInputStreams streams = interpreter->executeWithMultipleStreams();
         nested_streams.insert(nested_streams.end(), streams.begin(), streams.end());
+        LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"number " + std::to_string(index) + " InterpreterSelectQuery finish  executeImpl ,get " + std::to_string(streams.size()) + " subStream");
+        index ++ ;
     }
 
     /// Unify data structure.
@@ -182,11 +228,14 @@ BlockInputStreams InterpreterSelectWithUnionQuery::executeWithMultipleStreams()
 
 BlockIO InterpreterSelectWithUnionQuery::execute()
 {
+
+    LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"start to execute  ... query is " + queryToString(query_ptr));
     const Settings & settings = context.getSettingsRef();
 
     BlockInputStreams nested_streams = executeWithMultipleStreams();
     BlockInputStreamPtr result_stream;
 
+    LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"execute finished,nested_streams size " + std::to_string(nested_streams.size()));
     if (nested_streams.empty())
     {
         result_stream = std::make_shared<NullBlockInputStream>(getSampleBlock());
@@ -198,12 +247,14 @@ BlockIO InterpreterSelectWithUnionQuery::execute()
     }
     else
     {
+        LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"create UnionBlockInputStream");
         result_stream = std::make_shared<UnionBlockInputStream<>>(nested_streams, nullptr, settings.max_threads);
         nested_streams.clear();
     }
 
     BlockIO res;
     res.in = result_stream;
+    LOG_DEBUG(&Logger::get("InterpreterSelectWithUnionQuery"),"end of execute  ... query is" + queryToString(query_ptr));
     return res;
 }
 

@@ -60,6 +60,14 @@ public:
         size_t max_block_size,
         unsigned num_streams) override;
 
+    BlockInputStreams readOrigin(
+            const Names & column_names,
+            const SelectQueryInfo & query_info,
+            const Context & context,
+            QueryProcessingStage::Enum & processed_stage,
+            size_t max_block_size,
+            unsigned num_streams) ;
+
     BlockOutputStreamPtr write(const ASTPtr & query, const Settings & settings) override;
 
     void drop() override {}

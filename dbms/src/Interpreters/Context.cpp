@@ -808,13 +808,15 @@ StoragePtr Context::getTableImpl(const String & database_name, const String & ta
     if (database_name.empty())
     {
         StoragePtr res = tryGetExternalTable(table_name);
-        if (res)
+        if (res){
+            LOG_DEBUG(&Logger::get("Context")  , " get external table :" + table_name);
             return res;
+        }
+
     }
 
     String db = resolveDatabase(database_name, current_database);
     checkDatabaseAccessRightsImpl(db);
-
     Databases::const_iterator it = shared->databases.find(db);
     if (shared->databases.end() == it)
     {
@@ -823,9 +825,11 @@ StoragePtr Context::getTableImpl(const String & database_name, const String & ta
         return {};
     }
 
+
     auto table = it->second->tryGetTable(*this, table_name);
     if (!table)
     {
+        LOG_DEBUG(&Logger::get("Context"),"not find table  " + table_name);
         if (exception)
             *exception = Exception("Table " + backQuoteIfNeed(db) + "." + backQuoteIfNeed(table_name) + " doesn't exist.", ErrorCodes::UNKNOWN_TABLE);
         return {};
@@ -837,6 +841,12 @@ StoragePtr Context::getTableImpl(const String & database_name, const String & ta
 
 void Context::addExternalTable(const String & table_name, const StoragePtr & storage, const ASTPtr & ast)
 {
+    //Exception e =  Exception("test");
+
+    LOG_DEBUG(&Logger::get("Context"),"addExternalTable : " + table_name);
+
+    //LOG_DEBUG(&Logger::get("Context"),"stack trace : " +  e.getStackTrace().toString());
+
     if (external_tables.end() != external_tables.find(table_name))
         throw Exception("Temporary table " + backQuoteIfNeed(table_name) + " already exists.", ErrorCodes::TABLE_ALREADY_EXISTS);
 

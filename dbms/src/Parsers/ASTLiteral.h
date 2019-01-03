@@ -18,7 +18,7 @@ public:
     ASTLiteral(const Field & value_) : value(value_) {}
 
     /** Get the text that identifies this element. */
-    String getID() const override { return "Literal_" + applyVisitor(FieldVisitorDump(), value); }
+    String getID() const override { return "Literal_" + applyVisitor(FieldVisitorDump(), value) + (alias.size() > 0  ? "_alias_" + alias : "") ; }
 
     ASTPtr clone() const override { return std::make_shared<ASTLiteral>(*this); }
 

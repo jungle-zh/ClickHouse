@@ -1,0 +1,69 @@
+//
+// Created by admin on 18/11/28.
+//
+
+
+#include <Interpreters/DistributeInterpreterSelectQuery.h>
+
+namespace  DB {
+
+
+    void DistributeInterpreterSelectQuery::initConnections() {
+
+
+      auto shard_addresses =  context.getCluster(cluster_name)->getShardsAddresses();
+
+      for(auto  & shard_address : shard_addresses){
+
+          auto & address  =  shard_address[0];   //first replica address
+          connections.emplace_back(Connection(address.host_name,address.port,"default","","",context.getCluster(cluster_name)->getConnectIionTimeOut()));
+
+      }
+    }
+
+
+    BlockIO  DistributeInterpreterSelectQuery::execute(){
+
+
+
+
+
+    }
+
+
+
+    void  DistributeInterpreterSelectQuery::executeNode(){
+
+        // top node
+        // wait join
+
+
+        // join node
+        // wait join
+        // append where , group and other plan and execute
+        // if(need agg)
+        //   wait data
+        //   agg
+        //   send data
+        // else
+        //   wait shuffle write
+        //   ask  shuffle read
+
+        // query node
+        // wait query
+        // if(need agg)
+        //   wait data
+        //   agg
+        //   send data
+        // else
+        //   wait shuffle write
+        //   ask  shuffle read
+
+    }
+
+
+}
+
+
+
+

@@ -180,18 +180,20 @@ Clusters::Impl Clusters::getContainer() const
 
 /// Implementation of `Cluster` class
 
-Cluster::Cluster(Poco::Util::AbstractConfiguration & config, const Settings & settings, const String & cluster_name)
+Cluster::Cluster(Poco::Util::AbstractConfiguration & config, const Settings & settings, const String & cluster_name_)
 {
     Poco::Util::AbstractConfiguration::Keys config_keys;
-    config.keys(cluster_name, config_keys);
+    config.keys(cluster_name_, config_keys);
 
     if (config_keys.empty())
         throw Exception("No cluster elements (shard, node) specified in config at path " + cluster_name, ErrorCodes::SHARD_HAS_NO_CONNECTIONS);
 
-    const auto & config_prefix = cluster_name + ".";
+    const auto & config_prefix = cluster_name_ + ".";
 
     UInt32 current_shard_num = 1;
 
+    cluster_name = cluster_name_;
+    LOG_DEBUG(&Logger::get("Cluster"), "cluster name is " + cluster_name_ );
     for (const auto & key : config_keys)
     {
         if (startsWith(key, "node"))
@@ -227,7 +229,10 @@ Cluster::Cluster(Poco::Util::AbstractConfiguration & config, const Settings & se
 
                 info.pool = std::make_shared<ConnectionPoolWithFailover>(
                     ConnectionPoolPtrs{pool}, settings.load_balancing, settings.connections_with_failover_max_tries);
+
                 info.per_replica_pools = {std::move(pool)};
+
+
             }
 
             if (weight)
@@ -334,6 +339,7 @@ Cluster::Cluster(Poco::Util::AbstractConfiguration & config, const Settings & se
         throw Exception("There must be either 'node' or 'shard' elements in config", ErrorCodes::EXCESSIVE_ELEMENT_IN_CONFIG);
 
     initMisc();
+    timeouts = ConnectionTimeouts::getTCPTimeoutsWithFailover(settings).getSaturated(settings.max_execution_time);
 }
 
 
@@ -385,7 +391,9 @@ Cluster::Cluster(const Settings & settings, const std::vector<std::vector<String
         ++current_shard_num;
     }
 
+
     initMisc();
+    timeouts = ConnectionTimeouts::getTCPTimeoutsWithFailover(settings).getSaturated(settings.max_execution_time);
 }
 
 

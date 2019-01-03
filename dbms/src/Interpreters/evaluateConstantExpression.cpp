@@ -10,6 +10,7 @@
 #include <Interpreters/ExpressionActions.h>
 #include <Interpreters/evaluateConstantExpression.h>
 #include <Common/typeid_cast.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -24,6 +25,7 @@ namespace ErrorCodes
 
 std::pair<Field, std::shared_ptr<const IDataType>> evaluateConstantExpression(const ASTPtr & node, const Context & context)
 {
+    LOG_DEBUG(&Logger::get("evaluateConstantExpression"),"start of evaluateConstantExpression");
     ExpressionActionsPtr expr_for_constant_folding = ExpressionAnalyzer(
         node, context, nullptr, NamesAndTypesList{{ "_dummy", std::make_shared<DataTypeUInt8>() }}, Names()).getConstActions();
 
@@ -45,7 +47,7 @@ std::pair<Field, std::shared_ptr<const IDataType>> evaluateConstantExpression(co
 
     if (!result_column.isColumnConst())
         throw Exception("Element of set in IN or VALUES is not a constant expression: " + name, ErrorCodes::BAD_ARGUMENTS);
-
+    LOG_DEBUG(&Logger::get("evaluateConstantExpression"),"end of  evaluateConstantExpression");
     return std::make_pair(result_column[0], result.type);
 }
 

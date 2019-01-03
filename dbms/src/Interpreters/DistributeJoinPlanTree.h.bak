@@ -1,0 +1,107 @@
+#pragma once
+
+#include <Core/QueryProcessingStage.h>
+#include <Interpreters/Context.h>
+#include <Interpreters/IInterpreter.h>
+#include <Interpreters/ExpressionAnalyzer.h>
+#include <Interpreters/ExpressionActions.h>
+#include <DataStreams/IBlockInputStream.h>
+#include <Poco/Logger.h>
+#include <common/logger_useful.h>
+#include <Parsers/ASTTablesInSelectQuery.h>
+
+namespace DB{
+
+
+    namespace DistributeJoinNodeType {
+
+        enum  NodeType {
+            JOIN = 0,
+            QUERY = 1,
+            TABLE = 2
+        };
+
+    }
+    namespace DistributeJoinNodeStatus{
+
+
+        enum NodeStatus {
+            PREPARE  = 0,
+            BUILD = 1,
+            SHUFFLE_WRITE = 2,
+            SHUFFLE_READ = 3,
+            AGG_WRITE = 4,
+            AGG_READ = 5,
+            DONE = 6
+        };
+    }
+
+
+
+using NodeType = DistributeJoinNodeType::NodeType;
+using NodeStatus = DistributeJoinNodeStatus::NodeStatus;
+
+
+
+
+class DistributeJoinPlanTree {
+
+
+public:
+    using DistributeJoinPlanTreePtr = std::shared_ptr<DistributeJoinPlanTree>
+
+    DistributeJoinPlanTree(DistributeJoinPlanTreePtr && left_ , DistributeJoinPlanTreePtr &&  rigth_ ,ASTTableJoin && join_ )  {
+        left = left_;
+        right  = rigth_;
+        join = join_;
+    }
+
+
+    DistributeJoinPlanTree(ASTPtr  query_or_table_ ) {
+        query_or_table = query_or_table_;
+    }
+
+    BlockInputStreamPtr execute();
+
+    BlockOutputStreamPtr buildFromChildNode(BlockInputStreamPtr left, BlockInputStreamPtr right);
+
+    BlockOutputStreamPtr buildFromQuery();
+
+
+    void shuffle_write();
+    void shuffle_read();
+    void agg_write();
+    void agg_read();
+    static DistributeJoinPlanTreePtr buildSubTree(ASTPtr &&  query);
+
+    void setNodeType(NodeType  type_){
+        type = type_;
+    }
+
+
+
+
+private:
+
+
+    NodeType  type;
+    NodeStatus  status;
+    ASTPtr query_or_table;
+
+    ASTTableJoin join;
+
+    DistributeJoinPlanTreePtr left;
+    DistributeJoinPlanTreePtr right;
+
+    bool need_aggregate ;
+
+
+};
+
+
+
+
+}
+
+
+

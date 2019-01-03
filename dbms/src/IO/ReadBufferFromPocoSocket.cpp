@@ -4,6 +4,7 @@
 
 #include <IO/ReadBufferFromPocoSocket.h>
 #include <Common/NetException.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -24,7 +25,17 @@ bool ReadBufferFromPocoSocket::nextImpl()
     /// Add more details to exceptions.
     try
     {
+
+        size_t pending =  working_buffer.end() - pos;
+        LOG_DEBUG(&Logger::get("ReadBufferFromPocoSocket"),"1pending data :" + std::to_string(pending) );
         bytes_read = socket.impl()->receiveBytes(internal_buffer.begin(), internal_buffer.size());
+
+        LOG_DEBUG(&Logger::get("ReadBufferFromPocoSocket"),"socket read " + std::to_string(bytes_read) + " bytes ");
+
+        size_t pending1 =  working_buffer.end() - pos;
+        LOG_DEBUG(&Logger::get("ReadBufferFromPocoSocket"),"2pending data :" + std::to_string(pending1) );
+
+
     }
     catch (const Poco::Net::NetException & e)
     {

@@ -101,6 +101,7 @@ public:
             if (!all_read)
                 cancel(false);
 
+            LOG_DEBUG(&Logger::get("UnionBlockInputStream"),"~UnionBlockInputStream");
             finalize();
         }
         catch (...)
@@ -189,6 +190,9 @@ protected:
 
     Block readImpl() override
     {
+
+
+        LOG_DEBUG(&Logger::get("UnionBlockInputStream"),"start readImpl");
         if (all_read)
             return received_payload.block;
 
@@ -202,6 +206,10 @@ protected:
         /// We will wait until the next block is ready or an exception is thrown.
         //std::cerr << "popping\n";
         output_queue.pop(received_payload);
+        if(received_payload.block){
+            LOG_DEBUG(&Logger::get("UnionBlockInputStream"),"received block ,name  " + received_payload.block.dumpNames()  + " ,rows num :" + std::to_string(received_payload.block.rows()));
+        }
+
 
         if (received_payload.exception)
         {

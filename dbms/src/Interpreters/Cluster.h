@@ -104,6 +104,8 @@ public:
         /// Connection pool for each replica, contains nullptr for local replicas
         ConnectionPoolPtrs per_replica_pools;
         bool has_internal_replication;
+
+        //std::string remote_address;
     };
 
     using ShardsInfo = std::vector<ShardInfo>;
@@ -138,6 +140,8 @@ private:
 
 public:
     const SlotToShard & getSlotToShard() const { return slot_to_shard; }
+    const ConnectionTimeouts & getConnectIionTimeOut() const { return  timeouts;}
+    const String & getClusterName () { return  cluster_name ;}
 
 private:
     void initMisc();
@@ -159,6 +163,9 @@ private:
 
     size_t remote_shard_count = 0;
     size_t local_shard_count = 0;
+    ConnectionTimeouts timeouts;
+
+    String cluster_name;
 };
 
 using ClusterPtr = std::shared_ptr<Cluster>;

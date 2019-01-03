@@ -162,7 +162,7 @@ ConnectionPoolWithFailover::tryGetEntry(
         TablesStatusRequest status_request;
         status_request.tables.emplace(*table_to_check);
 
-        TablesStatusResponse status_response = result.entry->getTablesStatus(status_request);
+        TablesStatusResponse status_response = result.entry->getTablesStatus(status_request); //jungle comment will send TablesStatusRequest
         auto table_status_it = status_response.table_states_by_id.find(*table_to_check);
         if (table_status_it == status_response.table_states_by_id.end())
         {

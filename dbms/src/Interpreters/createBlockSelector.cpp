@@ -9,6 +9,7 @@
 #endif
 
 #include <libdivide.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -22,6 +23,8 @@ IColumn::Selector createBlockSelector(
     const auto total_weight = slots.size();
     size_t num_rows = column.size();
     IColumn::Selector selector(num_rows);
+
+
 
     /** Modulo of division of negative numbers to positive number in C++11 is negative (so called truncated division).
       * This is not suitable for our task. So we will process signed numbers as unsigned.
@@ -41,8 +44,10 @@ IColumn::Selector createBlockSelector(
         /// libdivide support only UInt32 and UInt64.
         using TUInt32Or64 = std::conditional_t<sizeof(UnsignedT) <= 4, UInt32, UInt64>;
 
+
         libdivide::divider<TUInt32Or64> divider(total_weight);
 
+        LOG_DEBUG(&Logger::get("Selector"),"bbbbbb");
         const auto & data = typeid_cast<const ColumnVector<T> &>(column).getData();
 
         for (size_t i = 0; i < num_rows; ++i)

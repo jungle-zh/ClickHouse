@@ -22,6 +22,7 @@ Block AggregatingBlockInputStream::getHeader() const
 
 Block AggregatingBlockInputStream::readImpl()
 {
+    LOG_DEBUG(&Logger::get("AggregatingBlockInputStream"),"start readImpl");
     if (!executed)
     {
         executed = true;

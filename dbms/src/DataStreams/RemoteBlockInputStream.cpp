@@ -19,8 +19,9 @@ namespace ErrorCodes
 RemoteBlockInputStream::RemoteBlockInputStream(
         Connection & connection,
         const String & query_, const Block & header_, const Context & context_, const Settings * settings,
-        const ThrottlerPtr & throttler, const Tables & external_tables_, QueryProcessingStage::Enum stage_)
-    : header(header_), query(query_), context(context_), external_tables(external_tables_), stage(stage_)
+        const ThrottlerPtr & throttler, const Tables & external_tables_, QueryProcessingStage::Enum stage_,Protocol::Client::Enum query_type_)
+    : header(header_), query(query_), context(context_), external_tables(external_tables_), stage(stage_),
+    query_type(query_type_)
 {
     if (settings)
         context.setSettings(*settings);
@@ -50,8 +51,8 @@ RemoteBlockInputStream::RemoteBlockInputStream(
 RemoteBlockInputStream::RemoteBlockInputStream(
         const ConnectionPoolWithFailoverPtr & pool,
         const String & query_, const Block & header_, const Context & context_, const Settings * settings,
-        const ThrottlerPtr & throttler, const Tables & external_tables_, QueryProcessingStage::Enum stage_)
-    : header(header_), query(query_), context(context_), external_tables(external_tables_), stage(stage_)
+        const ThrottlerPtr & throttler, const Tables & external_tables_, QueryProcessingStage::Enum stage_,Protocol::Client::Enum query_type_)
+    : header(header_), query(query_), context(context_), external_tables(external_tables_), stage(stage_),query_type(query_type_)
 {
     if (settings)
         context.setSettings(*settings);
@@ -60,16 +61,20 @@ RemoteBlockInputStream::RemoteBlockInputStream(
     {
         const Settings & settings = context.getSettingsRef();
 
-        std::vector<IConnectionPool::Entry> connections;
+        std::vector<IConnectionPool::Entry> connections; //jungle comment ,only one replica connection will be chosen
         if (main_table)
         {
+            LOG_DEBUG(&Logger::get("RemoteBlockInputStream"),"pool getManyChecked");
             auto try_results = pool->getManyChecked(&settings, pool_mode, *main_table);
             connections.reserve(try_results.size());
             for (auto & try_result : try_results)
                 connections.emplace_back(std::move(try_result.entry));
         }
-        else
+        else{
+            LOG_DEBUG(&Logger::get("RemoteBlockInputStream"),"pool getMany");
             connections = pool->getMany(&settings, pool_mode);
+        }
+
 
         return std::make_unique<MultiplexedConnections>(
                 std::move(connections), settings, throttler, append_extra_info);
@@ -82,8 +87,15 @@ RemoteBlockInputStream::~RemoteBlockInputStream()
       * all connections, then read and skip the remaining packets to make sure
       * these connections did not remain hanging in the out-of-sync state.
       */
-    if (established || isQueryPending())
+      LOG_DEBUG(&Logger::get("RemoteBlockInputStream"),"~RemoteBlockInputStream");
+    if (established || isQueryPending()){
+
+        LOG_DEBUG(&Logger::get("RemoteBlockInputStream")," multiplexed_connections disconnect");
         multiplexed_connections->disconnect();
+    } else{
+        LOG_DEBUG(&Logger::get("RemoteBlockInputStream")," multiplexed_connections did not  disconnect");
+    }
+
 }
 
 void RemoteBlockInputStream::appendExtraInfo()
@@ -94,7 +106,7 @@ void RemoteBlockInputStream::appendExtraInfo()
 void RemoteBlockInputStream::readPrefix()
 {
     if (!sent_query)
-        sendQuery();
+        sendQuery(query_type);
 }
 
 void RemoteBlockInputStream::cancel(bool kill)
@@ -173,9 +185,11 @@ static Block adaptBlockStructure(const Block & block, const Block & header, cons
 
 Block RemoteBlockInputStream::readImpl()
 {
+
+    LOG_DEBUG(&Logger::get("RemoteBlockInputStream"),"start readImpl");
     if (!sent_query)
     {
-        sendQuery();
+        sendQuery(query_type);
 
         if (context.getSettingsRef().skip_unavailable_shards && (0 == multiplexed_connections->size()))
             return {};
@@ -237,6 +251,8 @@ Block RemoteBlockInputStream::readImpl()
                 throw Exception("Unknown packet from server", ErrorCodes::UNKNOWN_PACKET_FROM_SERVER);
         }
     }
+
+
 }
 
 void RemoteBlockInputStream::readSuffixImpl()
@@ -259,6 +275,9 @@ void RemoteBlockInputStream::readSuffixImpl()
     tryCancel("Cancelling query because enough data has been read");
 
     /// Get the remaining packets so that there is no out of sync in the connections to the replicas.
+
+
+    LOG_DEBUG(&Logger::get("RemoteBlockInputStream"),"multiplexed_connections drain");
     Connection::Packet packet = multiplexed_connections->drain();
     switch (packet.type)
     {
@@ -277,21 +296,39 @@ void RemoteBlockInputStream::readSuffixImpl()
     }
 }
 
-void RemoteBlockInputStream::sendQuery()
+void RemoteBlockInputStream::sendQuery(Protocol::Client::Enum query_type)
 {
-    multiplexed_connections = create_multiplexed_connections();
+
+    if(!multiplexed_connections) {
+        multiplexed_connections = create_multiplexed_connections();
+    }
+
+    LOG_DEBUG(&Logger::get("RemoteBlockInputStream"), "send query :" + query + " to dumpAddress:" + multiplexed_connections->dumpAddresses());
 
     if (context.getSettingsRef().skip_unavailable_shards && 0 == multiplexed_connections->size())
         return;
 
     established = true;
 
-    multiplexed_connections->sendQuery(query, "", stage, &context.getClientInfo(), true);
+    multiplexed_connections->sendQuery(query, "", stage, &context.getClientInfo(), true,query_type);
 
     established = false;
     sent_query = true;
 
-    sendExternalTables();
+    sendExternalTables(); // will send empty block  ,means end of data
+}
+
+bool RemoteBlockInputStream::askIfShuffleStorageBuild(const String  & storage_name){
+
+    LOG_DEBUG(&Logger::get("RemoteBlockInputStream"),"askIfShuffleStorageBuild");
+    if(!multiplexed_connections) {
+        LOG_DEBUG(&Logger::get("RemoteBlockInputStream"),"create_multiplexed_connections");
+        multiplexed_connections = create_multiplexed_connections();
+    }
+
+    return multiplexed_connections->askIfShuffleStorageBuid(storage_name);
+
+
 }
 
 void RemoteBlockInputStream::tryCancel(const char * reason)

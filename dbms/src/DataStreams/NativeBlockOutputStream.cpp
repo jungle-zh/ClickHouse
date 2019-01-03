@@ -9,6 +9,7 @@
 #include <DataStreams/NativeBlockOutputStream.h>
 
 #include <Common/typeid_cast.h>
+#include <common/logger_useful.h>
 
 namespace DB
 {
@@ -60,8 +61,11 @@ void NativeBlockOutputStream::writeData(const IDataType & type, const ColumnPtr 
 void NativeBlockOutputStream::write(const Block & block)
 {
     /// Additional information about the block.
-    if (client_revision > 0)
+    if (client_revision > 0){
+        LOG_DEBUG(&Logger::get("NativeBlockOutputStream"),"client_revision > 0");
         block.info.write(ostr);
+    }
+
 
     block.checkNumberOfRows();
 
@@ -71,6 +75,8 @@ void NativeBlockOutputStream::write(const Block & block)
 
     writeVarUInt(columns, ostr);
     writeVarUInt(rows, ostr);
+
+    LOG_DEBUG(&Logger::get("NativeBlockOutputStream"),"write block columns:" + std::to_string(columns) + " rows :" + std::to_string(rows));
 
     /** The index has the same structure as the data stream.
       * But instead of column values, it contains a mark that points to the location in the data file where this part of the column is located.

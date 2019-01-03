@@ -322,6 +322,8 @@ void TCPHandler::processInsertQuery(const Settings & global_settings)
 
 void TCPHandler::processOrdinaryQuery()
 {
+
+    LOG_DEBUG(&Logger::get("TCPHandler"),"start processOrdinaryQuery\n");
     /// Pull query execution result, if exists, and send it to network.
     if (state.io.in)
     {
@@ -381,8 +383,11 @@ void TCPHandler::processOrdinaryQuery()
             }
 
             sendData(block);
-            if (!block)
+            if (!block){
+                LOG_DEBUG(&Logger::get("TCPHandler"), "block all sends to client , job finished ");
                 break;
+            }
+
         }
 
         async_in.readSuffix();
@@ -751,6 +756,7 @@ bool TCPHandler::isQueryCancelled()
 
 void TCPHandler::sendData(const Block & block)
 {
+    LOG_DEBUG(&Logger::get("TCPHandler"),"send block ,row size :" + std::to_string(block.rows()));
     initBlockOutput(block);
 
     writeVarUInt(Protocol::Server::Data, *out);

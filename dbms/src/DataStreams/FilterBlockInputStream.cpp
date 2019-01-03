@@ -6,6 +6,7 @@
 #include <Common/typeid_cast.h>
 
 #include <DataStreams/FilterBlockInputStream.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -66,6 +67,7 @@ Block FilterBlockInputStream::getHeader() const
 
 Block FilterBlockInputStream::readImpl()
 {
+    LOG_DEBUG(&Logger::get("FilterBlockInputStream"),"start readImpl ,expression:  " + expression->dumpActions());
     Block res;
 
     if (constant_filter_description.always_false)
@@ -78,7 +80,7 @@ Block FilterBlockInputStream::readImpl()
         if (!res)
             return res;
 
-        expression->execute(res);
+        expression->execute(res);  //jungle commnet :after execute ExpressionAction function ,function column value is true or flase
 
         if (constant_filter_description.always_true)
             return res;

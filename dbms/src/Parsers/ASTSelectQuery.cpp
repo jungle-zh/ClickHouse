@@ -7,6 +7,8 @@
 #include <Parsers/ASTSubquery.h>
 #include <Parsers/ASTTablesInSelectQuery.h>
 #include <Common/typeid_cast.h>
+#include <common/logger_useful.h>
+#include <Parsers/queryToString.h>
 
 
 namespace DB
@@ -209,7 +211,7 @@ static const ASTArrayJoin * getFirstArrayJoin(const ASTSelectQuery & select)
     return array_join;
 }
 
-static const ASTTablesInSelectQueryElement * getFirstTableJoin(const ASTSelectQuery & select)
+static  ASTTablesInSelectQueryElement * getFirstTableJoin(const ASTSelectQuery & select)
 {
     if (!select.tables)
         return {};
@@ -218,10 +220,10 @@ static const ASTTablesInSelectQueryElement * getFirstTableJoin(const ASTSelectQu
     if (tables_in_select_query.children.empty())
         return {};
 
-    const ASTTablesInSelectQueryElement * joined_table = nullptr;
+     ASTTablesInSelectQueryElement * joined_table = nullptr;
     for (const auto & child : tables_in_select_query.children)
     {
-        const ASTTablesInSelectQueryElement & tables_element = static_cast<const ASTTablesInSelectQueryElement &>(*child);
+         ASTTablesInSelectQueryElement & tables_element = static_cast< ASTTablesInSelectQueryElement &>(*child);
         if (tables_element.table_join)
         {
             if (!joined_table)
@@ -256,8 +258,12 @@ ASTPtr ASTSelectQuery::table() const
 
     if (table_expression->database_and_table_name)
     {
-        if (table_expression->database_and_table_name->children.empty())
+        if (table_expression->database_and_table_name->children.empty()) {
+
+            LOG_DEBUG(&Logger::get("ASTSelectQuery") , "get tmp table :" + queryToString(table_expression->database_and_table_name));
             return table_expression->database_and_table_name;
+        }
+
 
         if (table_expression->database_and_table_name->children.size() != 2)
             throw Exception("Logical error: more than two components in table expression", ErrorCodes::LOGICAL_ERROR);
@@ -387,6 +393,62 @@ void ASTSelectQuery::replaceDatabaseAndTable(const String & database_name, const
         table_expression->database_and_table_name = std::make_shared<ASTIdentifier>(table_name, ASTIdentifier::Table);
     }
 }
+
+
+    void ASTSelectQuery::replaceDatabaseAndTableOrSubquery(const String & database_name, const String & table_name)
+    {
+        ASTTableExpression * table_expression = getFirstTableExpression(*this);
+
+        if (!table_expression)
+        {
+            auto tables_list = std::make_shared<ASTTablesInSelectQuery>();
+            auto element = std::make_shared<ASTTablesInSelectQueryElement>();
+            auto table_expr = std::make_shared<ASTTableExpression>();
+            element->table_expression = table_expr;
+            element->children.emplace_back(table_expr);
+            tables_list->children.emplace_back(element);
+            tables = tables_list;
+            children.emplace_back(tables_list);
+            table_expression = table_expr.get();
+        }
+
+        ASTPtr table = std::make_shared<ASTIdentifier>(table_name, ASTIdentifier::Table);
+
+        if (!database_name.empty())
+        {
+            ASTPtr database = std::make_shared<ASTIdentifier>(database_name, ASTIdentifier::Database);
+
+            table_expression->database_and_table_name = std::make_shared<ASTIdentifier>(database_name + "." + table_name, ASTIdentifier::Table);
+            table_expression->database_and_table_name->children = {database, table};
+        }
+        else
+        {
+            LOG_DEBUG(&Logger::get("ASTSelectQuery"),"database name is empty");
+            table_expression->database_and_table_name = std::make_shared<ASTIdentifier>(table_name, ASTIdentifier::Table);
+            table_expression->subquery = nullptr;
+        }
+
+    }
+
+
+    void ASTSelectQuery::replaceJoinRightTableOrQuery(const String right_table_name){
+
+
+       ASTTablesInSelectQueryElement * joined_table  =   getFirstTableJoin(*this);
+       if(joined_table){
+
+           ASTTableExpression *  tableExpression =   static_cast<ASTTableExpression *>( joined_table->table_expression.get());
+
+           if(tableExpression){
+               tableExpression->database_and_table_name = std::make_shared<ASTIdentifier>(right_table_name, ASTIdentifier::Table);
+               tableExpression->subquery = nullptr;
+           } else{  // ASTIdentifier
+
+               LOG_DEBUG(&Logger::get("ASTSelectQuery"),"not ASTTableExpression");
+              // joined_table->table_expression = std::make_shared<ASTIdentifier>(right_table_name, ASTIdentifier::Table);
+           }
+       }
+    }
 
 };
 

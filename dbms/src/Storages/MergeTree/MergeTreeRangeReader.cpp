@@ -569,6 +569,7 @@ void MergeTreeRangeReader::executePrewhereActionsAndFilterColumns(ReadResult & r
     if (!prewhere_actions)
         return;
 
+    LOG_DEBUG(&Logger::get("MergeTreeRangeReader") ,"prewhere_actions  :\n" + prewhere_actions->dumpActions());
     prewhere_actions->execute(result.block);
     auto & prewhere_column = result.block.getByName(*prewhere_column_name);
     size_t prev_rows = result.block.rows();

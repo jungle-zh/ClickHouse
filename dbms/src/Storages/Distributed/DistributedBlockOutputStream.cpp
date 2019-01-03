@@ -32,6 +32,9 @@
 #include <future>
 #include <condition_variable>
 #include <mutex>
+#include <Core/ColumnNumbers.h>
+#include <Functions/FunctionFactory.h>
+#include <DataTypes/DataTypesNumber.h>
 
 
 namespace CurrentMetrics
@@ -55,17 +58,99 @@ namespace ErrorCodes
 
 
 DistributedBlockOutputStream::DistributedBlockOutputStream(
-    StorageDistributed & storage, const ASTPtr & query_ast, const ClusterPtr & cluster_,
+    StorageDistributed & storage_, const ASTPtr & query_ast, const ClusterPtr & cluster_,
     const Settings & settings_, bool insert_sync_, UInt64 insert_timeout_)
-    : storage(storage), query_ast(query_ast), cluster(cluster_), settings(settings_), insert_sync(insert_sync_),
+    : storage(&storage_), query_ast(query_ast), cluster(cluster_), settings(settings_), insert_sync(insert_sync_),
       insert_timeout(insert_timeout_), log(&Logger::get("DistributedBlockOutputStream"))
 {
 }
 
 
+DistributedBlockOutputStream::DistributedBlockOutputStream(StorageDistributed * storageDistributed_, const ClusterPtr & cluster_,
+                                 const Settings & settings_, bool insert_sync_, UInt64 insert_timeout_
+            ,Protocol::Client::Enum query_type_  ,const String & shuffle_table_name_ )
+   :storage(storageDistributed_),cluster(cluster_),settings(settings_),
+    insert_sync(insert_sync_),query_type(query_type_),
+    shuffle_table_name(shuffle_table_name_),insert_timeout(insert_timeout_),log(&Logger::get("DistributedBlockOutputStream"))
+{
+    LOG_DEBUG(&Logger::get("DistributedBlockOutputStream"),"create DistributedBlockOutputStream ");
+}
+
+
+    void DistributedBlockOutputStream::shuffleWrite(Block & block, const Names & key_names,const  Context & context) {
+
+
+        //last column is hash value column
+        LOG_DEBUG(&Logger::get("DistributedBlockOutputStream"),"shuffleWrite");
+
+       // DistributedBlockOutputStream * out_stream   = dynamic_cast<DistributedBlockOutputStream *>(BlockOutputStreamPtr.get());
+
+        IColumn::Selector  selector;
+
+        if(block){
+            selector = createSelectorShuffleRemote(block,key_names,context); // will not write to local shard
+        }
+
+        writeShuffleRemote(block,selector);
+
+
+        /*
+        size_t num_row = block.rows();
+
+
+        std::vector<MutableColumns> mcolumns;
+        mcolumns.reserve(out_num);
+        for(size_t j=0 ;j< block.columns() -1 ; ++j) {
+
+            ColumnPtr src = block.getByPosition(j).column;
+            for(auto & column : mcolumns){
+
+                column.push_back(src->cloneEmpty());
+                column.back()->reserve(src->size());
+            }
+
+        }
+
+
+        for(size_t j=0 ;j< block.columns() -1 ; ++j){
+
+            for(size_t i=0;i< num_row;++i){
+
+                Field  val  ;
+                block.getByPosition(block.columns()).column->get(i,val);
+                UInt64  hashval = val.get<UInt64>();
+                size_t index = hashval % out_num;
+
+                mcolumns[index][j]->insertFrom(*block.getByPosition(j).column.get(),i);
+            }
+        }
+
+
+
+        for(size_t i =0 ;i< out_num  ; ++i){
+
+            Block tmp_block ;
+
+            for( size_t j =0 ;j <  block.columns() - 1 ; ++ j){
+
+
+                tmp_block.insert(ColumnWithTypeAndName(std::move(mcolumns[i][j]),block.getByPosition(j).type, block.getByPosition(j).name));
+            }
+
+            streams[i]->write(tmp_block);
+
+        }
+
+         */
+
+
+
+    }
+
+
 Block DistributedBlockOutputStream::getHeader() const
 {
-    return storage.getSampleBlock();
+    return storage->getSampleBlock();
 }
 
 
@@ -73,6 +158,77 @@ void DistributedBlockOutputStream::writePrefix()
 {
 }
 
+
+void DistributedBlockOutputStream::writeShuffleRemote(const Block & block,const IColumn::Selector & selector ){
+
+
+    const auto & shards_info = cluster->getShardsInfo();
+    size_t num_shards = shards_info.size() ; // except local
+
+    if (!pool)
+    {
+        /// Deferred initialization. Only for sync insertion.
+        initWritingJobs(block);
+
+        pool.emplace(remote_jobs_count);
+        //query_string = queryToString(query_ast);
+
+        if (!throttler && (settings.max_network_bandwidth || settings.max_network_bytes))
+        {
+            throttler = std::make_shared<Throttler>(settings.max_network_bandwidth, settings.max_network_bytes,
+                                                    "Network bandwidth limit for a query exceeded.");
+        }
+
+        watch.restart();
+    }
+
+    watch_current_block.restart();
+
+    if (num_shards > 1)
+    {
+        //auto current_selector = createSelector(block);
+
+        /// Prepare row numbers for each shard
+        for (size_t shard_index : ext::range(0, num_shards))
+            per_shard_jobs[shard_index].shard_current_block_permuation.resize(0);
+
+        for (size_t i = 0; i < block.rows(); ++i){
+            LOG_DEBUG(&Logger::get("DistributedBlockOutputStream")," row num: " + std::to_string(i) + " shard is :" + std::to_string(selector[i]) );
+            per_shard_jobs[selector[i]].shard_current_block_permuation.push_back(i); // selector[i] is  shard_index
+        }
+
+    }
+
+    /// Run jobs in parallel for each block and wait them
+    finished_jobs_count = 0;
+    for (size_t shard_index : ext::range(0, shards_info.size())){
+
+        if(!shards_info[shard_index].isLocal()){
+
+            LOG_DEBUG(&Logger::get("DistributedBlockOutputStream"),"start shard " + std::to_string(shard_index) + " job");
+            for (JobReplica & job : per_shard_jobs[shard_index].replicas_jobs)
+                pool->schedule(runWritingJob(job, block));
+        } else{
+
+            LOG_DEBUG(&Logger::get("DistributedBlockOutputStream"),"shard is local " + std::to_string(shard_index) );
+        }
+    }
+
+    try
+    {
+        waitForJobs();
+    }
+    catch (Exception & exception)
+    {
+        exception.addMessage(getCurrentStateDescription());
+        throw;
+    }
+
+    inserted_blocks += 1;
+    inserted_rows += block.rows();
+
+
+}
 
 void DistributedBlockOutputStream::write(const Block & block)
 {
@@ -85,7 +241,7 @@ void DistributedBlockOutputStream::write(const Block & block)
 
 void DistributedBlockOutputStream::writeAsync(const Block & block)
 {
-    if (storage.getShardingKeyExpr() && (cluster->getShardsInfo().size() > 1))
+    if (storage->getShardingKeyExpr() && (cluster->getShardsInfo().size() > 1))
         return writeSplitAsync(block);
 
     writeAsyncImpl(block);
@@ -182,13 +338,12 @@ void DistributedBlockOutputStream::waitForJobs()
 
     size_t jobs_count = remote_jobs_count + local_jobs_count;
     size_t num_finished_jobs = finished_jobs_count;
-
     if (num_finished_jobs < jobs_count)
         LOG_WARNING(log, "Expected " << jobs_count << " writing jobs, but finished only " << num_finished_jobs);
 }
 
 
-ThreadPool::Job DistributedBlockOutputStream::runWritingJob(DistributedBlockOutputStream::JobReplica & job, const Block & current_block)
+ThreadPool::Job DistributedBlockOutputStream::runWritingJob(DistributedBlockOutputStream::JobReplica & job, const Block & current_block )
 {
     auto memory_tracker = current_memory_tracker;
     return [this, memory_tracker, &job, &current_block]()
@@ -226,16 +381,23 @@ ThreadPool::Job DistributedBlockOutputStream::runWritingJob(DistributedBlockOutp
                 auto & dst_column = job.current_shard_block.getByPosition(j).column;
 
                 /// Zero permutation size has special meaning in IColumn::permute
-                if (num_shard_rows)
+                if (num_shard_rows){
                     dst_column = src_column->permute(shard_permutation, num_shard_rows);
-                else
+                }
+                else{
                     dst_column = src_column->cloneEmpty();
+                }
+
             }
         }
 
-        const Block & shard_block = (num_shards > 1) ? job.current_shard_block : current_block;
+        LOG_DEBUG(&Logger::get("DistributedBlockOutputStream")," current_block rows  " + std::to_string(current_block.rows()));
 
-        if (!job.is_local_job)
+        const Block & shard_block = (num_shards > 1 && current_block.rows() > 0) ? job.current_shard_block : current_block;
+
+
+
+        if (!job.is_local_job )
         {
             if (!job.stream)
             {
@@ -268,11 +430,12 @@ ThreadPool::Job DistributedBlockOutputStream::runWritingJob(DistributedBlockOutp
                 if (throttler)
                     job.connection_entry->setThrottler(throttler);
 
-                job.stream = std::make_shared<RemoteBlockOutputStream>(*job.connection_entry, query_string, &settings);
+                job.stream = std::make_shared<RemoteBlockOutputStream>(*job.connection_entry, query_string, &settings,query_type,shuffle_table_name);
                 job.stream->writePrefix();
             }
 
             CurrentMetrics::Increment metric_increment{CurrentMetrics::DistributedSend};
+            LOG_DEBUG(&Logger::get("DistributedBlockOutputStream"),"shard index " + std::to_string(job.shard_index) + ", shard block size:" + std::to_string(shard_block.rows()));
             job.stream->write(shard_block);
         }
         else
@@ -280,7 +443,7 @@ ThreadPool::Job DistributedBlockOutputStream::runWritingJob(DistributedBlockOutp
             if (!job.stream)
             {
                 /// Forward user settings
-                job.local_context = std::make_unique<Context>(storage.context);
+                job.local_context = std::make_unique<Context>(storage->context);
                 job.local_context->setSettings(settings);
 
                 InterpreterInsertQuery interp(query_ast, *job.local_context);
@@ -385,13 +548,131 @@ void DistributedBlockOutputStream::writeSuffix()
     }
 }
 
+    void DistributedBlockOutputStream::writeSuffixForce()
+    {
+        LOG_DEBUG(&Logger::get("DistributedBlockOutputStream"),"writeSuffixForce");
+        if (pool)
+        {
+            finished_jobs_count = 0;
+            for (auto & shard_jobs : per_shard_jobs)
+                for (JobReplica & job : shard_jobs.replicas_jobs)
+                {
+                    if (job.stream)
+                        pool->schedule([&job] () {  LOG_DEBUG(&Logger::get("DistributedBlockOutputStream"),"job.stream->writeSuffix() "); job.stream->writeSuffix(); });
+                }
+
+            try
+            {
+                pool->wait();
+            }
+            catch (Exception & exception)
+            {
+                exception.addMessage(getCurrentStateDescription());
+                throw;
+            }
+
+            double elapsed = watch.elapsedSeconds();
+            LOG_DEBUG(log, "It took " << std::fixed << std::setprecision(1) << elapsed << " sec. to insert " << inserted_blocks << " blocks"
+                                      << ", " << std::fixed << std::setprecision(1) << inserted_rows / elapsed << " rows per second"
+                                      << ". " << getCurrentStateDescription());
+        }
+    }
+
+
+    IColumn::Selector DistributedBlockOutputStream::createSelectorShuffleRemote(const  Block & source_block ,const Names & key_names , const Context & context)
+    {
+
+        ColumnsWithTypeAndName arguments;
+
+        for(size_t i =0 ;i< key_names.size();++i ){
+            ColumnWithTypeAndName  col ;
+            col.column = nullptr;
+            col.name = source_block.getByName(key_names[i]).name;
+            col.type = source_block.getByName(key_names[i]).type;
+
+            LOG_DEBUG(&Logger::get("DistributedBlockOutputStream"),"key_name :" + col.name);
+            arguments.push_back(col);
+        }
+
+        auto function_builder = FunctionFactory::instance().get("cityHash64", context);
+        auto func =  function_builder->build(arguments);
+        //func->getReturnType()->createColumn();
+
+
+        ColumnNumbers  numbers ;
+        for( size_t i =0 ;i< source_block.getColumnsWithTypeAndName().size(); ++i){
+
+            for( size_t j = 0 ;j < key_names.size(); ++j){
+
+                if( source_block.getColumnsWithTypeAndName()[i].name == key_names[j]){
+                    numbers.push_back(i);
+                }
+            }
+        }
+
+        auto nameAndType = source_block.getNamesAndTypesList();
+
+        LOG_DEBUG(&Logger::get("DistributedBlockOutputStream"),"source_block is "+ source_block.printColumn());
+
+        Block  source_block_with_shard_expr = source_block ;
+        size_t expr_index = source_block.columns();
+        source_block_with_shard_expr.insert({ nullptr, func->getReturnType(), "hash_value"});
+        func->execute(source_block_with_shard_expr,numbers,expr_index);
+
+        LOG_DEBUG(&Logger::get("DistributedBlockOutputStream"),"source_block_with_shard_expr is "+ source_block_with_shard_expr.printColumn()  + ", expr_index is " +  std::to_string(expr_index));
+
+        const auto & key_column = source_block_with_shard_expr.getByPosition(expr_index);
+
+        LOG_DEBUG(&Logger::get("DistributedBlockOutputStream"),"key_column name is "+ key_column.name + " type is " + key_column.type->getName());
+
+        const auto & slot_to_shard = cluster->getSlotToShard();
+
+        const auto  & shards_info =  cluster->getShardsInfo();
+
+        std::vector<UInt64>  slot_to_shard_except_local_shard ;
+
+        for(size_t slot = 0 ; slot < slot_to_shard.size() ; ++slot){
+
+            if(!shards_info[slot_to_shard[slot]].isLocal()){
+
+                LOG_DEBUG(&Logger::get("DistributedBlockOutputStream"),"shard num " + std::to_string(slot_to_shard[slot]) + " is local shard ");
+
+                slot_to_shard_except_local_shard.push_back(slot_to_shard[slot]);
+            }
+        }
+
+        if(slot_to_shard_except_local_shard.size() == 0){
+            throw Exception("no remote shard to send shuffle data");
+        }
+
+        LOG_DEBUG(&Logger::get("DistributedBlockOutputStream"),"111111");
+
+
+#define CREATE_FOR_TYPE(TYPE) \
+    if (typeid_cast<const DataType ## TYPE *>(key_column.type.get())) \
+        return createBlockSelector<TYPE>(*key_column.column, slot_to_shard_except_local_shard);
+
+        CREATE_FOR_TYPE(UInt8)
+        CREATE_FOR_TYPE(UInt16)
+        CREATE_FOR_TYPE(UInt32)
+        CREATE_FOR_TYPE(UInt64)
+        CREATE_FOR_TYPE(Int8)
+        CREATE_FOR_TYPE(Int16)
+        CREATE_FOR_TYPE(Int32)
+        CREATE_FOR_TYPE(Int64)
+
+#undef CREATE_FOR_TYPE
+
+        throw Exception{"Sharding key expression does not evaluate to an integer type", ErrorCodes::TYPE_MISMATCH};
+    }
+
 
 IColumn::Selector DistributedBlockOutputStream::createSelector(const Block & source_block)
 {
     Block current_block_with_sharding_key_expr = source_block;
-    storage.getShardingKeyExpr()->execute(current_block_with_sharding_key_expr);
+    storage->getShardingKeyExpr()->execute(current_block_with_sharding_key_expr);
 
-    const auto & key_column = current_block_with_sharding_key_expr.getByName(storage.getShardingKeyColumnName());
+    const auto & key_column = current_block_with_sharding_key_expr.getByName(storage->getShardingKeyColumnName());
     const auto & slot_to_shard = cluster->getSlotToShard();
 
 #define CREATE_FOR_TYPE(TYPE) \
@@ -415,7 +696,7 @@ IColumn::Selector DistributedBlockOutputStream::createSelector(const Block & sou
 
 Blocks DistributedBlockOutputStream::splitBlock(const Block & block)
 {
-    auto selector = createSelector(block);
+    auto selector = createSelector(block); // selector index is row num , value is shard_num
 
     /// Split block to num_shard smaller block, using 'selector'.
 
@@ -464,7 +745,7 @@ void DistributedBlockOutputStream::writeAsyncImpl(const Block & block, const siz
         else
         {
             if (shard_info.dir_name_for_internal_replication.empty())
-                throw Exception("Directory name for async inserts is empty, table " + storage.getTableName(), ErrorCodes::LOGICAL_ERROR);
+                throw Exception("Directory name for async inserts is empty, table " + storage->getTableName(), ErrorCodes::LOGICAL_ERROR);
 
             writeToShard(block, {shard_info.dir_name_for_internal_replication});
         }
@@ -488,7 +769,7 @@ void DistributedBlockOutputStream::writeAsyncImpl(const Block & block, const siz
 void DistributedBlockOutputStream::writeToLocal(const Block & block, const size_t repeats)
 {
     /// Async insert does not support settings forwarding yet whereas sync one supports
-    InterpreterInsertQuery interp(query_ast, storage.context);
+    InterpreterInsertQuery interp(query_ast, storage->context);
 
     auto block_io = interp.execute();
     block_io.out->writePrefix();
@@ -513,13 +794,13 @@ void DistributedBlockOutputStream::writeToShard(const Block & block, const std::
     /// write first file, hardlink the others
     for (const auto & dir_name : dir_names)
     {
-        const auto & path = storage.getPath() + dir_name + '/';
+        const auto & path = storage->getPath() + dir_name + '/';
 
         /// ensure shard subdirectory creation and notify storage
         if (Poco::File(path).createDirectory())
-            storage.requireDirectoryMonitor(dir_name);
+            storage->requireDirectoryMonitor(dir_name);
 
-        const auto & file_name = toString(storage.file_names_increment.get()) + ".bin";
+        const auto & file_name = toString(storage->file_names_increment.get()) + ".bin";
         const auto & block_file_path = path + file_name;
 
         /** on first iteration write block to a temporary directory for subsequent hardlinking to ensure

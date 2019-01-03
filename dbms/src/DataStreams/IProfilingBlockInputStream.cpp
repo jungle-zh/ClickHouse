@@ -1,6 +1,7 @@
 #include <Interpreters/Quota.h>
 #include <Interpreters/ProcessList.h>
 #include <DataStreams/IProfilingBlockInputStream.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -25,6 +26,7 @@ IProfilingBlockInputStream::IProfilingBlockInputStream()
 
 Block IProfilingBlockInputStream::read()
 {
+    LOG_DEBUG(&Logger::get("IProfilingBlockInputStream"),"read");
     if (total_rows_approx)
     {
         progressImpl(Progress(0, 0, total_rows_approx));
@@ -45,8 +47,11 @@ Block IProfilingBlockInputStream::read()
     if (!checkTimeLimit())
         limit_exceeded_need_break = true;
 
-    if (!limit_exceeded_need_break)
+    if (!limit_exceeded_need_break){
+        LOG_DEBUG(&Logger::get("IProfilingBlockInputStream"),"readImpl");
         res = readImpl();
+    }
+
 
     if (res)
     {

@@ -6,6 +6,7 @@
 
 #include <Storages/StorageMemory.h>
 #include <Storages/StorageFactory.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -65,6 +66,11 @@ public:
 
     void write(const Block & block) override
     {
+        if(!block){
+            LOG_DEBUG(&Logger::get("MemoryBlockOutputStream") ,"receive empty block ,all received");
+            return;
+        }
+        LOG_DEBUG(&Logger::get("MemoryBlockOutputStream") ,"write block ,name :" + block.dumpNames() + "  ,row size :" + std::to_string(block.rows()));
         storage.check(block, true);
         std::lock_guard<std::mutex> lock(storage.mutex);
         storage.data.push_back(block);
@@ -88,6 +94,12 @@ BlockInputStreams StorageMemory::read(
     size_t /*max_block_size*/,
     unsigned num_streams)
 {
+    std::string col_names_s  = "";
+    for(auto & n : column_names){
+        col_names_s += n;
+        col_names_s += ",";
+    }
+    LOG_DEBUG(&Logger::get("StorageMemory"),"read column_names:" + col_names_s);
     check(column_names);
     processed_stage = QueryProcessingStage::FetchColumns;
 
@@ -118,6 +130,7 @@ BlockInputStreams StorageMemory::read(
 BlockOutputStreamPtr StorageMemory::write(
     const ASTPtr & /*query*/, const Settings & /*settings*/)
 {
+    LOG_DEBUG(&Logger::get("StorageMemory"),"write " );
     return std::make_shared<MemoryBlockOutputStream>(*this);
 }
 

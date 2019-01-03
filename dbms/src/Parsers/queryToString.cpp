@@ -9,6 +9,8 @@ namespace DB
         return queryToString(*query);
     }
 
+
+
     String queryToString(const IAST & query)
     {
         std::ostringstream out;

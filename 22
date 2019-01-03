@@ -1,0 +1,1719 @@
+2018.11.13 13:40:44.691361 [ 20 ] <Debug> executeQuery: (from [::1]:45796, query_id: 03e85012-b538-4d29-afac-b250a39e0bc6) SELECT arrayMap(x -> number != -1 ? x : 0, arr) FROM (SELECT number, range(number) AS arr FROM system.numbers LIMIT 10) WHERE number % 2 = 1
+2018.11.13 13:40:44.691423 [ 20 ] <Debug> executeQuery: parsered ast:
+SelectWithUnionQuery, 0x998f840
+-ExpressionList, 0xb17a0d0
+--SelectQuery, 0x999f550
+---ExpressionList, 0x999bd30
+----Function_arrayMap, 0x9a22c40
+-----ExpressionList, 0x999bcd0
+------Function_lambda, 0x9a22aa0
+-------ExpressionList, 0x999bf10
+--------Function_tuple, 0x9a22b70
+---------ExpressionList, 0x999bbb0
+----------Identifier_x, 0x99f5ae0
+--------Function_if, 0x9a22830
+---------ExpressionList, 0x999bf70
+----------Function_notEquals, 0x9a22760
+-----------ExpressionList, 0x999bc10
+------------Identifier_number, 0x99f5980
+------------Literal_Int64_-1, 0x99f58d0
+----------Identifier_x, 0x99f5fb0
+----------Literal_UInt64_0, 0x99f6060
+------Identifier_arr, 0x99f61c0
+---TablesInSelectQuery, 0x999bd90
+----TablesInSelectQueryElement, 0x998f720
+-----TableExpression, 0x9a00f10
+------Subquery, 0x998f4e0
+-------SelectWithUnionQuery, 0x998f600
+--------ExpressionList, 0xb17a010
+---------SelectQuery, 0x999f690
+----------ExpressionList, 0x999bdf0
+-----------Identifier_number, 0x99f5a30
+-----------Function_range, 0x9a22d10
+------------ExpressionList, 0x999be50
+-------------Identifier_number, 0x99f5cf0
+----------TablesInSelectQuery, 0x999bc70
+-----------TablesInSelectQueryElement, 0x998f690
+------------TableExpression, 0x9a01090
+-------------Identifier_system.numbers, 0x99f5da0
+--------------Identifier_system, 0x99f5b90
+--------------Identifier_numbers, 0x99f6110
+----------Literal_UInt64_10, 0x99f5e50
+---Function_equals, 0x9a22eb0
+----ExpressionList, 0xb17a070
+-----Function_modulo, 0x9a22de0
+------ExpressionList, 0x999bb50
+-------Identifier_number, 0x99f5f00
+-------Literal_UInt64_2, 0x99f6270
+-----Literal_UInt64_1, 0x99f6320
+
+ , start to get interpreter
+2018.11.13 13:40:44.691437 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: InterpreterSelectWithUnionQuery construct
+2018.11.13 13:40:44.691459 [ 20 ] <Debug> InterpreterSelectQuery: InterpreterSelectQuery construct1
+2018.11.13 13:40:44.691494 [ 20 ] <Debug> InterpreterSelectQuery: InterpreterSelectQuery  Read from subquery , InterpreterSelectWithUnionQuery query tree:
+SelectWithUnionQuery, 0x998fb10
+-ExpressionList, 0xb17a370
+--SelectQuery, 0x999fa50
+---ExpressionList, 0xb17a3d0
+----Identifier_number, 0x99f67f0
+----Function_range, 0x9a231f0
+-----ExpressionList, 0xb17a430
+------Identifier_number, 0x99f68a0
+---TablesInSelectQuery, 0xb17a490
+----TablesInSelectQueryElement, 0x998fba0
+-----TableExpression, 0x9a00d90
+------Identifier_system.numbers, 0x99f6950
+-------Identifier_system, 0x99f5b90
+-------Identifier_numbers, 0x99f6110
+---Literal_UInt64_10, 0x99f6a00
+ InterpreterSelectQuery ,query tree :
+SelectQuery, 0x999f7d0
+-ExpressionList, 0x999beb0
+--Function_arrayMap, 0x9a22280
+---ExpressionList, 0xb17a130
+----Function_lambda, 0x9a22350
+-----ExpressionList, 0xb17a190
+------Function_tuple, 0x9a22f80
+-------ExpressionList, 0xb17a1f0
+--------Identifier_x, 0x99f63d0
+------Function_if, 0x9a23050
+-------ExpressionList, 0xb17a250
+--------Function_notEquals, 0x9a23120
+---------ExpressionList, 0xb17a2b0
+----------Identifier_number, 0x99f6480
+----------Literal_Int64_-1, 0x99f6530
+--------Identifier_x, 0x99f65e0
+--------Literal_UInt64_0, 0x99f6690
+----Identifier_arr, 0x99f6740
+-TablesInSelectQuery, 0xb17a310
+--TablesInSelectQueryElement, 0x998f9f0
+---TableExpression, 0x9a00fd0
+----Subquery, 0x998fa80
+-----SelectWithUnionQuery, 0x998fb10
+------ExpressionList, 0xb17a370
+-------SelectQuery, 0x999fa50
+--------ExpressionList, 0xb17a3d0
+---------Identifier_number, 0x99f67f0
+---------Function_range, 0x9a231f0
+----------ExpressionList, 0xb17a430
+-----------Identifier_number, 0x99f68a0
+--------TablesInSelectQuery, 0xb17a490
+---------TablesInSelectQueryElement, 0x998fba0
+----------TableExpression, 0x9a00d90
+-----------Identifier_system.numbers, 0x99f6950
+------------Identifier_system, 0x99f5b90
+------------Identifier_numbers, 0x99f6110
+--------Literal_UInt64_10, 0x99f6a00
+-Function_equals, 0x9a232c0
+--ExpressionList, 0xb17a4f0
+---Function_modulo, 0x9a23390
+----ExpressionList, 0xb17a550
+-----Identifier_number, 0x99f6ab0
+-----Literal_UInt64_2, 0x99f6b60
+---Literal_UInt64_1, 0x99f6c10
+
+2018.11.13 13:40:44.691508 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: getSampleBlock
+
+2018.11.13 13:40:44.691514 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: InterpreterSelectWithUnionQuery construct
+2018.11.13 13:40:44.691524 [ 20 ] <Debug> InterpreterSelectQuery: InterpreterSelectQuery construct1
+2018.11.13 13:40:44.691564 [ 20 ] <Debug> InterpreterSelectQuery: create ExpressionAnalyzer
+
+2018.11.13 13:40:44.691574 [ 20 ] <Debug> ExpressionAnalyzer: ExpressionAnalyzer construct
+2018.11.13 13:40:44.691603 [ 20 ] <Debug> ExpressionAnalyzer: executeScalarSubqueries
+2018.11.13 13:40:44.691639 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: create InterpreterSelectQuery ,query tree :
+SelectQuery, 0x999fa50
+-ExpressionList, 0xb17a3d0
+--Identifier_number, 0x99f67f0
+--Function_range, 0x9a231f0
+---ExpressionList, 0xb17a430
+----Identifier_number, 0x99f68a0
+-TablesInSelectQuery, 0xb17a490
+--TablesInSelectQueryElement, 0x998fba0
+---TableExpression, 0x9a00d90
+----Identifier_system.numbers, 0x99f6950
+-----Identifier_system, 0x99f5b90
+-----Identifier_numbers, 0x99f6110
+-Literal_UInt64_10, 0x99f6a00
+
+ ,InterpreterSelectWithUnionQuery query tree:
+SelectWithUnionQuery, 0x998fb10
+-ExpressionList, 0xb17a370
+--SelectQuery, 0x999fa50
+---ExpressionList, 0xb17a3d0
+----Identifier_number, 0x99f67f0
+----Function_range, 0x9a231f0
+-----ExpressionList, 0xb17a430
+------Identifier_number, 0x99f68a0
+---TablesInSelectQuery, 0xb17a490
+----TablesInSelectQueryElement, 0x998fba0
+-----TableExpression, 0x9a00d90
+------Identifier_system.numbers, 0x99f6950
+-------Identifier_system, 0x99f5b90
+-------Identifier_numbers, 0x99f6110
+---Literal_UInt64_10, 0x99f6a00
+
+2018.11.13 13:40:44.691647 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: num_selects is Attempt to read after eof, now getSampleBlock
+2018.11.13 13:40:44.691653 [ 20 ] <Debug> InterpreterSelectQuery: start of getSampleBlock
+
+2018.11.13 13:40:44.691659 [ 20 ] <Debug> InterpreterSelectQuery: executeImpl ,dry_run is :true
+2018.11.13 13:40:44.691669 [ 20 ] <Debug> InterpreterSelectQuery: query ast tree:
+SelectQuery, 0x999fb90
+-ExpressionList, 0xb17a5b0
+--Identifier_number, 0x99f6cc0
+--Function_range, 0x9a23460
+---ExpressionList, 0xb17a610
+----Identifier_number, 0x99f6d70
+-TablesInSelectQuery, 0xb17a670
+--TablesInSelectQueryElement, 0x998fc30
+---TableExpression, 0x9a00e50
+----Identifier_system.numbers, 0x99f6e20
+-----Identifier_system, 0x99f5b90
+-----Identifier_numbers, 0x99f6110
+-Literal_UInt64_10, 0x99f6ed0
+
+2018.11.13 13:40:44.691678 [ 20 ] <Debug> InterpreterSelectQuery: ###### before read from storage :
+
+2018.11.13 13:40:44.691685 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.691693 [ 20 ] <Debug> InterpreterSelectQuery: ###### after read from storage :
+
+2018.11.13 13:40:44.691699 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.691706 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Null
+
+2018.11.13 13:40:44.691713 [ 20 ] <Debug> InterpreterSelectQuery: start analyzeExpressions 
+2018.11.13 13:40:44.691719 [ 20 ] <Debug> InterpreterSelectQuery: first_stage:1 , second_stage:1
+2018.11.13 13:40:44.691726 [ 20 ] <Debug> ExpressionAnalyzer: appendSelect 
+2018.11.13 13:40:44.691741 [ 20 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:0,only_consts:0, ast tree:
+ExpressionList, 0xb17a5b0
+-Identifier_number, 0x99f6cc0
+-Function_range, 0x9a23460
+--ExpressionList, 0xb17a610
+---Identifier_number, 0x99f6d70
+
+2018.11.13 13:40:44.691749 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.691757 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.691765 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.691775 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION range(number) (no type) = (no function)(number)
+2018.11.13 13:40:44.691810 [ 20 ] <Debug> ExpressionAnalyzer: appendProjectResult 
+2018.11.13 13:40:44.691837 [ 20 ] <Debug> InterpreterSelectQuery: # chain:
+step 0
+required output:
+number
+range(number)
+
+input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+step 1
+required output:
+number
+arr
+
+input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+
+2018.11.13 13:40:44.691857 [ 20 ] <Debug> InterpreterSelectQuery: executeExpression,action:input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+2018.11.13 13:40:44.691868 [ 20 ] <Debug> InterpreterSelectQuery: executeProjection,action:input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+2018.11.13 13:40:44.691875 [ 20 ] <Debug> InterpreterSelectQuery: after execute expression 
+
+2018.11.13 13:40:44.691881 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.691917 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Limit
+ Expression : expressionActions 
+input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+  Expression : expressionActions 
+input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+   Null
+
+2018.11.13 13:40:44.691924 [ 20 ] <Debug> InterpreterSelectQuery: start of  getHeader
+
+2018.11.13 13:40:44.691931 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.691948 [ 20 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.691957 [ 20 ] <Debug> InterpreterSelectQuery: end of  getHeader
+
+2018.11.13 13:40:44.691962 [ 20 ] <Debug> InterpreterSelectQuery: end  of getSampleBlock
+
+2018.11.13 13:40:44.692010 [ 20 ] <Debug> InterpreterSelectQuery: create ExpressionAnalyzer
+
+2018.11.13 13:40:44.692020 [ 20 ] <Debug> ExpressionAnalyzer: ExpressionAnalyzer construct
+2018.11.13 13:40:44.692052 [ 20 ] <Debug> ExpressionAnalyzer: executeScalarSubqueries
+2018.11.13 13:40:44.692117 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: create InterpreterSelectQuery ,query tree :
+SelectQuery, 0x999f550
+-ExpressionList, 0x999bd30
+--Function_arrayMap, 0x9a22c40
+---ExpressionList, 0x999bcd0
+----Function_lambda, 0x9a22aa0
+-----ExpressionList, 0x999bf10
+------Function_tuple, 0x9a22b70
+-------ExpressionList, 0x999bbb0
+--------Identifier_x, 0x99f5ae0
+------Function_if, 0x9a22830
+-------ExpressionList, 0x999bf70
+--------Function_notEquals, 0x9a22760
+---------ExpressionList, 0x999bc10
+----------Identifier_number, 0x99f5980
+----------Literal_Int64_-1, 0x99f58d0
+--------Identifier_x, 0x99f5fb0
+--------Literal_UInt64_0, 0x99f6060
+----Identifier_arr, 0x99f61c0
+-TablesInSelectQuery, 0x999bd90
+--TablesInSelectQueryElement, 0x998f720
+---TableExpression, 0x9a00f10
+----Subquery, 0x998f4e0
+-----SelectWithUnionQuery, 0x998f600
+------ExpressionList, 0xb17a010
+-------SelectQuery, 0x999f690
+--------ExpressionList, 0x999bdf0
+---------Identifier_number, 0x99f5a30
+---------Function_range, 0x9a22d10
+----------ExpressionList, 0x999be50
+-----------Identifier_number, 0x99f5cf0
+--------TablesInSelectQuery, 0x999bc70
+---------TablesInSelectQueryElement, 0x998f690
+----------TableExpression, 0x9a01090
+-----------Identifier_system.numbers, 0x99f5da0
+------------Identifier_system, 0x99f5b90
+------------Identifier_numbers, 0x99f6110
+--------Literal_UInt64_10, 0x99f5e50
+-Function_equals, 0x9a22eb0
+--ExpressionList, 0xb17a070
+---Function_modulo, 0x9a22de0
+----ExpressionList, 0x999bb50
+-----Identifier_number, 0x99f5f00
+-----Literal_UInt64_2, 0x99f6270
+---Literal_UInt64_1, 0x99f6320
+
+ ,InterpreterSelectWithUnionQuery query tree:
+SelectWithUnionQuery, 0x998f840
+-ExpressionList, 0xb17a0d0
+--SelectQuery, 0x999f550
+---ExpressionList, 0x999bd30
+----Function_arrayMap, 0x9a22c40
+-----ExpressionList, 0x999bcd0
+------Function_lambda, 0x9a22aa0
+-------ExpressionList, 0x999bf10
+--------Function_tuple, 0x9a22b70
+---------ExpressionList, 0x999bbb0
+----------Identifier_x, 0x99f5ae0
+--------Function_if, 0x9a22830
+---------ExpressionList, 0x999bf70
+----------Function_notEquals, 0x9a22760
+-----------ExpressionList, 0x999bc10
+------------Identifier_number, 0x99f5980
+------------Literal_Int64_-1, 0x99f58d0
+----------Identifier_x, 0x99f5fb0
+----------Literal_UInt64_0, 0x99f6060
+------Identifier_arr, 0x99f61c0
+---TablesInSelectQuery, 0x999bd90
+----TablesInSelectQueryElement, 0x998f720
+-----TableExpression, 0x9a00f10
+------Subquery, 0x998f4e0
+-------SelectWithUnionQuery, 0x998f600
+--------ExpressionList, 0xb17a010
+---------SelectQuery, 0x999f690
+----------ExpressionList, 0x999bdf0
+-----------Identifier_number, 0x99f5a30
+-----------Function_range, 0x9a22d10
+------------ExpressionList, 0x999be50
+-------------Identifier_number, 0x99f5cf0
+----------TablesInSelectQuery, 0x999bc70
+-----------TablesInSelectQueryElement, 0x998f690
+------------TableExpression, 0x9a01090
+-------------Identifier_system.numbers, 0x99f5da0
+--------------Identifier_system, 0x99f5b90
+--------------Identifier_numbers, 0x99f6110
+----------Literal_UInt64_10, 0x99f5e50
+---Function_equals, 0x9a22eb0
+----ExpressionList, 0xb17a070
+-----Function_modulo, 0x9a22de0
+------ExpressionList, 0x999bb50
+-------Identifier_number, 0x99f5f00
+-------Literal_UInt64_2, 0x99f6270
+-----Literal_UInt64_1, 0x99f6320
+
+2018.11.13 13:40:44.692132 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: num_selects is Attempt to read after eof, now getSampleBlock
+2018.11.13 13:40:44.692138 [ 20 ] <Debug> InterpreterSelectQuery: start of getSampleBlock
+
+2018.11.13 13:40:44.692144 [ 20 ] <Debug> InterpreterSelectQuery: executeImpl ,dry_run is :true
+2018.11.13 13:40:44.692160 [ 20 ] <Debug> InterpreterSelectQuery: query ast tree:
+SelectQuery, 0x999f7d0
+-ExpressionList, 0x999beb0
+--Function_arrayMap, 0x9a22280
+---ExpressionList, 0xb17a130
+----Function_lambda, 0x9a22350
+-----ExpressionList, 0xb17a190
+------Function_tuple, 0x9a22f80
+-------ExpressionList, 0xb17a1f0
+--------Identifier_x, 0x99f63d0
+------Function_if, 0x9a23050
+-------ExpressionList, 0xb17a250
+--------Function_notEquals, 0x9a23120
+---------ExpressionList, 0xb17a2b0
+----------Identifier_number, 0x99f6480
+----------Literal_Int64_-1, 0x99f6530
+--------Identifier_x, 0x99f65e0
+--------Literal_UInt64_0, 0x99f6690
+----Identifier_arr, 0x99f6740
+-TablesInSelectQuery, 0xb17a310
+--TablesInSelectQueryElement, 0x998f9f0
+---TableExpression, 0x9a00fd0
+----Subquery, 0x998fa80
+-----SelectWithUnionQuery, 0x998fb10
+------ExpressionList, 0xb17a370
+-------SelectQuery, 0x999fa50
+--------ExpressionList, 0xb17a3d0
+---------Identifier_number, 0x99f67f0
+---------Function_range, 0x9a231f0
+----------ExpressionList, 0xb17a430
+-----------Identifier_number, 0x99f68a0
+--------TablesInSelectQuery, 0xb17a490
+---------TablesInSelectQueryElement, 0x998fba0
+----------TableExpression, 0x9a00d90
+-----------Identifier_system.numbers, 0x99f6950
+------------Identifier_system, 0x99f5b90
+------------Identifier_numbers, 0x99f6110
+--------Literal_UInt64_10, 0x99f6a00
+-Function_equals, 0x9a232c0
+--ExpressionList, 0xb17a4f0
+---Function_modulo, 0x9a23390
+----ExpressionList, 0xb17a550
+-----Identifier_number, 0x99f6ab0
+-----Literal_UInt64_2, 0x99f6b60
+---Literal_UInt64_1, 0x99f6c10
+
+2018.11.13 13:40:44.692170 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: InterpreterSelectWithUnionQuery construct
+2018.11.13 13:40:44.692181 [ 20 ] <Debug> InterpreterSelectQuery: InterpreterSelectQuery construct1
+2018.11.13 13:40:44.692204 [ 20 ] <Debug> InterpreterSelectQuery: create ExpressionAnalyzer
+
+2018.11.13 13:40:44.692212 [ 20 ] <Debug> ExpressionAnalyzer: ExpressionAnalyzer construct
+2018.11.13 13:40:44.692231 [ 20 ] <Debug> ExpressionAnalyzer: executeScalarSubqueries
+2018.11.13 13:40:44.692256 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: create InterpreterSelectQuery ,query tree :
+SelectQuery, 0x999fa50
+-ExpressionList, 0xb17a3d0
+--Identifier_number, 0x99f67f0
+--Function_range, 0x9a231f0
+---ExpressionList, 0xb17a430
+----Identifier_number, 0x99f68a0
+-TablesInSelectQuery, 0xb17a490
+--TablesInSelectQueryElement, 0x998fba0
+---TableExpression, 0x9a00d90
+----Identifier_system.numbers, 0x99f6950
+-----Identifier_system, 0x99f5b90
+-----Identifier_numbers, 0x99f6110
+-Literal_UInt64_10, 0x99f6a00
+
+ ,InterpreterSelectWithUnionQuery query tree:
+SelectWithUnionQuery, 0x998fb10
+-ExpressionList, 0xb17a370
+--SelectQuery, 0x999fa50
+---ExpressionList, 0xb17a3d0
+----Identifier_number, 0x99f67f0
+----Function_range, 0x9a231f0
+-----ExpressionList, 0xb17a430
+------Identifier_number, 0x99f68a0
+---TablesInSelectQuery, 0xb17a490
+----TablesInSelectQueryElement, 0x998fba0
+-----TableExpression, 0x9a00d90
+------Identifier_system.numbers, 0x99f6950
+-------Identifier_system, 0x99f5b90
+-------Identifier_numbers, 0x99f6110
+---Literal_UInt64_10, 0x99f6a00
+
+2018.11.13 13:40:44.692268 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: num_selects is Attempt to read after eof, now getSampleBlock
+2018.11.13 13:40:44.692273 [ 20 ] <Debug> InterpreterSelectQuery: start of getSampleBlock
+
+2018.11.13 13:40:44.692279 [ 20 ] <Debug> InterpreterSelectQuery: executeImpl ,dry_run is :true
+2018.11.13 13:40:44.692288 [ 20 ] <Debug> InterpreterSelectQuery: query ast tree:
+SelectQuery, 0x999fb90
+-ExpressionList, 0xb17a9d0
+--Identifier_number, 0x99f7450
+--Function_range, 0x9a23460
+---ExpressionList, 0xb17a970
+----Identifier_number, 0x99f73a0
+-TablesInSelectQuery, 0xb17a910
+--TablesInSelectQueryElement, 0x998fc30
+---TableExpression, 0x9a00e50
+----Identifier_system.numbers, 0x99f72f0
+-----Identifier_system, 0x99f5b90
+-----Identifier_numbers, 0x99f6110
+-Literal_UInt64_10, 0x99f7240
+
+2018.11.13 13:40:44.692295 [ 20 ] <Debug> InterpreterSelectQuery: ###### before read from storage :
+
+2018.11.13 13:40:44.692302 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.692309 [ 20 ] <Debug> InterpreterSelectQuery: ###### after read from storage :
+
+2018.11.13 13:40:44.692315 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.692320 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Null
+
+2018.11.13 13:40:44.692327 [ 20 ] <Debug> InterpreterSelectQuery: start analyzeExpressions 
+2018.11.13 13:40:44.692332 [ 20 ] <Debug> InterpreterSelectQuery: first_stage:1 , second_stage:1
+2018.11.13 13:40:44.692338 [ 20 ] <Debug> ExpressionAnalyzer: appendSelect 
+2018.11.13 13:40:44.692349 [ 20 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:0,only_consts:0, ast tree:
+ExpressionList, 0xb17a9d0
+-Identifier_number, 0x99f7450
+-Function_range, 0x9a23460
+--ExpressionList, 0xb17a970
+---Identifier_number, 0x99f73a0
+
+2018.11.13 13:40:44.692357 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.692363 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.692370 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.692378 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION range(number) (no type) = (no function)(number)
+2018.11.13 13:40:44.692392 [ 20 ] <Debug> ExpressionAnalyzer: appendProjectResult 
+2018.11.13 13:40:44.692410 [ 20 ] <Debug> InterpreterSelectQuery: # chain:
+step 0
+required output:
+number
+range(number)
+
+input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+step 1
+required output:
+number
+arr
+
+input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+
+2018.11.13 13:40:44.692426 [ 20 ] <Debug> InterpreterSelectQuery: executeExpression,action:input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+2018.11.13 13:40:44.692436 [ 20 ] <Debug> InterpreterSelectQuery: executeProjection,action:input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+2018.11.13 13:40:44.692448 [ 20 ] <Debug> InterpreterSelectQuery: after execute expression 
+
+2018.11.13 13:40:44.692454 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.692485 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Limit
+ Expression : expressionActions 
+input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+  Expression : expressionActions 
+input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+   Null
+
+2018.11.13 13:40:44.692492 [ 20 ] <Debug> InterpreterSelectQuery: start of  getHeader
+
+2018.11.13 13:40:44.692498 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.692507 [ 20 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.692513 [ 20 ] <Debug> InterpreterSelectQuery: end of  getHeader
+
+2018.11.13 13:40:44.692519 [ 20 ] <Debug> InterpreterSelectQuery: end  of getSampleBlock
+
+2018.11.13 13:40:44.692542 [ 20 ] <Debug> InterpreterSelectQuery: InterpreterSelectQuery create InterpreterSelectWithUnionQuery ,ast:
+ SelectQuery, 0x999f7d0
+-ExpressionList, 0x999beb0
+--Function_arrayMap, 0x9a22280
+---ExpressionList, 0xb17a130
+----Function_lambda, 0x9a22350
+-----ExpressionList, 0xb17a190
+------Function_tuple, 0x9a22f80
+-------ExpressionList, 0xb17a1f0
+--------Identifier_x, 0x99f63d0
+------Function_if, 0x9a23050
+-------ExpressionList, 0xb17a250
+--------Function_notEquals, 0x9a23120
+---------ExpressionList, 0xb17a2b0
+----------Identifier_number, 0x99f6480
+----------Literal_Int64_-1, 0x99f6530
+--------Identifier_x, 0x99f65e0
+--------Literal_UInt64_0, 0x99f6690
+----Identifier_arr, 0x99f6740
+-TablesInSelectQuery, 0xb17a310
+--TablesInSelectQueryElement, 0x998f9f0
+---TableExpression, 0x9a00fd0
+----Subquery, 0x998fa80
+-----SelectWithUnionQuery, 0x998fb10
+------ExpressionList, 0xb17a370
+-------SelectQuery, 0x999fa50
+--------ExpressionList, 0xb17a3d0
+---------Identifier_number, 0x99f67f0
+---------Function_range, 0x9a231f0
+----------ExpressionList, 0xb17a430
+-----------Identifier_number, 0x99f68a0
+--------TablesInSelectQuery, 0xb17a490
+---------TablesInSelectQueryElement, 0x998fba0
+----------TableExpression, 0x9a00d90
+-----------Identifier_system.numbers, 0x99f6950
+------------Identifier_system, 0x99f5b90
+------------Identifier_numbers, 0x99f6110
+--------Literal_UInt64_10, 0x99f6a00
+-Function_equals, 0x9a232c0
+--ExpressionList, 0xb17a4f0
+---Function_modulo, 0x9a23390
+----ExpressionList, 0xb17a550
+-----Identifier_number, 0x99f6ab0
+-----Literal_UInt64_2, 0x99f6b60
+---Literal_UInt64_1, 0x99f6c10
+
+ InterpreterSelectWithUnionQuery ast:
+ SelectWithUnionQuery, 0x998fb10
+-ExpressionList, 0xb17a370
+--SelectQuery, 0x999fa50
+---ExpressionList, 0xb17a3d0
+----Identifier_number, 0x99f67f0
+----Function_range, 0x9a231f0
+-----ExpressionList, 0xb17a430
+------Identifier_number, 0x99f68a0
+---TablesInSelectQuery, 0xb17a490
+----TablesInSelectQueryElement, 0x998fba0
+-----TableExpression, 0x9a00d90
+------Identifier_system.numbers, 0x99f6950
+-------Identifier_system, 0x99f5b90
+-------Identifier_numbers, 0x99f6110
+---Literal_UInt64_10, 0x99f6a00
+
+2018.11.13 13:40:44.692550 [ 20 ] <Debug> InterpreterSelectQuery: has Subquery , executeWithMultipleStreams
+2018.11.13 13:40:44.692561 [ 20 ] <Debug> InterpreterSelectQuery: start analyzeExpressions 
+2018.11.13 13:40:44.692567 [ 20 ] <Debug> InterpreterSelectQuery: first_stage:1 , second_stage:1
+2018.11.13 13:40:44.692574 [ 20 ] <Debug> ExpressionAnalyzer: appendWhere 
+2018.11.13 13:40:44.692586 [ 20 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:0,only_consts:0, ast tree:
+Function_equals, 0x9a232c0
+-ExpressionList, 0xb17a4f0
+--Function_modulo, 0x9a23390
+---ExpressionList, 0xb17a550
+----Identifier_number, 0x99f6ab0
+----Literal_UInt64_2, 0x99f6b60
+--Literal_UInt64_1, 0x99f6c10
+
+2018.11.13 13:40:44.692595 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.692608 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.692614 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.692621 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:44.692632 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 2 UInt8 Const(UInt8)
+2018.11.13 13:40:44.692643 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION modulo(number, 2) (no type) = (no function)(number, 2)
+2018.11.13 13:40:44.692656 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:44.692663 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 1 UInt8 Const(UInt8)
+2018.11.13 13:40:44.692673 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION equals(modulo(number, 2), 1) (no type) = (no function)(modulo(number, 2), 1)
+2018.11.13 13:40:44.692690 [ 20 ] <Debug> ExpressionAnalyzer: appendSelect 
+2018.11.13 13:40:44.692704 [ 20 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:0,only_consts:0, ast tree:
+ExpressionList, 0x999beb0
+-Function_arrayMap, 0x9a22280
+--ExpressionList, 0xb17a130
+---Function_lambda, 0x9a22350
+----ExpressionList, 0xb17a190
+-----Function_tuple, 0x9a22f80
+------ExpressionList, 0xb17a1f0
+-------Identifier_x, 0x99f63d0
+-----Function_if, 0x9a23050
+------ExpressionList, 0xb17a250
+-------Function_notEquals, 0x9a23120
+--------ExpressionList, 0xb17a2b0
+---------Identifier_number, 0x99f6480
+---------Literal_Int64_-1, 0x99f6530
+-------Identifier_x, 0x99f65e0
+-------Literal_UInt64_0, 0x99f6690
+---Identifier_arr, 0x99f6740
+
+2018.11.13 13:40:44.692715 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.692730 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.692753 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.692762 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.692769 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.692775 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:44.692789 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD -1 Int8 Const(Int8)
+2018.11.13 13:40:44.692800 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION notEquals(number, -1) (no type) = (no function)(number, -1)
+2018.11.13 13:40:44.692824 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.692831 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:44.692838 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 0 UInt8 Const(UInt8)
+2018.11.13 13:40:44.692849 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION if(notEquals(number, -1), x, 0) (no type) = (no function)(notEquals(number, -1), x, 0)
+2018.11.13 13:40:44.692886 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :notEquals(number, -1)
+2018.11.13 13:40:44.692895 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :x
+2018.11.13 13:40:44.692901 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :0
+2018.11.13 13:40:44.692916 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION __lambda1 (no type) = (no function)(notEquals(number, -1), 0)
+2018.11.13 13:40:44.692929 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) (no type) = (no function)(__lambda1, arr)
+2018.11.13 13:40:44.692960 [ 20 ] <Debug> ExpressionAnalyzer: appendProjectResult 
+2018.11.13 13:40:44.693009 [ 20 ] <Debug> InterpreterSelectQuery: # chain:
+step 0
+required output:
+equals(modulo(number, 2), 1)
+
+input:
+number UInt64
+arr Array(UInt64)
+
+actions:
+ADD 2 UInt8 Const(UInt8)
+FUNCTION modulo(number, 2) UInt8 = modulo(number, 2)
+ADD 1 UInt8 Const(UInt8)
+FUNCTION equals(modulo(number, 2), 1) UInt8 = equals(modulo(number, 2), 1)
+
+output:
+number UInt64
+arr Array(UInt64)
+2 UInt8
+modulo(number, 2) UInt8
+1 UInt8
+equals(modulo(number, 2), 1) UInt8
+
+step 1
+required output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr)
+
+input:
+number UInt64
+arr Array(UInt64)
+2 UInt8
+modulo(number, 2) UInt8
+1 UInt8
+equals(modulo(number, 2), 1) UInt8
+
+actions:
+ADD -1 Int8 Const(Int8)
+FUNCTION notEquals(number, -1) UInt8 = notEquals(number, -1)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(UInt64 -> UInt64) = Capture[UInt8, UInt8](UInt64) -> UInt64(notEquals(number, -1), 0)
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64) = arrayMap(__lambda1, arr)
+
+output:
+number UInt64
+arr Array(UInt64)
+2 UInt8
+modulo(number, 2) UInt8
+1 UInt8
+equals(modulo(number, 2), 1) UInt8
+-1 Int8
+notEquals(number, -1) UInt8
+0 UInt8
+__lambda1 Function(UInt64 -> UInt64)
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+step 2
+required output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr)
+
+input:
+number UInt64
+arr Array(UInt64)
+2 UInt8
+modulo(number, 2) UInt8
+1 UInt8
+equals(modulo(number, 2), 1) UInt8
+-1 Int8
+notEquals(number, -1) UInt8
+0 UInt8
+__lambda1 Function(UInt64 -> UInt64)
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+
+2018.11.13 13:40:44.693041 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :number
+2018.11.13 13:40:44.693048 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :-1
+2018.11.13 13:40:44.693057 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :notEquals(number, -1)
+2018.11.13 13:40:44.693063 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :0
+2018.11.13 13:40:44.693069 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :__lambda1
+2018.11.13 13:40:44.693075 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :arr
+2018.11.13 13:40:44.693091 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :2
+2018.11.13 13:40:44.693098 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :modulo(number, 2)
+2018.11.13 13:40:44.693104 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :1
+2018.11.13 13:40:44.693122 [ 20 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.693131 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:44.693137 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.693155 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.693161 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:44.693167 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.693178 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.693184 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.693207 [ 20 ] <Debug> InterpreterSelectQuery: executeExpression,action:input:
+number UInt64
+arr Array(UInt64)
+
+actions:
+PROJECT number, arr
+ADD -1 Int8 Const(Int8)
+FUNCTION notEquals(number, -1) UInt8 = notEquals(number, -1)
+REMOVE number
+REMOVE -1
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(UInt64 -> UInt64) = Capture[UInt8, UInt8](UInt64) -> UInt64(notEquals(number, -1), 0)
+REMOVE notEquals(number, -1)
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+2018.11.13 13:40:44.693217 [ 20 ] <Debug> InterpreterSelectQuery: executeProjection,action:input:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+2018.11.13 13:40:44.693223 [ 20 ] <Debug> InterpreterSelectQuery: after execute expression 
+
+2018.11.13 13:40:44.693233 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.693287 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Expression : expressionActions 
+input:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+ Expression : expressionActions 
+input:
+number UInt64
+arr Array(UInt64)
+
+actions:
+PROJECT number, arr
+ADD -1 Int8 Const(Int8)
+FUNCTION notEquals(number, -1) UInt8 = notEquals(number, -1)
+REMOVE number
+REMOVE -1
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(UInt64 -> UInt64) = Capture[UInt8, UInt8](UInt64) -> UInt64(notEquals(number, -1), 0)
+REMOVE notEquals(number, -1)
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+  Filter
+   Null
+
+2018.11.13 13:40:44.693294 [ 20 ] <Debug> InterpreterSelectQuery: start of  getHeader
+
+2018.11.13 13:40:44.693300 [ 20 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.693307 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:44.693313 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.693328 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.693334 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.693340 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:44.693346 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.693356 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.693362 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.693367 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.693380 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.693399 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.693406 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.693411 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.693418 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.693424 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.693430 [ 20 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.693436 [ 20 ] <Debug> InterpreterSelectQuery: end of  getHeader
+
+2018.11.13 13:40:44.693441 [ 20 ] <Debug> InterpreterSelectQuery: end  of getSampleBlock
+
+2018.11.13 13:40:44.693462 [ 20 ] <Debug> executeQuery: after get interpreter ,start to execute
+2018.11.13 13:40:44.693468 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: execute 
+
+2018.11.13 13:40:44.693474 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: executeWithMultipleStreams
+2018.11.13 13:40:44.693480 [ 20 ] <Debug> InterpreterSelectQuery: executeImpl ,dry_run is :false
+2018.11.13 13:40:44.693499 [ 20 ] <Debug> InterpreterSelectQuery: query ast tree:
+SelectQuery, 0x999f7d0
+-ExpressionList, 0x999beb0
+--Function_arrayMap, 0x9a22280
+---ExpressionList, 0xb17a130
+----Function_lambda, 0x9a22350
+-----ExpressionList, 0xb17a190
+------Function_tuple, 0x9a22f80
+-------ExpressionList, 0xb17a1f0
+--------Identifier_x, 0x99f63d0
+------Function_if, 0x9a23050
+-------ExpressionList, 0xb17a250
+--------Function_notEquals, 0x9a23120
+---------ExpressionList, 0xb17a2b0
+----------Identifier_number, 0x99f6480
+----------Literal_Int64_-1, 0x99f6530
+--------Identifier_x, 0x99f65e0
+--------Literal_UInt64_0, 0x99f6690
+----Identifier_arr, 0x99f6740
+-TablesInSelectQuery, 0xb17a310
+--TablesInSelectQueryElement, 0x998f9f0
+---TableExpression, 0x9a00fd0
+----Subquery, 0x998fa80
+-----SelectWithUnionQuery, 0x998fb10
+------ExpressionList, 0xb17a370
+-------SelectQuery, 0x999fa50
+--------ExpressionList, 0xb17a3d0
+---------Identifier_number, 0x99f67f0
+---------Function_range, 0x9a231f0
+----------ExpressionList, 0xb17a430
+-----------Identifier_number, 0x99f68a0
+--------TablesInSelectQuery, 0xb17a490
+---------TablesInSelectQueryElement, 0x998fba0
+----------TableExpression, 0x9a00d90
+-----------Identifier_system.numbers, 0x99f6950
+------------Identifier_system, 0x99f5b90
+------------Identifier_numbers, 0x99f6110
+--------Literal_UInt64_10, 0x99f6a00
+-Function_equals, 0x9a232c0
+--ExpressionList, 0xb17a4f0
+---Function_modulo, 0x9a23390
+----ExpressionList, 0xb17a550
+-----Identifier_number, 0x99f6ab0
+-----Literal_UInt64_2, 0x99f6b60
+---Literal_UInt64_1, 0x99f6c10
+
+2018.11.13 13:40:44.693514 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: InterpreterSelectWithUnionQuery construct
+2018.11.13 13:40:44.693524 [ 20 ] <Debug> InterpreterSelectQuery: InterpreterSelectQuery construct1
+2018.11.13 13:40:44.693547 [ 20 ] <Debug> InterpreterSelectQuery: create ExpressionAnalyzer
+
+2018.11.13 13:40:44.693555 [ 20 ] <Debug> ExpressionAnalyzer: ExpressionAnalyzer construct
+2018.11.13 13:40:44.693577 [ 20 ] <Debug> ExpressionAnalyzer: executeScalarSubqueries
+2018.11.13 13:40:44.693603 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: create InterpreterSelectQuery ,query tree :
+SelectQuery, 0x999fa50
+-ExpressionList, 0xb17a3d0
+--Identifier_number, 0x99f67f0
+--Function_range, 0x9a231f0
+---ExpressionList, 0xb17a430
+----Identifier_number, 0x99f68a0
+-TablesInSelectQuery, 0xb17a490
+--TablesInSelectQueryElement, 0x998fba0
+---TableExpression, 0x9a00d90
+----Identifier_system.numbers, 0x99f6950
+-----Identifier_system, 0x99f5b90
+-----Identifier_numbers, 0x99f6110
+-Literal_UInt64_10, 0x99f6a00
+
+ ,InterpreterSelectWithUnionQuery query tree:
+SelectWithUnionQuery, 0x998fb10
+-ExpressionList, 0xb17a370
+--SelectQuery, 0x999fa50
+---ExpressionList, 0xb17a3d0
+----Identifier_number, 0x99f67f0
+----Function_range, 0x9a231f0
+-----ExpressionList, 0xb17a430
+------Identifier_number, 0x99f68a0
+---TablesInSelectQuery, 0xb17a490
+----TablesInSelectQueryElement, 0x998fba0
+-----TableExpression, 0x9a00d90
+------Identifier_system.numbers, 0x99f6950
+-------Identifier_system, 0x99f5b90
+-------Identifier_numbers, 0x99f6110
+---Literal_UInt64_10, 0x99f6a00
+
+2018.11.13 13:40:44.693611 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: num_selects is Attempt to read after eof, now getSampleBlock
+2018.11.13 13:40:44.693616 [ 20 ] <Debug> InterpreterSelectQuery: start of getSampleBlock
+
+2018.11.13 13:40:44.693622 [ 20 ] <Debug> InterpreterSelectQuery: executeImpl ,dry_run is :true
+2018.11.13 13:40:44.693631 [ 20 ] <Debug> InterpreterSelectQuery: query ast tree:
+SelectQuery, 0x999fb90
+-ExpressionList, 0xb17a910
+--Identifier_number, 0x99f7240
+--Function_range, 0x9a23e20
+---ExpressionList, 0xb17a9d0
+----Identifier_number, 0x99f72f0
+-TablesInSelectQuery, 0xb17a8b0
+--TablesInSelectQueryElement, 0x998fc30
+---TableExpression, 0x9a00e50
+----Identifier_system.numbers, 0x99f73a0
+-----Identifier_system, 0x99f5b90
+-----Identifier_numbers, 0x99f6110
+-Literal_UInt64_10, 0x99f7450
+
+2018.11.13 13:40:44.693638 [ 20 ] <Debug> InterpreterSelectQuery: ###### before read from storage :
+
+2018.11.13 13:40:44.693644 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.693651 [ 20 ] <Debug> InterpreterSelectQuery: ###### after read from storage :
+
+2018.11.13 13:40:44.693656 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.693663 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Null
+
+2018.11.13 13:40:44.693669 [ 20 ] <Debug> InterpreterSelectQuery: start analyzeExpressions 
+2018.11.13 13:40:44.693675 [ 20 ] <Debug> InterpreterSelectQuery: first_stage:1 , second_stage:1
+2018.11.13 13:40:44.693681 [ 20 ] <Debug> ExpressionAnalyzer: appendSelect 
+2018.11.13 13:40:44.693692 [ 20 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:0,only_consts:0, ast tree:
+ExpressionList, 0xb17a910
+-Identifier_number, 0x99f7240
+-Function_range, 0x9a23e20
+--ExpressionList, 0xb17a9d0
+---Identifier_number, 0x99f72f0
+
+2018.11.13 13:40:44.693704 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.693711 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.693718 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.693726 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION range(number) (no type) = (no function)(number)
+2018.11.13 13:40:44.693740 [ 20 ] <Debug> ExpressionAnalyzer: appendProjectResult 
+2018.11.13 13:40:44.693758 [ 20 ] <Debug> InterpreterSelectQuery: # chain:
+step 0
+required output:
+number
+range(number)
+
+input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+step 1
+required output:
+number
+arr
+
+input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+
+2018.11.13 13:40:44.693774 [ 20 ] <Debug> InterpreterSelectQuery: executeExpression,action:input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+2018.11.13 13:40:44.693784 [ 20 ] <Debug> InterpreterSelectQuery: executeProjection,action:input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+2018.11.13 13:40:44.693790 [ 20 ] <Debug> InterpreterSelectQuery: after execute expression 
+
+2018.11.13 13:40:44.693796 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.693828 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Limit
+ Expression : expressionActions 
+input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+  Expression : expressionActions 
+input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+   Null
+
+2018.11.13 13:40:44.693834 [ 20 ] <Debug> InterpreterSelectQuery: start of  getHeader
+
+2018.11.13 13:40:44.693841 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.693850 [ 20 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.693857 [ 20 ] <Debug> InterpreterSelectQuery: end of  getHeader
+
+2018.11.13 13:40:44.693862 [ 20 ] <Debug> InterpreterSelectQuery: end  of getSampleBlock
+
+2018.11.13 13:40:44.693886 [ 20 ] <Debug> InterpreterSelectQuery: InterpreterSelectQuery create InterpreterSelectWithUnionQuery ,ast:
+ SelectQuery, 0x999f7d0
+-ExpressionList, 0x999beb0
+--Function_arrayMap, 0x9a22280
+---ExpressionList, 0xb17a130
+----Function_lambda, 0x9a22350
+-----ExpressionList, 0xb17a190
+------Function_tuple, 0x9a22f80
+-------ExpressionList, 0xb17a1f0
+--------Identifier_x, 0x99f63d0
+------Function_if, 0x9a23050
+-------ExpressionList, 0xb17a250
+--------Function_notEquals, 0x9a23120
+---------ExpressionList, 0xb17a2b0
+----------Identifier_number, 0x99f6480
+----------Literal_Int64_-1, 0x99f6530
+--------Identifier_x, 0x99f65e0
+--------Literal_UInt64_0, 0x99f6690
+----Identifier_arr, 0x99f6740
+-TablesInSelectQuery, 0xb17a310
+--TablesInSelectQueryElement, 0x998f9f0
+---TableExpression, 0x9a00fd0
+----Subquery, 0x998fa80
+-----SelectWithUnionQuery, 0x998fb10
+------ExpressionList, 0xb17a370
+-------SelectQuery, 0x999fa50
+--------ExpressionList, 0xb17a3d0
+---------Identifier_number, 0x99f67f0
+---------Function_range, 0x9a231f0
+----------ExpressionList, 0xb17a430
+-----------Identifier_number, 0x99f68a0
+--------TablesInSelectQuery, 0xb17a490
+---------TablesInSelectQueryElement, 0x998fba0
+----------TableExpression, 0x9a00d90
+-----------Identifier_system.numbers, 0x99f6950
+------------Identifier_system, 0x99f5b90
+------------Identifier_numbers, 0x99f6110
+--------Literal_UInt64_10, 0x99f6a00
+-Function_equals, 0x9a232c0
+--ExpressionList, 0xb17a4f0
+---Function_modulo, 0x9a23390
+----ExpressionList, 0xb17a550
+-----Identifier_number, 0x99f6ab0
+-----Literal_UInt64_2, 0x99f6b60
+---Literal_UInt64_1, 0x99f6c10
+
+ InterpreterSelectWithUnionQuery ast:
+ SelectWithUnionQuery, 0x998fb10
+-ExpressionList, 0xb17a370
+--SelectQuery, 0x999fa50
+---ExpressionList, 0xb17a3d0
+----Identifier_number, 0x99f67f0
+----Function_range, 0x9a231f0
+-----ExpressionList, 0xb17a430
+------Identifier_number, 0x99f68a0
+---TablesInSelectQuery, 0xb17a490
+----TablesInSelectQueryElement, 0x998fba0
+-----TableExpression, 0x9a00d90
+------Identifier_system.numbers, 0x99f6950
+-------Identifier_system, 0x99f5b90
+-------Identifier_numbers, 0x99f6110
+---Literal_UInt64_10, 0x99f6a00
+
+2018.11.13 13:40:44.693899 [ 20 ] <Debug> InterpreterSelectQuery: has Subquery , executeWithMultipleStreams
+2018.11.13 13:40:44.693904 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: executeWithMultipleStreams
+2018.11.13 13:40:44.693910 [ 20 ] <Debug> InterpreterSelectQuery: executeImpl ,dry_run is :false
+2018.11.13 13:40:44.693919 [ 20 ] <Debug> InterpreterSelectQuery: query ast tree:
+SelectQuery, 0x999fb90
+-ExpressionList, 0xb17a910
+--Identifier_number, 0x99f7240
+--Function_range, 0x9a23e20
+---ExpressionList, 0xb17a9d0
+----Identifier_number, 0x99f72f0
+-TablesInSelectQuery, 0xb17a8b0
+--TablesInSelectQueryElement, 0x998fc30
+---TableExpression, 0x9a00e50
+----Identifier_system.numbers, 0x99f73a0
+-----Identifier_system, 0x99f5b90
+-----Identifier_numbers, 0x99f6110
+-Literal_UInt64_10, 0x99f7450
+
+2018.11.13 13:40:44.693926 [ 20 ] <Debug> InterpreterSelectQuery: ###### before read from storage :
+
+2018.11.13 13:40:44.693932 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.693941 [ 20 ] <Debug> InterpreterSelectQuery: ###### after read from storage :
+
+2018.11.13 13:40:44.693947 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.693952 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Numbers
+
+2018.11.13 13:40:44.693958 [ 20 ] <Trace> InterpreterSelectQuery: FetchColumns -> Complete
+2018.11.13 13:40:44.693964 [ 20 ] <Debug> InterpreterSelectQuery: start analyzeExpressions 
+2018.11.13 13:40:44.693970 [ 20 ] <Debug> InterpreterSelectQuery: first_stage:1 , second_stage:1
+2018.11.13 13:40:44.693976 [ 20 ] <Debug> ExpressionAnalyzer: appendSelect 
+2018.11.13 13:40:44.693986 [ 20 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:0,only_consts:0, ast tree:
+ExpressionList, 0xb17a910
+-Identifier_number, 0x99f7240
+-Function_range, 0x9a23e20
+--ExpressionList, 0xb17a9d0
+---Identifier_number, 0x99f72f0
+
+2018.11.13 13:40:44.693994 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.694000 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.694006 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.694014 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION range(number) (no type) = (no function)(number)
+2018.11.13 13:40:44.694026 [ 20 ] <Debug> ExpressionAnalyzer: appendProjectResult 
+2018.11.13 13:40:44.694042 [ 20 ] <Debug> InterpreterSelectQuery: # chain:
+step 0
+required output:
+number
+range(number)
+
+input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+step 1
+required output:
+number
+arr
+
+input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+
+2018.11.13 13:40:44.694057 [ 20 ] <Debug> InterpreterSelectQuery: executeExpression,action:input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+2018.11.13 13:40:44.694066 [ 20 ] <Debug> InterpreterSelectQuery: executeProjection,action:input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+2018.11.13 13:40:44.694072 [ 20 ] <Debug> InterpreterSelectQuery: after execute expression 
+
+2018.11.13 13:40:44.694078 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.694110 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Limit
+ Expression : expressionActions 
+input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+  Expression : expressionActions 
+input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+   Numbers
+@@ ? above
+2018.11.13 13:40:44.694127 [ 20 ] <Trace> InterpreterSelectQuery: FetchColumns -> Complete
+2018.11.13 13:40:44.694134 [ 20 ] <Debug> InterpreterSelectQuery: start analyzeExpressions 
+2018.11.13 13:40:44.694139 [ 20 ] <Debug> InterpreterSelectQuery: first_stage:1 , second_stage:1
+2018.11.13 13:40:44.694145 [ 20 ] <Debug> ExpressionAnalyzer: appendWhere 
+2018.11.13 13:40:44.694158 [ 20 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:0,only_consts:0, ast tree:
+Function_equals, 0x9a232c0
+-ExpressionList, 0xb17a4f0
+--Function_modulo, 0x9a23390
+---ExpressionList, 0xb17a550
+----Identifier_number, 0x99f6ab0
+----Literal_UInt64_2, 0x99f6b60
+--Literal_UInt64_1, 0x99f6c10
+
+2018.11.13 13:40:44.694167 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.694174 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.694181 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.694187 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:44.694196 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 2 UInt8 Const(UInt8)
+2018.11.13 13:40:44.694205 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION modulo(number, 2) (no type) = (no function)(number, 2)
+2018.11.13 13:40:44.694217 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:44.694224 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 1 UInt8 Const(UInt8)
+2018.11.13 13:40:44.694233 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION equals(modulo(number, 2), 1) (no type) = (no function)(modulo(number, 2), 1)
+2018.11.13 13:40:44.694250 [ 20 ] <Debug> ExpressionAnalyzer: appendSelect 
+2018.11.13 13:40:44.694262 [ 20 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:0,only_consts:0, ast tree:
+ExpressionList, 0x999beb0
+-Function_arrayMap, 0x9a22280
+--ExpressionList, 0xb17a130
+---Function_lambda, 0x9a22350
+----ExpressionList, 0xb17a190
+-----Function_tuple, 0x9a22f80
+------ExpressionList, 0xb17a1f0
+-------Identifier_x, 0x99f63d0
+-----Function_if, 0x9a23050
+------ExpressionList, 0xb17a250
+-------Function_notEquals, 0x9a23120
+--------ExpressionList, 0xb17a2b0
+---------Identifier_number, 0x99f6480
+---------Literal_Int64_-1, 0x99f6530
+-------Identifier_x, 0x99f65e0
+-------Literal_UInt64_0, 0x99f6690
+---Identifier_arr, 0x99f6740
+
+2018.11.13 13:40:44.694272 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.694280 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.694293 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.694301 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:44.694307 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.694314 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:44.694322 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD -1 Int8 Const(Int8)
+2018.11.13 13:40:44.694333 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION notEquals(number, -1) (no type) = (no function)(number, -1)
+2018.11.13 13:40:44.694345 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:44.694352 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:44.694360 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 0 UInt8 Const(UInt8)
+2018.11.13 13:40:44.694370 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION if(notEquals(number, -1), x, 0) (no type) = (no function)(notEquals(number, -1), x, 0)
+2018.11.13 13:40:44.694398 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :notEquals(number, -1)
+2018.11.13 13:40:44.694406 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :x
+2018.11.13 13:40:44.694412 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :0
+2018.11.13 13:40:44.694426 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION __lambda1 (no type) = (no function)(notEquals(number, -1), 0)
+2018.11.13 13:40:44.694438 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) (no type) = (no function)(__lambda1, arr)
+2018.11.13 13:40:44.694456 [ 20 ] <Debug> ExpressionAnalyzer: appendProjectResult 
+2018.11.13 13:40:44.694492 [ 20 ] <Debug> InterpreterSelectQuery: # chain:
+step 0
+required output:
+equals(modulo(number, 2), 1)
+
+input:
+number UInt64
+arr Array(UInt64)
+
+actions:
+ADD 2 UInt8 Const(UInt8)
+FUNCTION modulo(number, 2) UInt8 = modulo(number, 2)
+ADD 1 UInt8 Const(UInt8)
+FUNCTION equals(modulo(number, 2), 1) UInt8 = equals(modulo(number, 2), 1)
+
+output:
+number UInt64
+arr Array(UInt64)
+2 UInt8
+modulo(number, 2) UInt8
+1 UInt8
+equals(modulo(number, 2), 1) UInt8
+
+step 1
+required output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr)
+
+input:
+number UInt64
+arr Array(UInt64)
+2 UInt8
+modulo(number, 2) UInt8
+1 UInt8
+equals(modulo(number, 2), 1) UInt8
+
+actions:
+ADD -1 Int8 Const(Int8)
+FUNCTION notEquals(number, -1) UInt8 = notEquals(number, -1)
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(UInt64 -> UInt64) = Capture[UInt8, UInt8](UInt64) -> UInt64(notEquals(number, -1), 0)
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64) = arrayMap(__lambda1, arr)
+
+output:
+number UInt64
+arr Array(UInt64)
+2 UInt8
+modulo(number, 2) UInt8
+1 UInt8
+equals(modulo(number, 2), 1) UInt8
+-1 Int8
+notEquals(number, -1) UInt8
+0 UInt8
+__lambda1 Function(UInt64 -> UInt64)
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+step 2
+required output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr)
+
+input:
+number UInt64
+arr Array(UInt64)
+2 UInt8
+modulo(number, 2) UInt8
+1 UInt8
+equals(modulo(number, 2), 1) UInt8
+-1 Int8
+notEquals(number, -1) UInt8
+0 UInt8
+__lambda1 Function(UInt64 -> UInt64)
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+
+2018.11.13 13:40:44.694517 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :number
+2018.11.13 13:40:44.694524 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :-1
+2018.11.13 13:40:44.694531 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :notEquals(number, -1)
+2018.11.13 13:40:44.694537 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :0
+2018.11.13 13:40:44.694543 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :__lambda1
+2018.11.13 13:40:44.694549 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :arr
+2018.11.13 13:40:44.694565 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :2
+2018.11.13 13:40:44.694572 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :modulo(number, 2)
+2018.11.13 13:40:44.694578 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :1
+2018.11.13 13:40:44.694591 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.694600 [ 20 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.694607 [ 20 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.694612 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:44.694618 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.694626 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.694631 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:44.694637 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.694648 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.694654 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.694676 [ 20 ] <Debug> InterpreterSelectQuery: executeExpression,action:input:
+number UInt64
+arr Array(UInt64)
+
+actions:
+PROJECT number, arr
+ADD -1 Int8 Const(Int8)
+FUNCTION notEquals(number, -1) UInt8 = notEquals(number, -1)
+REMOVE number
+REMOVE -1
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(UInt64 -> UInt64) = Capture[UInt8, UInt8](UInt64) -> UInt64(notEquals(number, -1), 0)
+REMOVE notEquals(number, -1)
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+2018.11.13 13:40:44.694685 [ 20 ] <Debug> InterpreterSelectQuery: executeProjection,action:input:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+2018.11.13 13:40:44.694692 [ 20 ] <Debug> InterpreterSelectQuery: after execute expression 
+
+2018.11.13 13:40:44.694698 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:44.694814 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Expression : expressionActions 
+input:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+ Expression : expressionActions 
+input:
+number UInt64
+arr Array(UInt64)
+
+actions:
+PROJECT number, arr
+ADD -1 Int8 Const(Int8)
+FUNCTION notEquals(number, -1) UInt8 = notEquals(number, -1)
+REMOVE number
+REMOVE -1
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(UInt64 -> UInt64) = Capture[UInt8, UInt8](UInt64) -> UInt64(notEquals(number, -1), 0)
+REMOVE notEquals(number, -1)
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+  Filter
+   Limit
+    Expression : expressionActions 
+input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+     Expression : expressionActions 
+input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+      Numbers
+
+2018.11.13 13:40:44.694823 [ 20 ] <Debug> executeQuery: interpreter finish to execute
+2018.11.13 13:40:44.694944 [ 20 ] <Debug> executeQuery: Query pipeline:
+Expression : expressionActions 
+input:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+actions:
+PROJECT arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr)
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+ Expression : expressionActions 
+input:
+number UInt64
+arr Array(UInt64)
+
+actions:
+PROJECT number, arr
+ADD -1 Int8 Const(Int8)
+FUNCTION notEquals(number, -1) UInt8 = notEquals(number, -1)
+REMOVE number
+REMOVE -1
+ADD 0 UInt8 Const(UInt8)
+FUNCTION __lambda1 Function(UInt64 -> UInt64) = Capture[UInt8, UInt8](UInt64) -> UInt64(notEquals(number, -1), 0)
+REMOVE notEquals(number, -1)
+REMOVE 0
+FUNCTION arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64) = arrayMap(__lambda1, arr)
+REMOVE __lambda1
+REMOVE arr
+
+output:
+arrayMap(lambda(tuple(x), if(notEquals(number, -1), x, 0)), arr) Array(UInt64)
+
+  Filter
+   Limit
+    Expression : expressionActions 
+input:
+number UInt64
+range(number) Array(UInt64)
+
+actions:
+PROJECT number, range(number) AS arr
+
+output:
+number UInt64
+arr Array(UInt64)
+
+     Expression : expressionActions 
+input:
+number UInt64
+
+actions:
+FUNCTION range(number) Array(UInt64) = range(number)
+
+output:
+number UInt64
+range(number) Array(UInt64)
+
+      Numbers
+
+2018.11.13 13:40:44.694974 [ 20 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.694982 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:44.694989 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.694998 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695004 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695010 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:44.695015 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.695023 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695029 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695034 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.695044 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.695054 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695061 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695067 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695074 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695080 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695086 [ 20 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.695195 [ 22 ] <Debug> ExpressionBlockInputStream: start readImpl
+2018.11.13 13:40:44.695214 [ 22 ] <Debug> ExpressionBlockInputStream: start readImpl
+2018.11.13 13:40:44.695221 [ 22 ] <Debug> ExpressionBlockInputStream: start readImpl
+2018.11.13 13:40:44.695227 [ 22 ] <Debug> ExpressionBlockInputStream: start readImpl
+2018.11.13 13:40:44.695238 [ 22 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.695251 [ 22 ] <Debug> ExpressionBlockInputStream: end readImpl
+2018.11.13 13:40:44.695258 [ 22 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.695266 [ 22 ] <Debug> ExpressionBlockInputStream: end readImpl
+2018.11.13 13:40:44.695272 [ 22 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.695278 [ 22 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:44.695285 [ 22 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.695294 [ 22 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695300 [ 22 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:44.695306 [ 22 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.695313 [ 22 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695320 [ 22 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695341 [ 22 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.695349 [ 22 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:44.695356 [ 22 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.695365 [ 22 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695371 [ 22 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695377 [ 22 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:44.695382 [ 22 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.695391 [ 22 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695397 [ 22 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695402 [ 22 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.695415 [ 22 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:44.695425 [ 22 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695431 [ 22 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695442 [ 22 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695450 [ 22 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695457 [ 22 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:44.695463 [ 22 ] <Debug> ExpressionBlockInputStream: end readImpl
+2018.11.13 13:40:44.695469 [ 22 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:44.695474 [ 22 ] <Debug> ExpressionBlockInputStream: end readImpl
+2018.11.13 13:40:44.695524 [ 22 ] <Debug> ExpressionBlockInputStream: start readImpl
+2018.11.13 13:40:44.695533 [ 22 ] <Debug> ExpressionBlockInputStream: start readImpl
+2018.11.13 13:40:44.695666 [ 20 ] <Information> executeQuery: Read 10 rows, 80.00 B in 0.004 sec., 2351 rows/sec., 18.37 KiB/sec.
+2018.11.13 13:40:44.695713 [ 20 ] <Debug> MemoryTracker: Peak memory usage (for query): 1.02 MiB.
+2018.11.13 13:40:44.695723 [ 20 ] <Debug> MemoryTracker: Peak memory usage (total): 1.02 MiB.
+2018.11.13 13:40:44.695735 [ 20 ] <Information> TCPHandler: Processed in 0.005 sec.

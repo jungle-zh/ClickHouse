@@ -8,6 +8,7 @@
 #include <Common/ProfileEvents.h>
 
 #include <common/logger_useful.h>
+#include <Parsers/queryToString.h>
 
 
 namespace ProfileEvents
@@ -44,6 +45,7 @@ namespace
 
 BlockInputStreamPtr createLocalStream(const ASTPtr & query_ast, const Context & context, QueryProcessingStage::Enum processed_stage)
 {
+
     InterpreterSelectQuery interpreter{query_ast, context, {}, processed_stage};
     BlockInputStreamPtr stream = interpreter.execute().in;
 
@@ -64,11 +66,15 @@ void SelectStreamFactory::createForShard(
 {
     auto emplace_local_stream = [&]()
     {
+        LOG_DEBUG(&Logger::get("SelectStreamFactory"),"add createLocalStream ,query :" + queryToString(query_ast));
         res.emplace_back(createLocalStream(query_ast, context, processed_stage));
     };
 
     auto emplace_remote_stream = [&]()
     {
+
+        LOG_DEBUG(&Logger::get("SelectStreamFactory"),"add RemoteBlockInputStream ,query : " + query);
+
         auto stream = std::make_shared<RemoteBlockInputStream>(shard_info.pool, query, header, context, nullptr, throttler, external_tables, processed_stage);
         stream->setPoolMode(PoolMode::GET_MANY);
         stream->setMainTable(main_table);
@@ -77,6 +83,7 @@ void SelectStreamFactory::createForShard(
 
     if (shard_info.isLocal())
     {
+        LOG_DEBUG(&Logger::get("SelectStreamFactory"),"shard is local");
         StoragePtr main_table_storage = context.tryGetTable(main_table.database, main_table.table);
         if (!main_table_storage) /// Table is absent on a local server.
         {
@@ -104,6 +111,7 @@ void SelectStreamFactory::createForShard(
         if (!replicated_storage)
         {
             /// Table is not replicated, use local server.
+            LOG_DEBUG(&Logger::get("SelectStreamFactory"),"no replicated_storage use local ");
             emplace_local_stream();
             return;
         }
@@ -200,8 +208,11 @@ void SelectStreamFactory::createForShard(
 
         res.emplace_back(std::make_shared<LazyBlockInputStream>("LazyShardWithLocalReplica", header, lazily_create_stream));
     }
-    else
+    else{
+        LOG_DEBUG(&Logger::get("SelectStreamFactory"),"shard is remote ");
         emplace_remote_stream();
+    }
+
 }
 
 }

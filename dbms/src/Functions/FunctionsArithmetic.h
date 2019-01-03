@@ -18,6 +18,7 @@
 #include <ext/range.h>
 #include <common/intExp.h>
 #include <boost/math/common_factor.hpp>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -669,6 +670,7 @@ private:
     template <typename T0, typename T1, typename ResultType = typename Op<T0, T1>::ResultType>
     bool executeRightTypeImpl(Block & block, const ColumnNumbers & arguments, size_t result, const ColumnVector<T0> * col_left)
     {
+        LOG_DEBUG(&Logger::get("FunctionBinaryArithmetic"),"left ColumnVector executeRightTypeImpl start ,col_left :" + col_left->dumpStructure());
         if (auto col_right = checkAndGetColumn<ColumnVector<T1>>(block.getByPosition(arguments[1]).column.get()))
         {
             auto col_res = ColumnVector<ResultType>::create();
@@ -678,6 +680,7 @@ private:
             BinaryOperationImpl<T0, T1, Op<T0, T1>, ResultType>::vector_vector(col_left->getData(), col_right->getData(), vec_res);
 
             block.getByPosition(result).column = std::move(col_res);
+            LOG_DEBUG(&Logger::get("FunctionBinaryArithmetic"),"right ColumnVector executeRightTypeImpl end col_right:" + col_right->dumpStructure() + ",col_res:" + block.getByPosition(result).column->dumpStructure() );
             return true;
         }
         else if (auto col_right = checkAndGetColumnConst<ColumnVector<T1>>(block.getByPosition(arguments[1]).column.get()))
@@ -689,6 +692,7 @@ private:
             BinaryOperationImpl<T0, T1, Op<T0, T1>, ResultType>::vector_constant(col_left->getData(), col_right->template getValue<T1>(), vec_res);
 
             block.getByPosition(result).column = std::move(col_res);
+            LOG_DEBUG(&Logger::get("FunctionBinaryArithmetic"),"right ColumnConst executeRightTypeImpl end col_right:" + col_right->dumpStructure() + ",col_res:" + block.getByPosition(result).column->dumpStructure());
             return true;
         }
 
@@ -699,6 +703,7 @@ private:
     template <typename T0, typename T1, typename ResultType = typename Op<T0, T1>::ResultType>
     bool executeRightTypeImpl(Block & block, const ColumnNumbers & arguments, size_t result, const ColumnConst * col_left)
     {
+        LOG_DEBUG(&Logger::get("FunctionBinaryArithmetic"),"left ColumnConst executeRightTypeImpl start col_left:" + col_left->dumpStructure());
         if (auto col_right = checkAndGetColumn<ColumnVector<T1>>(block.getByPosition(arguments[1]).column.get()))
         {
             auto col_res = ColumnVector<ResultType>::create();
@@ -708,6 +713,7 @@ private:
             BinaryOperationImpl<T0, T1, Op<T0, T1>, ResultType>::constant_vector(col_left->template getValue<T0>(), col_right->getData(), vec_res);
 
             block.getByPosition(result).column = std::move(col_res);
+            LOG_DEBUG(&Logger::get("FunctionBinaryArithmetic"),"right ColumnVector executeRightTypeImpl end  col_right :" +  col_right->dumpStructure() + ", col_res:" + block.getByPosition(result).column->dumpStructure()  );
             return true;
         }
         else if (auto col_right = checkAndGetColumnConst<ColumnVector<T1>>(block.getByPosition(arguments[1]).column.get()))
@@ -716,6 +722,7 @@ private:
             BinaryOperationImpl<T0, T1, Op<T0, T1>, ResultType>::constant_constant(col_left->template getValue<T0>(), col_right->template getValue<T1>(), res);
             block.getByPosition(result).column = DataTypeNumber<ResultType>().createColumnConst(col_left->size(), toField(res));
 
+            LOG_DEBUG(&Logger::get("FunctionBinaryArithmetic"),"right ColumnConst executeRightTypeImpl end  col_right :" +  col_right->dumpStructure() + ", col_res:" + block.getByPosition(result).column->dumpStructure());
             return true;
         }
 

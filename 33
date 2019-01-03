@@ -1,0 +1,147 @@
+
+1
+2
+
+保证物理执行计划的可重入性
+
+
+InterpreterSelectQuery
+
+executeFetchColumns 中创建的 subquery: InterpreterSelectWithUnionQuery 生命周期只在函数级别
+pipeline.streams = interpreter_subquery->executeWithMultipleStreams();
+interpreter_subquery->executeWithMultipleStreams() 结束之后，当前子查询对象生命周期结束
+子查询创建的ExpressionActionsPtr 都会被 pipeline.streams 接管
+最深层的子查询所创建的stream 是最深层次的child 
+streams 是可以并行执行的查询的集合
+pipeline.transform 看出当前查询会为所有可以并行的子查询创建父stream，加入父stream的Action
+
+analyzeExpressions 中只处理当前查询的 select，where ，groupby 等后面的表达式,不处理子查询,子查询在executeFetchColumns 中创建并处理,结果
+放在pipeline的stream中,append* 方法 将 select ,where ,groupby 后的表达式树转换为 ExpressionAction  
+
+InterpreterSelectWithUnionQuery 的构造函数中会创建
+InterpreterSelectQuery  并放入 nested_interpreters
+
+
+InterpreterSelectWithUnionQuery::executeWithMultipleStreams 是可重入的
+在 executeFetchColumns 调用被用来处理子查询,
+在 InterpreterSelectWithUnionQuery::execute() 调用是从executeQuery 发起的最顶层的查询
+
+InterpreterSelectQuery::executeWithMultipleStreams() 
+是可重入的，executeImpl 创建的包含ExpressionActionsPtr 的stream 都被Pipeline 接管,
+
+
+blockStream 中action被执行的细节   
+getSampleBlock
+join 的情况
+aggregate 的情况
+distribute 表的情况
+
+
+select  ***  from/in/join  () where ***
+lambda 表达式 ： 函数名，自变量 ，字面量，列 
+ScopeStack 中前一个level 的所有输入作为下一个level 的输入
+从 pushLevel 和 addAction 两个函数看出
+所以 lambda_actions 有了 0 -1 x 
+
+ExpressionActions::add  中 sample_block 会添加列
+
+FunctionCapture::execute 中保存lambda 函数的captured 列 到ColumnFunction 中,所有lambda 函数所有的参数名保存到FunctionExpression
+移除captured 列之后，在FunctionArrayMapped 中恢复ColumnFunction 的captured 列，并且加上arr 参数,作为临时的被lambda_action 执行的block，
+ColumnFunction::reduce() 中执行的是FunctionExpression的execute，将arr替换为lambda函数参数 x, reduce 函数执行完后结果列被添加到原始block中
+
+当有子查询时，先执行子查询的逻辑计划通过pipeline.streams 接受
+pipeline.streams = interpreter_subquery->executeWithMultipleStreams();
+然后通过analyzeExpressions 等产生select ,where 对应的的action，通过execute* 方法为子查询产生的stream 前面添加所有的父stream
+实际执行的时候，父stream 先执行child 的actions 方法，在执行自己的actions 
+ExpressionActions 的actions 的先后顺序是 analyzeExpressions 的append* 方法中的scopeStack 的执行顺序决定的
+
+scopeStack  深度优先遍历表达式
+
+InterpreterSelectQuery::init 中会创建临时的InterpreterSelectWithUnionQuery 来获取SampleBlock 从而获取当前query 的source_columns
+executeFetchColumns 中会创建临时的InterpreterSelectWithUnionQuery 来获取pipeline的子查询的stream
+
+解析和执行引擎
+1.sql 解析为 ast 树
+2.fetch column (in storage or subquery) set child streams in pipeline.streams
+3.analyzeExpressions 执行产生执行计划
+4.执行计划进行执行
+
+-如何保证 expressionAction 执行的时候参数里的block 和计划里的block 结构一样
+ ExpressionActions 中的Actions 之间 append* 方法会将 ExpressionActionsChain 的最后一个step 的action 初始化ScopeStack 
+ ,保障不同的ExpressionActions 之间block 上下文的正确性 ,
+ 同一个ExpressionAction 之间，利用Stack 数据结构保障表达式树的深度优先遍历
+ 父子query 之间,InterpreterSelectQuery::init 中当前query 会拿到子query 的结果column 作为source_columns ，用来初始化最早的append*方法中的ScopeStack 
+-ExpressionAction  中sample_block作用
+-如何保障state_less ,  pipeline.streams = interpreter_subquery->executeWithMultipleStreams(); 子查询中产生的所有stream 都被父pipeline接管 
+
+-analyzeExpressions 中append* 执行先后顺序的原因
+-join 的过程
+-distribute query 的执行过程
+
+
+group by:
+using AggregatedDataWithUInt64Key = HashMap<UInt64, AggregateDataPtr, HashCRC32<UInt64>>;
+std::unique_ptr<AggregationMethodOneNumber<UInt32, AggregatedDataWithUInt64Key>>         key32;
+hashMap 没有实际value 的类型，value类型通过获取 HashMap it->second (AggregateDataPtr) 在 IAggregateFunctionDataHelper 中 reinterpret_cast 为 Data类型  
+
+
+分布式查询中 , 主查询节点的InterpreterSelectQuery 中的 executeFetchColumns 的
+pipeline.streams = storage->read(required_columns, query_info, context, from_stage, max_block_size, max_streams);
+会使用StorageDistributed read 方法从本地和remote 分别获取 stream ， 完成  FetchColumns -> WithMergeableState 这一阶段逻辑计划的工作
+from_stage 会被修改为 WithMergeableState ，在 executeFetchColumns 返回 (StorageMergeTree::read 中 from_stage 为 FetchColumns,得到的stream会继续执行一阶段的逻辑计划
+不从storage 读取，而从subquery 读取的话，from_stage 也是FetchColumns ,所以有subquery 的情况，无论subquery 读取的是不是分布式表，都会执行一阶段的逻辑计划,
+ subquery 读取的stream 有多个的话会在InterpreterSelectWithUnionQuery executeWithMultipleStreams 不会被union ,多个stream可能是本地或者remote的,
+然后这些stream 作为child stream 会被添加一阶段和二阶段的逻辑执行计划,StorageDistributed 读取的stream 有多个的话 也不会被union ,然后只执行阶段二的逻辑计划)
+分布式查询 FetchColumns -> WithMergeableState 的逻辑计划在所有节点上执行 ,主节点在createLocalStream ，创建一个InterpreterSelectQuery 用于本节点数据查询
+WithMergeableState -> compelete 的逻辑计划在主查询节点执行, 
+
+
+join 的情况下 会先创建 from 子查询的逻辑计划，然后是join的逻辑计划，最后添加 join 子查询的逻辑计划 CreatingSetsBlockInputStream， 实际执行会先执行join子查询
+，然后 build hashmap 
+
+
+
+存储引擎
+-索引设计
+-insert 过程 (分区，排序)
+-merge 过程
+-read 过程
+-load 磁盘数据过程
+
+系统metric, system table
+query metric   storage metric  
+
+
+内存管理,线程安全,无泄漏
+并发管理,线程安全,state_less
+class 设计 高内聚，低耦合 
+InterpreterSelectWithUnionQuery
+InterpreterSelectQuery
+ExpressionAnalyzer
+ExpressionAction
+ScopeStack
+ExpressionActions
+IBlockInputStream
+pileline
+Block
+Cloumn
+Field
+IFunction
+
+
+
+C++ 类库抽取
+通信类库
+内存管理
+
+数据流 
+类uml关系
+业务数据流和类的api 是怎么结合，保证高内聚，低耦合
+big data
+  -yarn
+  -kafka
+  -spark 
+  -olap
+
+mirco service
+

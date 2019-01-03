@@ -69,6 +69,8 @@ namespace Protocol
             Totals = 7,               /// A block with totals (compressed or not).
             Extremes = 8,             /// A block with minimums and maximums (compressed or not).
             TablesStatusResponse = 9, /// A response to TablesStatus request.
+
+            ResponseIfStorageBuild = 10,
         };
 
         /// NOTE: If the type of packet argument would be Enum, the comparison packet >= 0 && packet < 10
@@ -97,6 +99,13 @@ namespace Protocol
             Cancel = 3,              /// Cancel the query execution.
             Ping = 4,                /// Check that connection to the server is alive.
             TablesStatusRequest = 5, /// Check status of tables on the server.
+            ShuffleWriteMainTable = 6,
+            ShuffleWriteRightTable = 7 ,
+            OriginPullQuery = 8,
+            FirstStageQuery = 9,
+            ShuffleJoinMasterQuery = 10 ,
+            AskIfStorageBuild = 11 ,
+
         };
 
         inline const char * toString(UInt64 packet)

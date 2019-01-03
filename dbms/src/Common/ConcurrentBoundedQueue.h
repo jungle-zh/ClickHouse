@@ -51,17 +51,33 @@ private:
     Poco::FastMutex mutex;
     Poco::Semaphore fill_count;
     Poco::Semaphore empty_count;
+    size_t push_cnt ;
+    size_t pop_cnt;
+    bool all_push_done;
 
 public:
     ConcurrentBoundedQueue(size_t max_fill)
-        : fill_count(0, max_fill), empty_count(max_fill, max_fill) {}
+        : fill_count(0, max_fill), empty_count(max_fill, max_fill),push_cnt(0),pop_cnt(0),all_push_done(false) {}
 
+    void setPushDone(){
+        all_push_done = true;
+    }
+    bool getPushDone(){
+        return  all_push_done;
+    }
+    size_t curPushCnt(){
+        return push_cnt;
+    }
+    size_t curPopCnt(){
+        return pop_cnt;
+    }
     void push(const T & x)
     {
         empty_count.wait();
         {
             Poco::ScopedLock<Poco::FastMutex> lock(mutex);
             queue.push(x);
+            push_cnt ++;
         }
         fill_count.set();
     }
@@ -73,6 +89,7 @@ public:
         {
             Poco::ScopedLock<Poco::FastMutex> lock(mutex);
             queue.emplace(std::forward<Args>(args)...);
+            push_cnt ++;
         }
         fill_count.set();
     }
@@ -84,6 +101,7 @@ public:
             Poco::ScopedLock<Poco::FastMutex> lock(mutex);
             detail::moveOrCopyIfThrow(std::move(queue.front()), x);
             queue.pop();
+            pop_cnt ++;
         }
         empty_count.set();
     }
@@ -95,6 +113,7 @@ public:
             {
                 Poco::ScopedLock<Poco::FastMutex> lock(mutex);
                 queue.push(x);
+                push_cnt++;
             }
             fill_count.set();
             return true;
@@ -110,6 +129,7 @@ public:
             {
                 Poco::ScopedLock<Poco::FastMutex> lock(mutex);
                 queue.emplace(std::forward<Args>(args)...);
+                push_cnt ++;
             }
             fill_count.set();
             return true;
@@ -125,6 +145,7 @@ public:
                 Poco::ScopedLock<Poco::FastMutex> lock(mutex);
                 detail::moveOrCopyIfThrow(std::move(queue.front()), x);
                 queue.pop();
+                pop_cnt++;
             }
             empty_count.set();
             return true;
@@ -148,5 +169,7 @@ public:
             }
             empty_count.set();
         }
+        pop_cnt = 0;
+        push_cnt = 0;
     }
 };

@@ -6,6 +6,7 @@
 #include <IO/WriteBufferFromString.h>
 #include <IO/Operators.h>
 #include <Columns/ColumnFunction.h>
+#include <common/logger_useful.h>
 
 namespace DB
 {
@@ -66,7 +67,7 @@ public:
         {
             const auto & argument = block.getByPosition(arguments[i]);
             /// Replace column name with value from argument_names.
-            expr_block.insert({argument.column, argument.type, argument_names[i]});
+            expr_block.insert({argument.column, argument.type, argument_names[i]});// jungle comment : -1,0,arr -> -1,0,x  {captured , arr } -> { captured , x}
         }
 
         expression_actions->execute(expr_block);
@@ -169,6 +170,20 @@ public:
         auto function = std::make_shared<FunctionExpression>(expression_actions, types, names,
                                                              function_return_type, expression_return_name);
         auto size = block.rows();
+
+        std::string columns_in_block = "";
+        for(const auto & col  : columns){
+            columns_in_block += col.name;
+            columns_in_block += " ";
+        }
+
+        std::string names_s = "";
+        for(const auto & name  : names){
+            names_s += name;
+            names_s += " ";
+        }
+        LOG_DEBUG(&Logger::get("FunctionCapture"),"before create ColumnFunction , columns_in_block : " + columns_in_block + " lambda args:" + names_s);
+
         block.getByPosition(result).column = ColumnFunction::create(size, std::move(function), columns);
     }
 

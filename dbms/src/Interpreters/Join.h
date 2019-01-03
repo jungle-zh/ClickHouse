@@ -260,6 +260,9 @@ public:
 
     ASTTableJoin::Kind getKind() const { return kind; }
 
+    Names getLeftTableKeyName() const  { return  key_names_left;}
+    Names getRightTableKeyName ()  const { return  key_names_right;}
+
 
     /// Reference to the row in block.
     struct RowRef

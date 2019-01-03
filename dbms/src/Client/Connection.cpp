@@ -48,8 +48,10 @@ void Connection::connect()
 {
     try
     {
-        if (connected)
+        if (connected){
             disconnect();
+        }
+
 
         LOG_TRACE(log_wrapper.get(), "Connecting. Database: " << (default_database.empty() ? "(not specified)" : default_database) << ". User: " << user
         << (static_cast<bool>(secure) ? ". Secure" : "") << (static_cast<bool>(compression) ? "" : ". Uncompressed") );
@@ -104,7 +106,8 @@ void Connection::connect()
 
 void Connection::disconnect()
 {
-    //LOG_TRACE(log_wrapper.get(), "Disconnecting");
+    LOG_DEBUG(log_wrapper.get(), "1 Disconnecting");
+    //LOG_DEBUG(&Logger::get("Connection"),"disconnect ");
 
     in = nullptr;
     out = nullptr; // can write to socket
@@ -112,6 +115,9 @@ void Connection::disconnect()
         socket->close();
     socket = nullptr;
     connected = false;
+
+    LOG_DEBUG(log_wrapper.get(), "2 Disconnecting");
+
 }
 
 
@@ -300,8 +306,10 @@ void Connection::sendQuery(
     UInt64 stage,
     const Settings * settings,
     const ClientInfo * client_info,
-    bool with_pending_data)
+    bool with_pending_data,
+    Protocol::Client::Enum query_type)
 {
+    LOG_DEBUG(&Logger::get("Connection"),"sendQuery :" + query + ",query type is " + std::to_string(query_type));
     if (!connected)
         connect();
 
@@ -311,7 +319,7 @@ void Connection::sendQuery(
 
     //LOG_TRACE(log_wrapper.get(), "Sending query");
 
-    writeVarUInt(Protocol::Client::Query, *out);
+    writeVarUInt(query_type, *out);
     writeStringBinary(query_id, *out);
 
     /// Client info.
@@ -370,6 +378,70 @@ void Connection::sendCancel()
 }
 
 
+
+
+void Connection::sendShuffleMainTableData(const DB::Block &block, const DB::String &name) {
+
+    LOG_DEBUG(&Logger::get("Connection"),"sendShuffleMainTableData :" + name + " , block size :" + std::to_string(block.rows()));
+    if (!block_out)
+    {
+        if (compression == Protocol::Compression::Enable)
+            maybe_compressed_out = std::make_shared<CompressedWriteBuffer>(*out, compression_settings);
+        else
+            maybe_compressed_out = out;
+
+        block_out = std::make_shared<NativeBlockOutputStream>(*maybe_compressed_out, server_revision, block.cloneEmpty());
+    }
+
+    writeVarUInt(Protocol::Client::ShuffleWriteMainTable, *out);
+    writeStringBinary(name, *out);
+
+    size_t prev_bytes = out->count();
+
+    block_out->write(block);
+    maybe_compressed_out->next();
+    out->next();
+
+    if (throttler)
+        throttler->add(out->count() - prev_bytes);
+
+}
+
+    void Connection::sendShuffleRightTableData(const DB::Block &block, const DB::String &name) {
+
+        LOG_DEBUG(&Logger::get("Connection"),"sendShuffleRightTableData :" + name + " block size :" + std::to_string(block.rows()));
+        if (!block_out)
+        {
+            LOG_DEBUG(&Logger::get("Connection"),"create NativeBlockOutputStream");
+            if (compression == Protocol::Compression::Enable){
+                LOG_DEBUG(&Logger::get("Connection"),"compression is Enable in write");
+                maybe_compressed_out = std::make_shared<CompressedWriteBuffer>(*out, compression_settings);
+            }
+            else{
+                LOG_DEBUG(&Logger::get("Connection"),"compression is Disable in write");
+                maybe_compressed_out = out;
+            }
+
+
+            block_out = std::make_shared<NativeBlockOutputStream>(*maybe_compressed_out, server_revision, block.cloneEmpty());
+        }
+
+        writeVarUInt(Protocol::Client::ShuffleWriteRightTable, *out);
+        writeStringBinary(name, *out);
+
+        size_t prev_bytes = out->count();
+
+        block_out->write(block);
+        maybe_compressed_out->next();
+        out->next();
+
+        LOG_DEBUG(&Logger::get("Connection"),"sendShuffleRightTableData send bytes :" + std::to_string(out->count()) );
+        if (throttler)
+            throttler->add(out->count() - prev_bytes);
+
+    }
+
+
 void Connection::sendData(const Block & block, const String & name)
 {
     //LOG_TRACE(log_wrapper.get(), "Sending data");
@@ -398,11 +470,12 @@ void Connection::sendData(const Block & block, const String & name)
 }
 
 
+
 void Connection::sendPreparedData(ReadBuffer & input, size_t size, const String & name)
 {
     /// NOTE 'Throttler' is not used in this method (could use, but it's not important right now).
 
-    writeVarUInt(Protocol::Client::Data, *out);
+    writeVarUInt(Protocol::Client::Query, *out);
     writeStringBinary(name, *out);
 
     if (0 == size)
@@ -413,8 +486,23 @@ void Connection::sendPreparedData(ReadBuffer & input, size_t size, const String 
 }
 
 
+void Connection::askIfShuffleStorageBuid(const String & storage_name) {
+
+    writeVarUInt(Protocol::Client::AskIfStorageBuild, *out);
+    writeStringBinary(storage_name, *out);
+
+
+    out->next();
+
+}
+
+
+
+
 void Connection::sendExternalTablesData(ExternalTablesData & data)
 {
+
+
     if (data.empty())
     {
         /// Send empty block, which means end of data transfer.
@@ -436,6 +524,7 @@ void Connection::sendExternalTablesData(ExternalTablesData & data)
         {
             rows += block.rows();
             sendData(block, elem.second);
+            LOG_DEBUG(&Logger::get("Connection"),"sendExternalTablesData : " + elem.second + " ,block name :" + block.dumpNames());
         }
         elem.first->readSuffix();
     }
@@ -513,6 +602,10 @@ Connection::Packet Connection::receivePacket()
                 return res;
 
             case Protocol::Server::EndOfStream:
+                return res;
+
+            case Protocol::Server::ResponseIfStorageBuild:
+                res.if_storageBuild = receiveIfStorageBuild();
                 return res;
 
             default:
@@ -604,6 +697,15 @@ BlockStreamProfileInfo Connection::receiveProfileInfo()
     BlockStreamProfileInfo profile_info;
     profile_info.read(*in);
     return profile_info;
+}
+
+String Connection::receiveIfStorageBuild(){
+
+    String res ;
+    readStringBinary(res,*in);
+
+    return  res;
+
 }
 
 void Connection::fillBlockExtraInfo(BlockExtraInfo & info) const

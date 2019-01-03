@@ -9,7 +9,7 @@
 #include <Interpreters/Context.h>
 #include <Client/ConnectionPool.h>
 #include <Client/MultiplexedConnections.h>
-#include <Interpreters/Cluster.h>
+
 
 
 namespace DB
@@ -26,7 +26,7 @@ public:
             Connection & connection,
             const String & query_, const Block & header_, const Context & context_, const Settings * settings = nullptr,
             const ThrottlerPtr & throttler = nullptr, const Tables & external_tables_ = Tables(),
-            QueryProcessingStage::Enum stage_ = QueryProcessingStage::Complete);
+            QueryProcessingStage::Enum stage_ = QueryProcessingStage::Complete,Protocol::Client::Enum query_type = Protocol::Client::Query);
 
     /// Accepts several connections already taken from pool.
     /// If `settings` is nullptr, settings will be taken from context.
@@ -42,7 +42,7 @@ public:
             const ConnectionPoolWithFailoverPtr & pool,
             const String & query_, const Block & header_, const Context & context_, const Settings * settings = nullptr,
             const ThrottlerPtr & throttler = nullptr, const Tables & external_tables_ = Tables(),
-            QueryProcessingStage::Enum stage_ = QueryProcessingStage::Complete);
+            QueryProcessingStage::Enum stage_ = QueryProcessingStage::Complete,Protocol::Client::Enum query_type = Protocol::Client::Query);
 
     ~RemoteBlockInputStream() override;
 
@@ -72,6 +72,7 @@ public:
     }
 
     Block getHeader() const override { return header; }
+    bool askIfShuffleStorageBuild(const String & storage_name);
 
 protected:
     /// Send all temporary tables to remote servers
@@ -87,8 +88,12 @@ protected:
     /// Returns true if exception was thrown
     bool hasThrownException() const;
 
+
+
 private:
-    void sendQuery();
+    void sendQuery(Protocol::Client::Enum query_type =  Protocol::Client::Query);
+
+
 
     Block receiveBlock();
 
@@ -103,10 +108,12 @@ private:
     std::unique_ptr<MultiplexedConnections> multiplexed_connections;
 
     const String query;
+
     Context context;
     /// Temporary tables needed to be sent to remote servers
     Tables external_tables;
     QueryProcessingStage::Enum stage;
+    Protocol::Client::Enum  query_type;
 
     /// Streams for reading from temporary tables and following sending of data
     /// to remote servers for GLOBAL-subqueries

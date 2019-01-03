@@ -151,14 +151,25 @@ Aggregator::Aggregator(const Params & params_)
     total_size_of_aggregate_states = 0;
     all_aggregates_has_trivial_destructor = true;
 
+    std::string agg_des ="";
+    for(auto & e : params.aggregates){
+        agg_des += e.to_string();
+        agg_des += "\n";
+    }
+    LOG_DEBUG(&Logger::get("Aggregator"),"AggregateDescriptions in params:\n" + agg_des);
+
+
+
     for (size_t i = 0; i < params.aggregates_size; ++i)
     {
+        LOG_DEBUG(&Logger::get("Aggregator"), (std::to_string(i)  + " offsets_of_aggregate_states :" +  std::to_string(offsets_of_aggregate_states[i])) );
         offsets_of_aggregate_states[i] = total_size_of_aggregate_states;
         total_size_of_aggregate_states += params.aggregates[i].function->sizeOfData();
 
         if (!params.aggregates[i].function->hasTrivialDestructor())
             all_aggregates_has_trivial_destructor = false;
     }
+    LOG_DEBUG(&Logger::get("Aggregator"), (" total_size_of_aggregate_states :" +  std::to_string(total_size_of_aggregate_states) ));
 
     method = chooseAggregationMethod();
 }
@@ -558,6 +569,7 @@ void NO_INLINE Aggregator::executeImplCase(
         /// Get the key to insert into the hash table.
         typename Method::Key key = state.getKey(key_columns, params.keys_size, i, key_sizes, keys, *aggregates_pool);
 
+        //LOG_DEBUG(&Logger::get("Aggregator"),"get key :" + std::to_string(key));
         if (!no_more_keys)  /// Insert.
         {
             /// Optimization for consecutive identical keys.
@@ -598,7 +610,7 @@ void NO_INLINE Aggregator::executeImplCase(
         /// If a new key is inserted, initialize the states of the aggregate functions, and possibly something related to the key.
         if (inserted)
         {
-            AggregateDataPtr & aggregate_data = Method::getAggregateData(it->second);
+            AggregateDataPtr & aggregate_data = Method::getAggregateData(it->second); //jungle comment , get the HashMap value of aggregated key (char *)
 
             /// exception-safety - if you can not allocate memory or create states, then destructors will not be called.
             aggregate_data = nullptr;
@@ -606,7 +618,7 @@ void NO_INLINE Aggregator::executeImplCase(
             method.onNewKey(*it, params.keys_size, keys, *aggregates_pool);
 
             AggregateDataPtr place = aggregates_pool->alloc(total_size_of_aggregate_states);
-            createAggregateStates(place);
+            createAggregateStates(place);   //jungle comment : placement new
             aggregate_data = place;
         }
         else
@@ -653,6 +665,7 @@ bool Aggregator::executeOnBlock(const Block & block, AggregatedDataVariants & re
     ColumnRawPtrs & key_columns, AggregateColumns & aggregate_columns, StringRefs & key,
     bool & no_more_keys)
 {
+    LOG_DEBUG(&Logger::get("Aggregator"),"executeOnBlock ,block rows :" + std::to_string(block.rows()));
     if (isCancelled())
         return true;
 
@@ -684,9 +697,13 @@ bool Aggregator::executeOnBlock(const Block & block, AggregatedDataVariants & re
 
     for (size_t i = 0; i < params.aggregates_size; ++i)
     {
+        std::string  agg_arguments_name_s = "";
         for (size_t j = 0; j < aggregate_columns[i].size(); ++j)
         {
             aggregate_columns[i][j] = block.safeGetByPosition(params.aggregates[i].arguments[j]).column.get();
+
+            agg_arguments_name_s += block.safeGetByPosition(params.aggregates[i].arguments[j]).name;
+            agg_arguments_name_s += ",";
 
             if (ColumnPtr converted = aggregate_columns[i][j]->convertToFullColumnIfConst())
             {
@@ -699,6 +716,9 @@ bool Aggregator::executeOnBlock(const Block & block, AggregatedDataVariants & re
         aggregate_functions_instructions[i].func = aggregate_functions[i]->getAddressOfAddFunction();
         aggregate_functions_instructions[i].state_offset = offsets_of_aggregate_states[i];
         aggregate_functions_instructions[i].arguments = aggregate_columns[i].data();
+
+
+        LOG_DEBUG(&Logger::get("Aggregator"),"aggregate_functions name :" + aggregate_functions[i]->getName() + ",arguments:" + agg_arguments_name_s);
     }
 
     if (isCancelled())
@@ -990,6 +1010,7 @@ bool Aggregator::checkLimits(size_t result_size, bool & no_more_keys) const
 
 void Aggregator::execute(const BlockInputStreamPtr & stream, AggregatedDataVariants & result)
 {
+    LOG_DEBUG(&Logger::get("Aggregator"),"execute");
     if (isCancelled())
         return;
 
@@ -1225,6 +1246,7 @@ Block Aggregator::prepareBlockAndFillWithoutKey(AggregatedDataVariants & data_va
 
 Block Aggregator::prepareBlockAndFillSingleLevel(AggregatedDataVariants & data_variants, bool final) const
 {
+    LOG_DEBUG(&Logger::get("Aggregator"),"convertToBlock");
     size_t rows = data_variants.sizeWithoutOverflowRow();
 
     auto filler = [&data_variants, this](
@@ -1416,7 +1438,7 @@ void NO_INLINE Aggregator::mergeDataImpl(
         }
         else
         {
-            res_it->second = it->second;
+            res_it->second = it->second;    //jungle comment  second is AggregateDataPtr (HashMap<UInt64, AggregateDataPtr, HashCRC32<UInt64>>;)
         }
 
         Method::getAggregateData(it->second) = nullptr;
@@ -1515,6 +1537,7 @@ template <typename Method>
 void NO_INLINE Aggregator::mergeSingleLevelDataImpl(
     ManyAggregatedDataVariants & non_empty_data) const
 {
+    LOG_DEBUG(&Logger::get("Aggregator"),"mergeSingleLevelData");
     AggregatedDataVariantsPtr & res = non_empty_data[0];
     bool no_more_keys = false;
 
@@ -1607,6 +1630,7 @@ public:
 protected:
     Block readImpl() override
     {
+        LOG_DEBUG(&Logger::get("MergingAndConvertingBlockInputStream"),"start readImpl");
         if (data.empty())
             return {};
 
@@ -1771,7 +1795,7 @@ std::unique_ptr<IBlockInputStream> Aggregator::mergeAndConvertToBlocks(
     if (data_variants.empty())
         throw Exception("Empty data passed to Aggregator::mergeAndConvertToBlocks.", ErrorCodes::EMPTY_DATA_PASSED);
 
-    LOG_TRACE(log, "Merging aggregated data");
+    LOG_TRACE(log, "mergeAndConvertToBlocks");
 
     ManyAggregatedDataVariants non_empty_data;
     non_empty_data.reserve(data_variants.size());

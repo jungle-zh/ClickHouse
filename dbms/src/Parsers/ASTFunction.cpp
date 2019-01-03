@@ -40,7 +40,7 @@ String ASTFunction::getColumnNameImpl() const
 /** Get the text that identifies this element. */
 String ASTFunction::getID() const
 {
-    return "Function_" + name;
+    return "Function_" + name + (alias.size() > 0  ? "_alias_" + alias : "") ;
 }
 
 ASTPtr ASTFunction::clone() const

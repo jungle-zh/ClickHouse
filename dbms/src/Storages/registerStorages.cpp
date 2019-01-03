@@ -16,6 +16,7 @@ void registerStorageMerge(StorageFactory & factory);
 void registerStorageBuffer(StorageFactory & factory);
 void registerStorageDistributed(StorageFactory & factory);
 void registerStorageMemory(StorageFactory & factory);
+void registerStorageMemoryFifo(StorageFactory & factory);
 void registerStorageFile(StorageFactory & factory);
 void registerStorageDictionary(StorageFactory & factory);
 void registerStorageSet(StorageFactory & factory);
@@ -49,6 +50,7 @@ void registerStorages()
     registerStorageBuffer(factory);
     registerStorageDistributed(factory);
     registerStorageMemory(factory);
+    registerStorageMemoryFifo(factory);
     registerStorageFile(factory);
     registerStorageDictionary(factory);
     registerStorageSet(factory);

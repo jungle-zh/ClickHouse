@@ -29,7 +29,7 @@ public:
         : name(name_), kind(kind_) {}
 
     /** Get the text that identifies this element. */
-    String getID() const override { return "Identifier_" + name; }
+    String getID() const override { return "Identifier_" + name + (alias.size() > 0  ? "_alias_" + alias : "") ;}
 
     ASTPtr clone() const override { return std::make_shared<ASTIdentifier>(*this); }
 

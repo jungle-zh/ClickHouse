@@ -63,6 +63,13 @@ MergeTreeBlockInputStream::MergeTreeBlockInputStream(
 
     header = storage.getSampleBlockForColumns(ordered_names);
 
+    std::string ordered_names_s = "" ;
+    for(auto s :ordered_names ){
+        ordered_names_s += s;
+        ordered_names_s += ",";
+    }
+    LOG_DEBUG(&Logger::get("MergeTreeBlockInputStream"),"ordered_names:" + ordered_names_s);
+
     /// Types may be different during ALTER (when this stream is used to perform an ALTER).
     /// NOTE: We may use similar code to implement non blocking ALTERs.
     for (const auto & name_type : data_part->columns)

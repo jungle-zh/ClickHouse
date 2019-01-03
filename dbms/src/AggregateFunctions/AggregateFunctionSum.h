@@ -9,6 +9,7 @@
 #include <Columns/ColumnVector.h>
 
 #include <AggregateFunctions/IAggregateFunction.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -104,11 +105,13 @@ public:
 
     void add(AggregateDataPtr place, const IColumn ** columns, size_t row_num, Arena *) const override
     {
+        LOG_DEBUG(&Logger::get("AggregateFunctionSum"),"add value :" + std::to_string(static_cast<const ColumnVector<T> &>(*columns[0]).getData()[row_num]));
         this->data(place).add(static_cast<const ColumnVector<T> &>(*columns[0]).getData()[row_num]);
     }
 
     void merge(AggregateDataPtr place, ConstAggregateDataPtr rhs, Arena *) const override
     {
+        LOG_DEBUG(&Logger::get("AggregateFunctionSum"),"merge value :" + std::to_string( static_cast<T>(static_cast<Data>(this->data(rhs)).get()) ));
         this->data(place).merge(this->data(rhs));
     }
 
@@ -124,6 +127,7 @@ public:
 
     void insertResultInto(ConstAggregateDataPtr place, IColumn & to) const override
     {
+        LOG_DEBUG(&Logger::get("AggregateFunctionSum"),"insertResultInto " + std::to_string(  static_cast<T>(static_cast<Data>(this->data(place)).get())  ))  ;
         static_cast<ColumnVector<TResult> &>(to).getData().push_back(this->data(place).get());
     }
 

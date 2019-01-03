@@ -136,7 +136,9 @@ static std::tuple<ASTPtr, BlockIO> executeQueryImpl(
     const char * end,
     Context & context,
     bool internal,
-    QueryProcessingStage::Enum stage)
+    QueryProcessingStage::Enum stage,
+    Protocol::Client::Enum query_type,
+    std::shared_ptr<std::map<String,StoragePtr >>  shuffle_table)
 {
     ProfileEvents::increment(ProfileEvents::Query);
     time_t current_time = time(nullptr);
@@ -157,8 +159,9 @@ static std::tuple<ASTPtr, BlockIO> executeQueryImpl(
     try
     {
         /// TODO Parser should fail early when max_query_size limit is reached.
+        LOG_DEBUG(&Logger::get("executeQuery"),("start to parse ,query type is " + std::to_string(query_type)));
         ast = parseQuery(parser, begin, end, "", max_query_size);
-
+        LOG_DEBUG(&Logger::get("executeQuery"),("finish to parse"));
         /// Copy query into string. It will be written to log and presented in processlist. If an INSERT query, string will not include data to insertion.
         if (!(begin <= ast->range.first && ast->range.second <= end))
             throw Exception("Unexpected behavior: AST chars range is not inside source range", ErrorCodes::LOGICAL_ERROR);
@@ -205,9 +208,15 @@ static std::tuple<ASTPtr, BlockIO> executeQueryImpl(
 
             context.setProcessListElement(&process_list_entry->get());
         }
+        //jungle add
+        std::stringstream log_str;
+        ast->dumpTree(log_str);
+        LOG_DEBUG(&Logger::get("executeQuery"),("parsered ast:\n" + log_str.str() + "\n , start to get interpreter"));
 
-        auto interpreter = InterpreterFactory::get(ast, context, stage);
+        auto interpreter = InterpreterFactory::get(ast, context, stage,query_type,shuffle_table);
+        LOG_DEBUG(&Logger::get("executeQuery"),("******** after get interpreter ,start to execute "));
         res = interpreter->execute();
+        LOG_DEBUG(&Logger::get("executeQuery"),("interpreter finish to execute"));
 
         /// Delayed initialization of query streams (required for KILL QUERY purposes)
         if (process_list_entry)
@@ -388,10 +397,13 @@ BlockIO executeQuery(
     const String & query,
     Context & context,
     bool internal,
-    QueryProcessingStage::Enum stage)
+    QueryProcessingStage::Enum stage,
+    Protocol::Client::Enum query_type,
+    std::shared_ptr<std::map<String,StoragePtr >>  shuffle_table)
 {
     BlockIO streams;
-    std::tie(std::ignore, streams) = executeQueryImpl(query.data(), query.data() + query.size(), context, internal, stage);
+    std::tie(std::ignore, streams) = executeQueryImpl(query.data(), query.data() + query.size(), context, internal, stage,query_type,shuffle_table);
+    LOG_DEBUG(&Logger::get("executeQuery"),"1end  of executeQueryImpl and get streams \n");
     return streams;
 }
 
@@ -401,7 +413,8 @@ void executeQuery(
     WriteBuffer & ostr,
     bool allow_into_outfile,
     Context & context,
-    std::function<void(const String &)> set_content_type)
+    std::function<void(const String &)> set_content_type,
+    Protocol::Client::Enum query_type)
 {
     PODArray<char> parse_buf;
     const char * begin;
@@ -432,8 +445,9 @@ void executeQuery(
     ASTPtr ast;
     BlockIO streams;
 
-    std::tie(ast, streams) = executeQueryImpl(begin, end, context, false, QueryProcessingStage::Complete);
-
+    std::tie(ast, streams) = executeQueryImpl(begin, end, context, false, QueryProcessingStage::Complete,query_type,
+                                              nullptr);
+    LOG_DEBUG(&Logger::get("executeQuery"),"2end  of executeQueryImpl and get streams \n");
     try
     {
         if (streams.out)

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <DataStreams/IProfilingBlockInputStream.h>
-
+#include <common/logger_useful.h>
 
 namespace DB
 {
@@ -18,11 +18,14 @@ public:
     LazyBlockInputStream(const Block & header_, Generator generator_)
         : header(header_), generator(std::move(generator_))
     {
+
     }
+
 
     LazyBlockInputStream(const char * name_, const Block & header_, Generator generator_)
         : name(name_), header(header_), generator(std::move(generator_))
     {
+
     }
 
     String getName() const override { return name; }
@@ -37,6 +40,8 @@ protected:
     {
         if (!input)
         {
+
+            LOG_DEBUG(&Logger::get("LazyBlockInputStream"),"readImpl ,run generator");
             input = generator();
 
             if (!input)
@@ -72,6 +77,7 @@ private:
     Generator generator;
 
     BlockInputStreamPtr input;
+
 };
 
 }

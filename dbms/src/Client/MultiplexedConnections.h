@@ -37,7 +37,10 @@ public:
         const String & query_id = "",
         UInt64 stage = QueryProcessingStage::Complete,
         const ClientInfo * client_info = nullptr,
-        bool with_pending_data = false);
+        bool with_pending_data = false,
+        Protocol::Client::Enum query_type = Protocol::Client::Query);
+
+    bool askIfShuffleStorageBuid(const String & storage_name);
 
     /// Get packet from any replica.
     Connection::Packet receivePacket();

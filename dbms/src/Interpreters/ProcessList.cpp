@@ -182,8 +182,9 @@ ProcessList::EntryPtr ProcessList::insert(
 ProcessListEntry::~ProcessListEntry()
 {
     /// Destroy all streams to avoid long lock of ProcessList
+    LOG_DEBUG(&Logger::get("ProcessListEntry"),"~ProcessListEntry");
     it->releaseQueryStreams();
-
+    LOG_DEBUG(&Logger::get("ProcessListEntry"),"~ProcessListEntry11");
     std::lock_guard<std::mutex> lock(parent.mutex);
 
     String user = it->getClientInfo().current_user;

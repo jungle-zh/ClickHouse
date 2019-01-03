@@ -8,6 +8,7 @@
 #include <boost/noncopyable.hpp>
 #include <Core/Block.h>
 #include <Core/SortDescription.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -78,7 +79,7 @@ public:
     virtual void readPrefix() {}
     virtual void readSuffix() {}
 
-    virtual ~IBlockInputStream() {}
+    virtual ~IBlockInputStream() { LOG_DEBUG( &Logger::get("IBlockInputStream"),"~IBlockInputStream" );}
 
     /** To output the data stream transformation tree (query execution plan).
       */

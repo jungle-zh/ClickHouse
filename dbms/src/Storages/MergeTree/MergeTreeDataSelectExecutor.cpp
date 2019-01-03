@@ -139,6 +139,7 @@ BlockInputStreams MergeTreeDataSelectExecutor::read(
     const unsigned num_streams,
     Int64 max_block_number_to_read) const
 {
+    LOG_DEBUG(&Logger::get("MergeTreeDataSelectExecutor"),"start read....");
     size_t part_index = 0;
 
     MergeTreeData::DataPartsVector parts = data.getDataPartsVector();
@@ -174,6 +175,12 @@ BlockInputStreams MergeTreeDataSelectExecutor::read(
             real_column_names.push_back(name);
         }
     }
+    std::string real_column_names_s ;
+    for(auto & e : real_column_names){
+        real_column_names_s += e;
+        real_column_names_s += ",";
+    }
+    LOG_DEBUG(&Logger::get("MergeTreeDataSelectExecutor"),"real_column_names is " + real_column_names_s) ;
 
     NamesAndTypesList available_real_columns = data.getColumns().getAllPhysical();
 
@@ -473,6 +480,7 @@ BlockInputStreams MergeTreeDataSelectExecutor::read(
                 filter_function->children.push_back(filter_function->arguments);
             }
 
+            LOG_DEBUG(&Logger::get("MergeTreeDataSelectExecutor"),"get filter_expression and getActions ");
             filter_expression = ExpressionAnalyzer(filter_function, context, nullptr, available_real_columns).getActions(false);
 
             /// Add columns needed for `sampling_expression` to `column_names_to_read`.
@@ -498,6 +506,7 @@ BlockInputStreams MergeTreeDataSelectExecutor::read(
     String prewhere_column;
     if (select.prewhere_expression)
     {
+        LOG_DEBUG(&Logger::get("MergeTreeDataSelectExecutor"),"get prewhere_expression and get prewhere_actions to set to spreadMarkRangesAmongStreamsFinal");
         ExpressionAnalyzer analyzer(select.prewhere_expression, context, nullptr, available_real_columns);
         prewhere_actions = analyzer.getActions(false);
         prewhere_column = select.prewhere_expression->getColumnName();
@@ -562,6 +571,24 @@ BlockInputStreams MergeTreeDataSelectExecutor::read(
         std::sort(column_names_to_read.begin(), column_names_to_read.end());
         column_names_to_read.erase(std::unique(column_names_to_read.begin(), column_names_to_read.end()), column_names_to_read.end());
 
+
+        std::string column_names_s = "";
+        for(auto & e : column_names_to_read){
+            column_names_s += e;
+            column_names_s += ",";
+
+        }
+        LOG_DEBUG(&Logger::get("MergeTreeDataSelectExecutor"), "1column_names_to_read  is " + column_names_s);
+
+
+        std::string virt_column_names_s = "";
+        for(auto & e : virt_column_names){
+            virt_column_names_s += e;
+            virt_column_names_s += ",";
+
+        }
+        LOG_DEBUG(&Logger::get("MergeTreeDataSelectExecutor"), "1virt_column_names   is " + virt_column_names_s);
+
         res = spreadMarkRangesAmongStreamsFinal(
             std::move(parts_with_ranges),
             column_names_to_read,
@@ -574,6 +601,24 @@ BlockInputStreams MergeTreeDataSelectExecutor::read(
     }
     else
     {
+
+        std::string column_names_s = "";
+        for(auto & e : column_names_to_read){
+            column_names_s += e;
+            column_names_s += ",";
+
+        }
+        LOG_DEBUG(&Logger::get("MergeTreeDataSelectExecutor"), "column_names_to_read  is " + column_names_s);
+
+
+        std::string virt_column_names_s = "";
+        for(auto & e : virt_column_names){
+            virt_column_names_s += e;
+            virt_column_names_s += ",";
+
+        }
+        LOG_DEBUG(&Logger::get("MergeTreeDataSelectExecutor"), "virt_column_names   is " + virt_column_names_s);
+
         res = spreadMarkRangesAmongStreams(
             std::move(parts_with_ranges),
             num_streams,

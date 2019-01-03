@@ -25,6 +25,7 @@ add_library (clickhouse-server-lib
     Server.cpp
     StatusFile.cpp
     TCPHandler.cpp
+    TCPHandlerForFirstStageExec.cpp
     )
 
 target_link_libraries (clickhouse-server-lib clickhouse_common_io daemon clickhouse_storages_system clickhouse_functions clickhouse_aggregate_functions clickhouse_table_functions)

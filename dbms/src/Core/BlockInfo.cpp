@@ -6,6 +6,7 @@
 #include <IO/ReadHelpers.h>
 #include <IO/WriteHelpers.h>
 #include <Core/BlockInfo.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -20,8 +21,13 @@ namespace ErrorCodes
 /// Write values in binary form. NOTE: You could use protobuf, but it would be overkill for this case.
 void BlockInfo::write(WriteBuffer & out) const
 {
+
+
+    LOG_DEBUG(&Logger::get("BlockInfo"),"write");
+
  /// Set of pairs `FIELD_NUM`, value in binary form. Then 0.
 #define WRITE_FIELD(TYPE, NAME, DEFAULT, FIELD_NUM) \
+    LOG_DEBUG(&Logger::get("BlockInfo"),"write field_num is " + std::to_string(FIELD_NUM)); \
     writeVarUInt(FIELD_NUM, out); \
     writeBinary(NAME, out);
 
@@ -36,9 +42,11 @@ void BlockInfo::read(ReadBuffer & in)
 {
     UInt64 field_num = 0;
 
+    LOG_DEBUG(&Logger::get("BlockInfo"),"read");
     while (true)
     {
         readVarUInt(field_num, in);
+        LOG_DEBUG(&Logger::get("BlockInfo"),"read field_num is " + std::to_string(field_num));
         if (field_num == 0)
             break;
 

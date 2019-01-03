@@ -49,6 +49,7 @@ MergeTreeBaseBlockInputStream::MergeTreeBaseBlockInputStream(
 
 Block MergeTreeBaseBlockInputStream::readImpl()
 {
+    LOG_DEBUG(&Logger::get("MergeTreeBaseBlockInputStream"),"start readImpl");
     Block res;
 
     while (!res && !isCancelled())
@@ -65,6 +66,8 @@ Block MergeTreeBaseBlockInputStream::readImpl()
             task.reset();
     }
 
+    LOG_DEBUG(&Logger::get("MergeTreeBaseBlockInputStream"),"end reaImpl ,block name :" + res.dumpNames()  + ", row size:" +
+            std::to_string(res.rows()) + ", column size:" +  std::to_string(res.columns()));
     return res;
 }
 

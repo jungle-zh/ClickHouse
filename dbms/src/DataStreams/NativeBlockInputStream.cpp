@@ -9,6 +9,7 @@
 #include <ext/range.h>
 
 #include <DataStreams/NativeBlockInputStream.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -26,6 +27,7 @@ namespace ErrorCodes
 NativeBlockInputStream::NativeBlockInputStream(ReadBuffer & istr_, UInt64 server_revision_)
     : istr(istr_), server_revision(server_revision_)
 {
+
 }
 
 NativeBlockInputStream::NativeBlockInputStream(ReadBuffer & istr_, const Block & header_, UInt64 server_revision_)
@@ -77,13 +79,17 @@ Block NativeBlockInputStream::readImpl()
 {
     Block res;
 
+    LOG_DEBUG(&Logger::get("NativeBlockInputStream"),"readImpl");
+
     const DataTypeFactory & data_type_factory = DataTypeFactory::instance();
 
-    if (use_index && index_block_it == index_block_end)
+    if (use_index && index_block_it == index_block_end){
         return res;
+    }
 
     if (istr.eof())
     {
+        LOG_DEBUG(&Logger::get("NativeBlockInputStream"),"eof ..");
         if (use_index)
             throw Exception("Input doesn't contain all data for index.", ErrorCodes::CANNOT_READ_ALL_DATA);
 
@@ -91,8 +97,10 @@ Block NativeBlockInputStream::readImpl()
     }
 
     /// Additional information about the block.
-    if (server_revision > 0)
+    if (server_revision > 0){
         res.info.read(istr);
+    }
+
 
     /// Dimensions
     size_t columns = 0;
@@ -102,6 +110,8 @@ Block NativeBlockInputStream::readImpl()
     {
         readVarUInt(columns, istr);
         readVarUInt(rows, istr);
+
+        LOG_DEBUG(&Logger::get("NativeBlockInputStream"),"read block columns:" + std::to_string(columns) + " rows:" + std::to_string(rows));
     }
     else
     {
@@ -121,6 +131,8 @@ Block NativeBlockInputStream::readImpl()
 
         /// Name
         readBinary(column.name, istr);
+
+        LOG_DEBUG(&Logger::get("NativeBlockInputStream"),"block column name  " + column.name);
 
         /// Type
         String type_name;
@@ -161,6 +173,7 @@ Block NativeBlockInputStream::readImpl()
             index_column_it = index_block_it->columns.begin();
     }
 
+    LOG_DEBUG(&Logger::get("NativeBlockInputStream"),"read block" + res.printColumn());
     return res;
 }
 

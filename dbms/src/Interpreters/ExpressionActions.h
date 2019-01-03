@@ -200,7 +200,7 @@ public:
 private:
     NamesAndTypesList input_columns;
     Actions actions;
-    Block sample_block;
+    Block sample_block;  //jungle comment  : column  changes  with action execute
     Settings settings;
 
     void checkLimits(Block & block) const;

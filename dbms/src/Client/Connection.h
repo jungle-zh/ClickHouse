@@ -125,6 +125,8 @@ public:
         Progress progress;
         BlockStreamProfileInfo profile_info;
 
+        String if_storageBuild ;
+
         Packet() : type(Protocol::Server::Hello) {}
     };
 
@@ -149,17 +151,23 @@ public:
         UInt64 stage = QueryProcessingStage::Complete,
         const Settings * settings = nullptr,
         const ClientInfo * client_info = nullptr,
-        bool with_pending_data = false);
+        bool with_pending_data = false,
+        Protocol::Client::Enum = Protocol::Client::Query);
 
     void sendCancel();
     /// Send block of data; if name is specified, server will write it to external (temporary) table of that name.
     void sendData(const Block & block, const String & name = "");
+
+    void sendShuffleMainTableData(const Block & block, const String & name = "");
+    void sendShuffleRightTableData(const Block & block, const String & name = "");
     /// Send all contents of external (temporary) tables.
     void sendExternalTablesData(ExternalTablesData & data);
 
     /// Send prepared block of data (serialized and, if need, compressed), that will be read from 'input'.
     /// You could pass size of serialized/compressed block.
     void sendPreparedData(ReadBuffer & input, size_t size, const String & name = "");
+
+    void askIfShuffleStorageBuid( const String & name );
 
     /// Check, if has data to read.
     bool poll(size_t timeout_microseconds = 0);
@@ -276,6 +284,7 @@ private:
     std::unique_ptr<Exception> receiveException();
     Progress receiveProgress();
     BlockStreamProfileInfo receiveProfileInfo();
+    String receiveIfStorageBuild();
 
     void initBlockInput();
 

@@ -3,6 +3,7 @@
 #include <Poco/Logger.h>
 #include <DataStreams/IProfilingBlockInputStream.h>
 #include <Interpreters/ExpressionAnalyzer.h>    /// SubqueriesForSets
+#include <Interpreters/Context.h>
 
 
 namespace Poco { class Logger; }
@@ -20,7 +21,14 @@ public:
     CreatingSetsBlockInputStream(
         const BlockInputStreamPtr & input,
         const SubqueriesForSets & subqueries_for_sets_,
-        const SizeLimits & network_transfer_limits);
+        const SizeLimits & network_transfer_limits,
+        const Context & context);
+
+
+    CreatingSetsBlockInputStream(
+            const BlockInputStreamPtr & input,
+            const SubqueriesForSets & subqueries_for_sets_,
+            const SizeLimits & network_transfer_limits);
 
     String getName() const override { return "CreatingSets"; }
 
@@ -45,6 +53,8 @@ private:
     using Logger = Poco::Logger;
     Logger * log = &Logger::get("CreatingSetsBlockInputStream");
 
+    //const Context & context;
+    const Context * context;
     void createAll();
     void createOne(SubqueryForSet & subquery);
 };

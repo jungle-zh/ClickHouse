@@ -49,6 +49,9 @@ MultiplexedConnections::MultiplexedConnections(
 
     active_connection_count = connections.size();
 
+
+    LOG_DEBUG(&Logger::get("MultiplexedConnections"),"in MultiplexedConnections construct , active_connection_count is " + std::to_string(active_connection_count) );
+
     if (append_extra_info)
         block_extra_info = std::make_unique<BlockExtraInfo>();
 }
@@ -75,12 +78,53 @@ void MultiplexedConnections::sendExternalTablesData(std::vector<ExternalTablesDa
     }
 }
 
+
+bool MultiplexedConnections::askIfShuffleStorageBuid(const String & storage_name){
+
+    bool  res = false;
+    Connection * connection = replica_states[0].connection;
+    if (connection == nullptr)
+        throw Exception("MultiplexedConnections: Internal error", ErrorCodes::LOGICAL_ERROR);
+
+    connection->askIfShuffleStorageBuid(storage_name);
+
+
+
+    Connection::Packet packet = connection->receivePacket();
+
+    assert(packet.type == Protocol::Server::ResponseIfStorageBuild);
+
+    if( packet.if_storageBuild == "yes" ){
+        res = true;
+    } else if(packet.if_storageBuild == "no"){
+        res = false;
+    } else{
+        throw NetException("Unexpected ResponseIfStorageBuild packet from server :" + packet.if_storageBuild);
+    }
+    /// Receive EndOfStream packet.
+    Connection::Packet end_packet = connection->receivePacket();
+
+    if (Protocol::Server::EndOfStream == end_packet.type)
+    {
+        /// Do nothing.
+    }
+    else if (Protocol::Server::Exception == end_packet.type)
+        packet.exception->rethrow();
+    else
+        throw NetException("Unexpected packet from server (expected EndOfStream or Exception, got "
+                           + String(Protocol::Server::toString(packet.type)) + ")");
+
+
+    return res;
+
+}
 void MultiplexedConnections::sendQuery(
     const String & query,
     const String & query_id,
     UInt64 stage,
     const ClientInfo * client_info,
-    bool with_pending_data)
+    bool with_pending_data,
+    Protocol::Client::Enum query_type)
 {
     std::lock_guard<std::mutex> lock(cancel_mutex);
 
@@ -99,7 +143,7 @@ void MultiplexedConnections::sendQuery(
                 throw Exception("MultiplexedConnections: Internal error", ErrorCodes::LOGICAL_ERROR);
 
             query_settings.parallel_replica_offset = i;
-            connection->sendQuery(query, query_id, stage, &query_settings, client_info, with_pending_data);
+            connection->sendQuery(query, query_id, stage, &query_settings, client_info, with_pending_data,query_type);
         }
     }
     else
@@ -108,7 +152,7 @@ void MultiplexedConnections::sendQuery(
         if (connection == nullptr)
             throw Exception("MultiplexedConnections: Internal error", ErrorCodes::LOGICAL_ERROR);
 
-        connection->sendQuery(query, query_id, stage, &settings, client_info, with_pending_data);
+        connection->sendQuery(query, query_id, stage, &settings, client_info, with_pending_data,query_type);
     }
 
     sent_query = true;
@@ -138,6 +182,7 @@ BlockExtraInfo MultiplexedConnections::getBlockExtraInfo() const
 
 void MultiplexedConnections::disconnect()
 {
+    LOG_DEBUG(&Logger::get("MultiplexedConnections"),"disconnect");
     std::lock_guard<std::mutex> lock(cancel_mutex);
 
     for (ReplicaState & state : replica_states)

@@ -936,12 +936,16 @@ public:
             }
 
             /// Put all the necessary columns multiplied by the sizes of arrays into the block.
+            LOG_DEBUG(&Logger::get("FunctionArrayMapped"),"column_function  replicate"  );
             auto replicated_column_function_ptr = (*column_function->replicate(column_first_array->getOffsets())).mutate();
             auto * replicated_column_function = typeid_cast<ColumnFunction *>(replicated_column_function_ptr.get());
-            replicated_column_function->appendArguments(arrays);
+            LOG_DEBUG(&Logger::get("FunctionArrayMapped"),"replicated_column_function  appendArguments"  );
+            replicated_column_function->appendArguments(arrays); //jungle comment:append array
 
             block.getByPosition(result).column = Impl::execute(*column_first_array,
                                                                replicated_column_function->reduce().column);
+
+            LOG_DEBUG(&Logger::get("FunctionArrayMapped"),"after execute reduce function ,block name :" + block.dumpNames());
         }
     }
 };

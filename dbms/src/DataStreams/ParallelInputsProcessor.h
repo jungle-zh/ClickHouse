@@ -267,6 +267,8 @@ private:
             }
 
             /// The main work.
+
+            LOG_DEBUG(&Logger::get("ParallelInputsProcessor"),"input.in->read");
             Block block = input.in->read();
 
             {

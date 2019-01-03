@@ -2,7 +2,7 @@
 
 #include <DataStreams/IProfilingBlockInputStream.h>
 
-
+#include <Interpreters/ExpressionActions.h>
 namespace DB
 {
 
@@ -21,6 +21,7 @@ private:
 public:
     ExpressionBlockInputStream(const BlockInputStreamPtr & input, const ExpressionActionsPtr & expression_);
 
+    ~ExpressionBlockInputStream(){ LOG_DEBUG(&Logger::get("ExpressionBlockInputStream"),"~ExpressionBlockInputStream ,action  is \n" + expression->dumpActions());}
     String getName() const override;
     Block getTotals() override;
     Block getHeader() const override;

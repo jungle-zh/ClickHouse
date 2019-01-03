@@ -40,6 +40,9 @@
 
 #include <boost/filesystem.hpp>
 #include <Parsers/ASTTablesInSelectQuery.h>
+#include <Parsers/queryToString.h>
+#include <Interpreters/ClusterProxy/SelectOriginStreamFactory.h>
+#include <Interpreters/InterpreterEnhanceJoinSelectQuery.h>
 
 
 namespace DB
@@ -184,6 +187,7 @@ BlockInputStreams StorageDistributed::read(
     const size_t /*max_block_size*/,
     const unsigned /*num_streams*/)
 {
+    LOG_DEBUG(&Logger::get("StorageDistributed") ,"@@ start read ..");
     auto cluster = getCluster();
 
     const Settings & settings = context.getSettingsRef();
@@ -199,17 +203,73 @@ BlockInputStreams StorageDistributed::read(
             ? QueryProcessingStage::Complete
             : QueryProcessingStage::WithMergeableState;
 
+
     const auto & modified_query_ast = rewriteSelectQuery(
         query_info.query, remote_database, remote_table);
+
+
+
 
     Block header = materializeBlock(InterpreterSelectQuery(query_info.query, context, {}, processed_stage).getSampleBlock());
 
     ClusterProxy::SelectStreamFactory select_stream_factory(
         header, processed_stage, QualifiedTableName{remote_database, remote_table}, context.getExternalTables());
 
-    return ClusterProxy::executeQuery(
-        select_stream_factory, cluster, modified_query_ast, context, settings);
+    LOG_DEBUG(&Logger::get("StorageDistributed") ,"ClusterProxy start execute modified_query :" + queryToString(modified_query_ast) + ", processed_stage : " +  std::to_string(processed_stage));
+    BlockInputStreams res = ClusterProxy::executeQuery(
+            select_stream_factory, cluster, modified_query_ast, context, settings);
+    LOG_DEBUG(&Logger::get("StorageDistributed") ,"@@ end read , BlockInputStreams size is :" + std::to_string(res.size()));
+    return  res ;
 }
+
+
+    BlockInputStreams StorageDistributed::readOrigin(
+            const Names & /*column_names*/,
+            const SelectQueryInfo & query_info,
+            const Context & context,
+            QueryProcessingStage::Enum & processed_stage,
+            const size_t /*max_block_size*/,
+            const unsigned /*num_streams*/)
+    {
+        LOG_DEBUG(&Logger::get("StorageDistributed") ,"readOrigin start ");
+        auto cluster = getCluster();
+
+        const Settings & settings = context.getSettingsRef();
+
+        size_t num_local_shards = cluster->getLocalShardCount();
+        size_t num_remote_shards = cluster->getRemoteShardCount();
+        size_t result_size = (num_remote_shards * settings.max_parallel_replicas) + num_local_shards;
+
+        if (settings.distributed_group_by_no_merge)
+            processed_stage = QueryProcessingStage::Complete;
+        else    /// Normal mode.
+            processed_stage = result_size == 1
+                              ? QueryProcessingStage::Complete
+                              : QueryProcessingStage::WithMergeableState;
+
+
+        const auto & modified_query_ast = rewriteSelectQuery(
+                query_info.query, remote_database, remote_table);
+
+
+
+
+        Block header = materializeBlock(InterpreterEnhanceJoinSelectQuery(query_info.query, context, {}, processed_stage, Protocol::Client::OriginPullQuery).getSampleBlock());
+
+        LOG_DEBUG(&Logger::get("StorageDistributed"),"readOrigin header column is :" + header.printColumn());
+        ClusterProxy::SelectOriginStreamFactory select_stream_factory(
+                header, processed_stage, QualifiedTableName{remote_database, remote_table}, context.getExternalTables());
+
+        //ClusterProxy::SelectStreamFactory select_stream_factory(
+        //    header, processed_stage, QualifiedTableName{remote_database, remote_table}, context.getExternalTables());
+
+        LOG_DEBUG(&Logger::get("StorageDistributed") ,"ClusterProxy start execute modified_query :" + queryToString(modified_query_ast) + ", processed_stage : " +  std::to_string(processed_stage));
+        BlockInputStreams res = ClusterProxy::executeQuery(
+                select_stream_factory, cluster, modified_query_ast, context, settings);
+        LOG_DEBUG(&Logger::get("StorageDistributed") ,"readOrigin end  , BlockInputStreams size is :" + std::to_string(res.size()));
+        return  res ;
+    }
+
 
 
 BlockOutputStreamPtr StorageDistributed::write(const ASTPtr & query, const Settings & settings)

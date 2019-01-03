@@ -1,12 +1,14 @@
 #pragma once
 
 #include <Poco/Event.h>
-
+#include <common/logger_useful.h>
 #include <DataStreams/IProfilingBlockInputStream.h>
 #include <Common/setThreadName.h>
 #include <Common/CurrentMetrics.h>
 #include <common/ThreadPool.h>
 #include <Common/MemoryTracker.h>
+
+
 
 
 namespace CurrentMetrics
@@ -63,13 +65,15 @@ public:
       */
     bool poll(UInt64 milliseconds)
     {
+        LOG_DEBUG(&Logger::get("AsynchronousBlockInputStream"), "poll ..");
         if (!started)
         {
             next();
             started = true;
         }
-
-        return ready.tryWait(milliseconds);
+        bool pool_res = ready.tryWait(milliseconds);
+        //LOG_DEBUG(&Logger::get("AsynchronousBlockInputStream"), "poll res :" + std::to_string(pool_res));
+        return pool_res ;
     }
 
 
@@ -95,6 +99,7 @@ protected:
     Block readImpl() override
     {
         /// If there were no calculations yet, calculate the first block synchronously
+        LOG_DEBUG(&Logger::get("AsynchronousBlockInputStream"), "polled block from child and readImpl ...");
         if (!started)
         {
             calculate(current_memory_tracker);
@@ -103,8 +108,11 @@ protected:
         else    /// If the calculations are already in progress - wait for the result
             pool.wait();
 
-        if (exception)
+        if (exception){
+            LOG_DEBUG(&Logger::get("AsynchronousBlockInputStream"), "polled block exception ");
             std::rethrow_exception(exception);
+        }
+
 
         Block res = block;
         if (!res)
@@ -128,6 +136,7 @@ protected:
     /// Calculations that can be performed in a separate thread
     void calculate(MemoryTracker * memory_tracker)
     {
+        LOG_DEBUG(&Logger::get("AsynchronousBlockInputStream"), "calculate ,in AsyncBlockInput thread");
         CurrentMetrics::Increment metric_increment{CurrentMetrics::QueryThread};
 
         try
@@ -139,7 +148,7 @@ protected:
                 current_memory_tracker = memory_tracker;
                 children.back()->readPrefix();
             }
-
+            LOG_DEBUG(&Logger::get("AsynchronousBlockInputStream"), "calculate readPrefix done ,start read");
             block = children.back()->read();
         }
         catch (...)

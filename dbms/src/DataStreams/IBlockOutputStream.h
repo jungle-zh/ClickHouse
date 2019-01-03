@@ -71,5 +71,6 @@ private:
 };
 
 using BlockOutputStreamPtr = std::shared_ptr<IBlockOutputStream>;
+using BlockOutputStreams = std::vector<BlockOutputStreamPtr>;
 
 }

@@ -174,7 +174,7 @@ PoolWithFailoverBase<TNestedPool>::getMany(
     };
 
     /// Sort the pools into order in which they will be tried (based on respective PoolStates).
-    std::vector<ShuffledPool> shuffled_pools;
+    std::vector<ShuffledPool> shuffled_pools;   //jungle comment nested_pools is one shard of different replicas connection pool
     shuffled_pools.reserve(nested_pools.size());
     for (size_t i = 0; i < nested_pools.size(); ++i)
         shuffled_pools.push_back(ShuffledPool{nested_pools[i].get(), &pool_states[i], i, 0});
@@ -206,7 +206,7 @@ PoolWithFailoverBase<TNestedPool>::getMany(
     {
         for (size_t i = 0; i < shuffled_pools.size(); ++i)
         {
-            if (up_to_date_count >= max_entries /// Already enough good entries.
+            if (up_to_date_count >= max_entries /// Already enough good entries. jungle comment  max_entries is 1 in settings , so although one shard has many replicas , only one replica will be chosen
                 || entries_count + failed_pools_count >= nested_pools.size()) /// No more good entries will be produced.
             {
                 finished = true;

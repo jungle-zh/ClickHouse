@@ -44,8 +44,11 @@
 #include <Core/Field.h>
 #include <Columns/Collator.h>
 #include <Common/typeid_cast.h>
+#include <Parsers/formatAST.h>
+#include <Parsers/queryToString.h>
 
 
+class LOG_DEBUG;
 namespace ProfileEvents
 {
     extern const Event SelectQuery;
@@ -83,6 +86,7 @@ InterpreterSelectQuery::InterpreterSelectQuery(
     , input(input)
     , log(&Logger::get("InterpreterSelectQuery"))
 {
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"InterpreterSelectQuery construct1");
     init(required_result_column_names_);
 }
 
@@ -96,6 +100,7 @@ InterpreterSelectQuery::InterpreterSelectQuery(OnlyAnalyzeTag, const ASTPtr & qu
     , only_analyze(true)
     , log(&Logger::get("InterpreterSelectQuery"))
 {
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"InterpreterSelectQuery construct2");
     init({});
 }
 
@@ -129,7 +134,14 @@ void InterpreterSelectQuery::init(const Names & required_result_column_names)
     else if (table_expression && typeid_cast<const ASTSelectWithUnionQuery *>(table_expression.get()))
     {
         /// Read from subquery.
+        //jungle add
+        std::stringstream log_str;
+        table_expression->dumpTree(log_str);
+        std::stringstream log_str1;
+        query.dumpTree(log_str1);
+        LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),("in init , father query  " +  queryToString(query) + " start  get source_columns from tmp subquqey :" + queryToString(table_expression) ));
         source_columns = InterpreterSelectWithUnionQuery::getSampleBlock(table_expression, context).getNamesAndTypesList();
+        LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),("in init , father query  " +  queryToString(query) + " finish getting source_columns from tmp subquery:" + queryToString(table_expression)) + ",tmp subquery nolonger exist ...");
     }
     else if (table_expression && typeid_cast<const ASTFunction *>(table_expression.get()))
     {
@@ -145,11 +157,15 @@ void InterpreterSelectQuery::init(const Names & required_result_column_names)
         getDatabaseAndTableNames(database_name, table_name);
 
         storage = context.getTable(database_name, table_name);
+        if(!storage){
+            LOG_DEBUG( &Logger::get("InterpreterSelectQuery") ,"not find table name :" + table_name + ", storage is null, current query table:" + queryToString(query.table()));
+        }
     }
 
     if (storage)
         table_lock = storage->lockStructure(false, __PRETTY_FUNCTION__);
 
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"create ExpressionAnalyzer in query:" + queryToString(query_ptr));
     query_analyzer = std::make_unique<ExpressionAnalyzer>(
         query_ptr, context, storage, source_columns, required_result_column_names, subquery_depth, !only_analyze);
 
@@ -169,6 +185,9 @@ void InterpreterSelectQuery::init(const Names & required_result_column_names)
             if (!context.tryGetExternalTable(it.first))
                 context.addExternalTable(it.first, it.second);
     }
+
+
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"InterpreterSelectQuery init finish :" + queryToString(query_ptr));
 }
 
 
@@ -202,9 +221,13 @@ void InterpreterSelectQuery::getDatabaseAndTableNames(String & database_name, St
 
 Block InterpreterSelectQuery::getSampleBlock()
 {
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"## start of getSampleBlock ,query is " + queryToString(query_ptr));
     Pipeline pipeline;
     executeImpl(pipeline, input, true);
+    //LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"start of  getHeader\n");
     auto res = pipeline.firstStream()->getHeader();
+    //LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"end of  getHeader\n");
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"## end  of getSampleBlock ,query is " + queryToString(query_ptr));
     return res;
 }
 
@@ -236,6 +259,8 @@ BlockInputStreams InterpreterSelectQuery::executeWithMultipleStreams()
 
 InterpreterSelectQuery::AnalysisResult InterpreterSelectQuery::analyzeExpressions(QueryProcessingStage::Enum from_stage)
 {
+
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"start of analyzeExpressions ");
     AnalysisResult res;
 
     /// Do I need to perform the first part of the pipeline - running on remote servers during distributed processing.
@@ -250,12 +275,17 @@ InterpreterSelectQuery::AnalysisResult InterpreterSelectQuery::analyzeExpression
         *  throw out unnecessary columns based on the entire query. In unnecessary parts of the query, we will not execute subqueries.
         */
 
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"first_stage:" << res.first_stage << " , second_stage:" << res.second_stage);
     {
         ExpressionActionsChain chain;
 
         res.need_aggregate = query_analyzer->hasAggregation();
 
-        query_analyzer->appendArrayJoin(chain, !res.first_stage);
+        if(query_analyzer->appendArrayJoin(chain, !res.first_stage)){
+            LOG_DEBUG(&Logger::get("InterpreterSelectQuery")," array join action :\n" + chain.steps.back().actions->dumpActions());
+        }
+
+
 
         if (query_analyzer->appendJoin(chain, !res.first_stage))
         {
@@ -276,6 +306,8 @@ InterpreterSelectQuery::AnalysisResult InterpreterSelectQuery::analyzeExpression
             query_analyzer->appendGroupBy(chain, !res.first_stage);
             query_analyzer->appendAggregateFunctionsArguments(chain, !res.first_stage);
             res.before_aggregation = chain.getLastActions();
+
+            LOG_DEBUG(&Logger::get("InterpreterSelectQuery"), "ExpressionActions :before_aggregation is \n"+chain.getLastActions()->dumpActions());
 
             chain.finalize();
             chain.clear();
@@ -305,6 +337,9 @@ InterpreterSelectQuery::AnalysisResult InterpreterSelectQuery::analyzeExpression
         query_analyzer->appendProjectResult(chain);
         res.final_projection = chain.getLastActions();
 
+
+        LOG_DEBUG(&Logger::get("InterpreterSelectQuery"), "# chain:\n"+chain.dumpChain());
+
         chain.finalize();
         chain.clear();
     }
@@ -317,12 +352,15 @@ InterpreterSelectQuery::AnalysisResult InterpreterSelectQuery::analyzeExpression
 
     res.subqueries_for_sets = query_analyzer->getSubqueriesForSets();
 
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"end of analyzeExpressions ");
     return res;
 }
 
 
 void InterpreterSelectQuery::executeImpl(Pipeline & pipeline, const BlockInputStreamPtr & input, bool dry_run)
 {
+    String dry = dry_run ?"true":"false";
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery") ,"start executeImpl ,dry_run is :" + dry );
     if (input)
         pipeline.streams.push_back(input);
 
@@ -367,8 +405,10 @@ void InterpreterSelectQuery::executeImpl(Pipeline & pipeline, const BlockInputSt
             to_stage > QueryProcessingStage::WithMergeableState &&
             !query.group_by_with_totals;
 
+        //LOG_DEBUG(&Logger::get("InterpreterSelectQuery") ,"first_stage is " +  std::to_string(expressions.first_stage) + ", second_stage is " + std::to_string(expressions.second_stage) );
         if (expressions.first_stage)
         {
+            LOG_DEBUG(&Logger::get("InterpreterSelectQuery") ,"first_stage is true ...");
             if (expressions.has_join)
             {
                 const ASTTableJoin & join = static_cast<const ASTTableJoin &>(*query.join()->table_join);
@@ -376,8 +416,11 @@ void InterpreterSelectQuery::executeImpl(Pipeline & pipeline, const BlockInputSt
                     pipeline.stream_with_non_joined_data = expressions.before_join->createStreamWithNonJoinedDataIfFullOrRightJoin(
                         pipeline.firstStream()->getHeader(), settings.max_block_size);
 
-                for (auto & stream : pipeline.streams)   /// Applies to all sources except stream_with_non_joined_data.
+                for (auto & stream : pipeline.streams) {  /// Applies to all sources except stream_with_non_joined_data.
+                    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"executeJoin pipeline add ExpressionBlockInputStream:\n"+ expressions.before_join->dumpActions());
                     stream = std::make_shared<ExpressionBlockInputStream>(stream, expressions.before_join);
+                }
+
             }
 
             if (expressions.has_where)
@@ -407,10 +450,13 @@ void InterpreterSelectQuery::executeImpl(Pipeline & pipeline, const BlockInputSt
                 if (query.limit_length)
                     executePreLimit(pipeline);
             }
+        } else{
+            LOG_DEBUG(&Logger::get("InterpreterSelectQuery") ,"first_stage is false ");
         }
 
         if (expressions.second_stage)
         {
+            LOG_DEBUG(&Logger::get("InterpreterSelectQuery") ,"second_stage is true ... ");
             bool need_second_distinct_pass = false;
             bool need_merge_streams = false;
 
@@ -490,11 +536,18 @@ void InterpreterSelectQuery::executeImpl(Pipeline & pipeline, const BlockInputSt
             executeExtremes(pipeline);
 
             executeLimit(pipeline);
+        } else{
+            LOG_DEBUG(&Logger::get("InterpreterSelectQuery") ,"second_stage is false ");
         }
     }
 
-    if (!expressions.subqueries_for_sets.empty())
+    if (!expressions.subqueries_for_sets.empty()){
         executeSubqueriesInSetsAndJoins(pipeline, expressions.subqueries_for_sets);
+    }
+
+
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"after executeFetchColumns , analyzeExpression and execute* , pipeline of this InterpreterSelectQuery built done ,query :" + queryToString(query));
+    pipeline.printStream();
 }
 
 
@@ -512,6 +565,7 @@ static void getLimitLengthAndOffset(ASTSelectQuery & query, size_t & length, siz
 
 QueryProcessingStage::Enum InterpreterSelectQuery::executeFetchColumns(Pipeline & pipeline, bool dry_run)
 {
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),("start to executeFetchColumns"));
     /// List of columns to read to execute the query.
     Names required_columns = query_analyzer->getRequiredSourceColumns();
 
@@ -557,6 +611,7 @@ QueryProcessingStage::Enum InterpreterSelectQuery::executeFetchColumns(Pipeline 
     /// The subquery interpreter, if the subquery
     std::unique_ptr<InterpreterSelectWithUnionQuery> interpreter_subquery;
 
+
     auto query_table = query.table();
     if (query_table && typeid_cast<ASTSelectWithUnionQuery *>(query_table.get()))
     {
@@ -571,8 +626,19 @@ QueryProcessingStage::Enum InterpreterSelectQuery::executeFetchColumns(Pipeline 
         subquery_settings.extremes = 0;
         subquery_context.setSettings(subquery_settings);
 
+        std::stringstream log_str;
+        std::stringstream log_str1;
+        query_table->dumpTree(log_str);
+        query.dumpTree(log_str1);
+
+        LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),("in executeFetchColumns , InterpreterSelectQuery start create subquery ,father is: " + queryToString(query) + "  child  is: " + queryToString(query_table)));
+
+
         interpreter_subquery = std::make_unique<InterpreterSelectWithUnionQuery>(
             query_table, subquery_context, required_columns, QueryProcessingStage::Complete, subquery_depth + 1);
+
+        LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),("in executeFetchColumns , InterpreterSelectQuery finish creating subquery , father is :" + queryToString(query) + "  child  is: " + queryToString(query_table) ));
+
 
         /// If there is an aggregation in the outer query, WITH TOTALS is ignored in the subquery.
         if (query_analyzer->hasAggregation())
@@ -638,11 +704,23 @@ QueryProcessingStage::Enum InterpreterSelectQuery::executeFetchColumns(Pipeline 
     else if (interpreter_subquery)
     {
         /// Subquery.
-
-        if (!dry_run)
+        std::stringstream log_str;
+        query_table->dumpTree(log_str);
+        std::stringstream log_str1;
+        query.dumpTree(log_str1);
+        LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"======== start to execute Subquery , father is  " + queryToString(query) + ",  child is:" + queryToString(query_table) );
+        if (!dry_run) {
+            LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"start executeWithMultipleStreams");
             pipeline.streams = interpreter_subquery->executeWithMultipleStreams();
-        else
+            LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"======== finish to execute Subquery  ,get child subStream: "  );
+            pipeline.printStream();
+        }
+        else{
+            LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"is dry_run,get  InterpreterSelectWithUnionQuery's result_header directly");
             pipeline.streams.emplace_back(std::make_shared<NullBlockInputStream>(interpreter_subquery->getSampleBlock()));
+        }
+
+
     }
     else if (storage)
     {
@@ -675,13 +753,25 @@ QueryProcessingStage::Enum InterpreterSelectQuery::executeFetchColumns(Pipeline 
         }
 
         query_analyzer->makeSetsForIndex();
+        LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"###### before read from " + queryToString(query.table())  +":\n" );
+        pipeline.printStream();
 
-        if (!dry_run)
+        if (!dry_run){
+
+            std::string required_columns_s = "" ;
+            for(auto s :required_columns ){
+                required_columns_s += s;
+                required_columns_s += ",";
+            }
+            LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"read from storage,required_columns: " +  required_columns_s);
             pipeline.streams = storage->read(required_columns, query_info, context, from_stage, max_block_size, max_streams);
+            //jungle comment : context contain  external_tables ,only build once
+        }
 
-        if (pipeline.streams.empty())
+        if (pipeline.streams.empty())  // lazy interpreter
             pipeline.streams.emplace_back(std::make_shared<NullBlockInputStream>(storage->getSampleBlockForColumns(required_columns)));
-
+        LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"###### after read from " + queryToString(query.table())  +":\n"  );
+        pipeline.printStream();
         pipeline.transform([&](auto & stream)
         {
             stream->addTableLock(table_lock);
@@ -733,6 +823,7 @@ QueryProcessingStage::Enum InterpreterSelectQuery::executeFetchColumns(Pipeline 
             stream = std::make_shared<ExpressionBlockInputStream>(stream, alias_actions);
         });
     }
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),(" end  of executeFetchColumns"));
 
     return from_stage;
 }
@@ -740,6 +831,8 @@ QueryProcessingStage::Enum InterpreterSelectQuery::executeFetchColumns(Pipeline 
 
 void InterpreterSelectQuery::executeWhere(Pipeline & pipeline, const ExpressionActionsPtr & expression)
 {
+
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"executeWhere pipeline add FilterBlockInputStream:\n"+ expression->dumpActions());
     pipeline.transform([&](auto & stream)
     {
         stream = std::make_shared<FilterBlockInputStream>(stream, expression, query.where_expression->getColumnName());
@@ -749,6 +842,7 @@ void InterpreterSelectQuery::executeWhere(Pipeline & pipeline, const ExpressionA
 
 void InterpreterSelectQuery::executeAggregation(Pipeline & pipeline, const ExpressionActionsPtr & expression, bool overflow_row, bool final)
 {
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"executeAggregation pipeline add before_aggregation ExpressionBlockInputStream:\n" + expression->dumpActions());
     pipeline.transform([&](auto & stream)
     {
         stream = std::make_shared<ExpressionBlockInputStream>(stream, expression);
@@ -786,6 +880,7 @@ void InterpreterSelectQuery::executeAggregation(Pipeline & pipeline, const Expre
     /// If there are several sources, then we perform parallel aggregation
     if (pipeline.streams.size() > 1)
     {
+        LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"executeAggregation pipeline add ParallelAggregatingBlockInputStream" );
         pipeline.firstStream() = std::make_shared<ParallelAggregatingBlockInputStream>(
             pipeline.streams, pipeline.stream_with_non_joined_data, params, final,
             max_streams,
@@ -816,6 +911,8 @@ void InterpreterSelectQuery::executeAggregation(Pipeline & pipeline, const Expre
 
 void InterpreterSelectQuery::executeMergeAggregated(Pipeline & pipeline, bool overflow_row, bool final)
 {
+
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"executeMergeAggregated pipeline");
     Names key_names;
     AggregateDescriptions aggregates;
     query_analyzer->getAggregateInfo(key_names, aggregates);
@@ -889,6 +986,7 @@ void InterpreterSelectQuery::executeTotalsAndHaving(Pipeline & pipeline, bool ha
 
 void InterpreterSelectQuery::executeExpression(Pipeline & pipeline, const ExpressionActionsPtr & expression)
 {
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"executeExpression pipeline add ExpressionBlockInputStream:\n"+ expression->dumpActions());
     pipeline.transform([&](auto & stream)
     {
         stream = std::make_shared<ExpressionBlockInputStream>(stream, expression);
@@ -988,6 +1086,7 @@ void InterpreterSelectQuery::executeMergeSorted(Pipeline & pipeline)
 
 void InterpreterSelectQuery::executeProjection(Pipeline & pipeline, const ExpressionActionsPtr & expression)
 {
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"executeProjection pipeline add ExpressionBlockInputStream:\n"+ expression->dumpActions());
     pipeline.transform([&](auto & stream)
     {
         stream = std::make_shared<ExpressionBlockInputStream>(stream, expression);
@@ -1029,6 +1128,7 @@ void InterpreterSelectQuery::executeUnion(Pipeline & pipeline)
     /// If there are still several streams, then we combine them into one
     if (pipeline.hasMoreThanOneStream())
     {
+        LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"executeUnion  pipeline add UnionBlockInputStream ,sub streams num :" + std::to_string(pipeline.streams.size()));
         pipeline.firstStream() = std::make_shared<UnionBlockInputStream<>>(pipeline.streams, pipeline.stream_with_non_joined_data, max_streams);
         pipeline.stream_with_non_joined_data = nullptr;
         pipeline.streams.resize(1);
@@ -1152,8 +1252,9 @@ void InterpreterSelectQuery::executeExtremes(Pipeline & pipeline)
 void InterpreterSelectQuery::executeSubqueriesInSetsAndJoins(Pipeline & pipeline, SubqueriesForSets & subqueries_for_sets)
 {
     const Settings & settings = context.getSettingsRef();
-
+    LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"executeSubqueriesInSetsAndJoins  pipeline add CreatingSetsBlockInputStream");
     executeUnion(pipeline);
+
     pipeline.firstStream() = std::make_shared<CreatingSetsBlockInputStream>(
         pipeline.firstStream(), subqueries_for_sets,
         SizeLimits(settings.max_rows_to_transfer, settings.max_bytes_to_transfer, settings.transfer_overflow_mode));

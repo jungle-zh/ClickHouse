@@ -4,6 +4,7 @@
 
 #include <IO/WriteBufferFromPocoSocket.h>
 #include <Common/NetException.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -23,7 +24,7 @@ void WriteBufferFromPocoSocket::nextImpl()
         return;
 
     size_t bytes_written = 0;
-    while (bytes_written < offset())
+    while (bytes_written < offset()) //jungle comment : send all data in buffer   
     {
         ssize_t res = 0;
 
@@ -31,6 +32,7 @@ void WriteBufferFromPocoSocket::nextImpl()
         try
         {
             res = socket.impl()->sendBytes(working_buffer.begin() + bytes_written, offset() - bytes_written);
+            LOG_DEBUG(&Logger::get("WriteBufferFromPocoSocket"),"send " + std::to_string(res) + " bytes to remote");
         }
         catch (const Poco::Net::NetException & e)
         {

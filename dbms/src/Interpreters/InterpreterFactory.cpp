@@ -36,6 +36,7 @@
 
 #include <Parsers/ASTSystemQuery.h>
 #include <Common/typeid_cast.h>
+#include "InterpreterEnhanceJoinSelectQuery.h"
 
 
 namespace DB
@@ -61,15 +62,27 @@ static void throwIfReadOnly(Context & context)
 }
 
 
-std::unique_ptr<IInterpreter> InterpreterFactory::get(ASTPtr & query, Context & context, QueryProcessingStage::Enum stage)
+std::unique_ptr<IInterpreter> InterpreterFactory::get(ASTPtr & query, Context & context, QueryProcessingStage::Enum stage,Protocol::Client::Enum query_type,   std::shared_ptr<std::map<String,StoragePtr >>  shuffle_tables)
 {
+    LOG_DEBUG(&Logger::get("InterpreterFactory"),"query type is :" + std::to_string(query_type));
     if (typeid_cast<ASTSelectQuery *>(query.get()))
     {
+        LOG_DEBUG(&Logger::get("InterpreterFactory"),"get InterpreterSelectQuery");
         return std::make_unique<InterpreterSelectQuery>(query, context, Names{}, stage);
     }
     else if (typeid_cast<ASTSelectWithUnionQuery *>(query.get()))
     {
-        return std::make_unique<InterpreterSelectWithUnionQuery>(query, context, Names{}, stage);
+        LOG_DEBUG(&Logger::get("InterpreterFactory"),"query is ASTSelectWithUnionQuery ");
+        if(query_type == Protocol::Client::ShuffleJoinMasterQuery ||
+                  query_type == Protocol::Client::OriginPullQuery ||
+                  query_type == Protocol::Client::FirstStageQuery){
+
+            LOG_DEBUG(&Logger::get("InterpreterFactory"),"get InterpreterEnhanceJoinSelectQuery");
+          //  return std::make_unique<InterpreterEnhanceJoinSelectQuery>(query, context, Names{}, stage,query_type);
+        }
+
+        return std::make_unique<InterpreterSelectWithUnionQuery>(query, context, Names{}, stage,0,query_type,shuffle_tables);
+
     }
     else if (typeid_cast<ASTInsertQuery *>(query.get()))
     {

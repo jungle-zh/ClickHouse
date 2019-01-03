@@ -286,6 +286,21 @@ std::string Block::dumpStructure() const
 }
 
 
+std::string Block::printColumn() const {
+
+    std::string res ;
+
+    for(auto e : data){
+        res += "name:";
+        res += e.name;
+        res += " type:";
+        res += e.type.get()->getName();
+        res += ",";
+    }
+    return res;
+}
+
+
 Block Block::cloneEmpty() const
 {
     Block res;

@@ -27,7 +27,7 @@
 #include <Common/HashTable/Hash.h>
 #include <Functions/IFunction.h>
 #include <Functions/FunctionHelpers.h>
-
+#include <common/logger_useful.h>
 #include <ext/range.h>
 
 
@@ -388,6 +388,7 @@ private:
             for (size_t i = 0; i < size; ++i)
             {
                 UInt64 h = IntHash64Impl::apply(toInteger(vec_from[i]));
+                LOG_DEBUG(&Logger::get("FunctionNeighbourhoodHash64") ,"arg value :"  + std::to_string(toInteger(vec_from[i])) +  " , hash value :" + std::to_string(h));
                 if (first)
                     vec_to[i] = h;
                 else
@@ -589,6 +590,7 @@ public:
 
     void executeImpl(Block & block, const ColumnNumbers & arguments, size_t result) override
     {
+        LOG_DEBUG(&Logger::get("FunctionsHashing"),"before executeImpl ,block " + block.printColumn());
         size_t rows = block.rows();
         auto col_to = ColumnUInt64::create(rows);
 
@@ -610,6 +612,9 @@ public:
         }
 
         block.getByPosition(result).column = std::move(col_to);
+
+        LOG_DEBUG(&Logger::get("FunctionsHashing"),"after executeImpl ,block " + block.printColumn());
+
     }
 };
 
@@ -814,8 +819,12 @@ struct ImplCityHash64
     static constexpr auto name = "cityHash64";
     using uint128_t = CityHash_v1_0_2::uint128;
 
-    static auto Hash128to64(const uint128_t & x) { return CityHash_v1_0_2::Hash128to64(x); }
-    static auto Hash64(const char * s, const size_t len) { return CityHash_v1_0_2::CityHash64(s, len); }
+    static auto Hash128to64(const uint128_t & x) {
+        LOG_DEBUG(&Logger::get("ImplCityHash64"),"Hash128to64");
+        return CityHash_v1_0_2::Hash128to64(x); }
+    static auto Hash64(const char * s, const size_t len) {
+        LOG_DEBUG(&Logger::get("ImplCityHash64"),"Hash64");
+        return CityHash_v1_0_2::CityHash64(s, len); }
 };
 
 struct ImplFarmHash64

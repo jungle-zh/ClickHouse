@@ -1,0 +1,106 @@
+//
+// Created by admin on 18/11/28.
+//
+
+
+#include <Interpreters/DistributeJoinPlanTree.h>
+#include <Parsers/ASTJoinSelectQuery.h>
+#include <Common/typeid_cast.h>
+
+namespace DB
+{
+
+    using DistributeJoinPlanTreePtr = std::shared_ptr<DistributeJoinPlanTree>
+
+
+    BlockInputStreamPtr DistributeJoinPlanTree::execute() {
+
+        if(type == NodeType::JOIN){
+
+            status = NodeStatus::PREPARE;
+            BlockInputStreamPtr leftStream  = left->execute();
+            BlockInputStreamPtr rightStream  = right->execute();
+
+            status = NodeStatus::BUILD;
+            BlockOutputStreamPtr outToShuffle  =   buildFromChildNode(leftStream,rightStream); //join and get the output stream
+
+
+
+        }
+        if(type == NodeType::QUERY){
+
+            BlockOutputStreamPtr outToShuffle  =  buildFromQuery(); // get the output stream  by query of local
+
+
+        }
+
+        if( !need_aggregate ){
+
+            status = NodeStatus::SHUFFLE_WRITE;
+            //write out
+
+            status = NodeStatus::SHUFFLE_READ;
+
+            // read from other
+
+            BlockInputStreamPtr readStream ;
+
+
+            return readStream;
+
+
+        } else {
+
+            status = NodeStatus::AGG_WRITE;
+            //write out
+
+            status = NodeStatus::AGG_READ;
+
+            // read from other
+
+            BlockInputStreamPtr readStream ;
+
+            return readStream;
+
+        }
+
+    }
+
+
+
+
+    DistributeJoinPlanTreePtr DistributeJoinPlanTree::buildSubTree(ASTPtr && query) {
+        ASTJoinSelectQuery * node = nullptr;
+
+        if(node = reinterpret_cast< ASTJoinSelectQuery *>(query.get()) ){
+
+
+         DistributeJoinPlanTreePtr root =  std::make_shared<DistributeJoinPlanTree>(buildSubTree( node->getLeft()),buildSubTree( node->getRight()),node->getJoin());
+
+         root->setNodeType(NodeType::JOIN);
+
+         return root;
+
+
+        } else {  //no subtree ,leef node
+
+         DistributeJoinPlanTreePtr root =  std::make_shared<DistributeJoinPlanTree>(query);
+
+         root->setNodeType(NodeType::QUERY);
+
+         return root ;
+
+        }
+
+
+
+    }
+
+
+
+
+
+
+}
+
+

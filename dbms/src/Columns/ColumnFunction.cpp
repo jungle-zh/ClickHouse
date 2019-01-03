@@ -2,6 +2,7 @@
 #include <Columns/ColumnFunction.h>
 #include <Columns/ColumnsCommon.h>
 #include <Functions/IFunction.h>
+#include <common/logger_useful.h>
 
 namespace DB
 {
@@ -14,6 +15,7 @@ namespace ErrorCodes
 ColumnFunction::ColumnFunction(size_t size, FunctionBasePtr function, const ColumnsWithTypeAndName & columns_to_capture)
         : size_(size), function(function)
 {
+    LOG_DEBUG(&Logger::get("ColumnFunction"),"ColumnFunction construct ");
     appendArguments(columns_to_capture);
 }
 
@@ -161,8 +163,11 @@ void ColumnFunction::appendArguments(const ColumnsWithTypeAndName & columns)
                         (were_captured ? " and " + toString(were_captured) + " columns have already been captured" : "")
                         + ".", ErrorCodes::LOGICAL_ERROR);
 
-    for (const auto & column : columns)
+    for (const auto & column : columns){
         appendArgument(column);
+        LOG_DEBUG(&Logger::get("ColumnFunction"),"captured_columns appendArgument  :" +column.name);
+    }
+
 }
 
 void ColumnFunction::appendArgument(const ColumnWithTypeAndName & column)
@@ -190,9 +195,16 @@ ColumnWithTypeAndName ColumnFunction::reduce() const
     Block block(captured_columns);
     block.insert({nullptr, function->getReturnType(), ""});
 
+    std::string  captured_columns_s  = "";
     ColumnNumbers arguments(captured_columns.size());
-    for (size_t i = 0; i < captured_columns.size(); ++i)
+    for (size_t i = 0; i < captured_columns.size(); ++i){
         arguments[i] = i;
+        captured_columns_s += captured_columns[i].name;
+        captured_columns_s +=",";
+    }
+
+
+    LOG_DEBUG(&Logger::get("ColumnFunction"),"in ColumnFunction reduce captured_columns :" + captured_columns_s +  " , tmp block with captured_columns \n " + block.dumpNames() );
 
     function->execute(block, arguments, captured_columns.size());
 

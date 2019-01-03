@@ -26,4 +26,10 @@ namespace QueryProcessingStage
     }
 }
 
+namespace InterpreterRole{
+
+
+
+}
+
 }

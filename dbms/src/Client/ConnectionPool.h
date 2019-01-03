@@ -86,8 +86,11 @@ public:
         else
             entry = Base::get(-1);
 
-        if (force_connected)
+        if (force_connected){
+            LOG_DEBUG(&Logger::get("ConnectionPool"),"force_connected");
             entry->forceConnected();
+        }
+
 
         return entry;
     }

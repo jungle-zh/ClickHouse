@@ -9,6 +9,7 @@
 #include <Parsers/ParserSampleRatio.h>
 #include <Parsers/ParserSelectQuery.h>
 #include <Parsers/ParserTablesInSelectQuery.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -85,6 +86,10 @@ bool ParserSelectQuery::parseImpl(Pos & pos, ASTPtr & node, Expected & expected)
     {
         if (!exp_elem.parse(pos, select_query->where_expression, expected))
             return false;
+
+        std::stringstream dbg_str;
+        select_query->where_expression->dumpTree(dbg_str);
+        LOG_DEBUG(&Logger::get("ParserSelectQuery"),"where expression :\n" + dbg_str.str() );
     }
 
     /// GROUP BY expr list

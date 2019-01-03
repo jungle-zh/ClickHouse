@@ -107,6 +107,61 @@ struct ASTTableJoin : public IAST
 };
 
 
+
+/// How to JOIN another table.
+    struct ASTTableEnhanceJoin : public IAST
+    {
+        /// Algorithm for distributed query processing.
+        enum class Locality
+        {
+            Unspecified,
+            Local,    /// Perform JOIN, using only data available on same servers (co-located data).
+            Global    /// Collect and merge data from remote servers, and broadcast it to each server.
+        };
+
+        /// Allows more optimal JOIN for typical cases.
+        enum class Strictness
+        {
+            Unspecified,
+            Any,    /// If there are many suitable rows to join, use any from them (also known as unique JOIN).
+            All        /// If there are many suitable rows to join, use all of them and replicate rows of "left" table (usual semantic of JOIN).
+        };
+
+        /// Join method.
+        enum class Kind
+        {
+            Inner,    /// Leave ony rows that was JOINed.
+            Left,    /// If in "right" table there is no corresponding rows, use default values instead.
+            Right,
+            Full,
+            Cross,    /// Direct product. Strictness and condition doesn't matter.
+            Comma    /// Same as direct product. Intended to be converted to INNER JOIN with conditions from WHERE.
+        };
+
+        Locality locality = Locality::Unspecified;
+        Strictness strictness = Strictness::Unspecified;
+        Kind kind = Kind::Inner;
+
+        /// Condition. One of fields is non-nullptr.
+        ASTPtr using_expression_list;
+        ASTPtr on_expression;
+
+        ASTPtr left_table_expression;
+        ASTPtr right_table_expression;
+
+        using IAST::IAST;
+        String getID() const override { return "TableEnhanceJoin"; }
+        ASTPtr clone() const override;
+
+        void formatImplBeforeTable(const FormatSettings & settings, FormatState & state, FormatStateStacked frame) const ;
+        void formatImplAfterTable(const FormatSettings & settings, FormatState & state, FormatStateStacked frame) const ;
+        void formatImpl(const FormatSettings & settings, FormatState & state, FormatStateStacked frame) const override ;
+    };
+
+
+
+
+
 /// Specification of ARRAY JOIN.
 struct ASTArrayJoin : public IAST
 {
@@ -135,7 +190,7 @@ struct ASTTablesInSelectQueryElement : public IAST
       * For former elements, either table_join and table_expression are both non-nullptr, or array_join is non-nullptr.
       */
     ASTPtr table_join;       /// How to JOIN a table, if table_expression is non-nullptr.
-    ASTPtr table_expression; /// Table.
+    ASTPtr table_expression; /// Table. (it is  right table with old join)
     ASTPtr array_join;       /// Arrays to JOIN.
 
     using IAST::IAST;

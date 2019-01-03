@@ -20,6 +20,7 @@
 #include <DataTypes/getLeastSupertype.h>
 #include <Functions/GatherUtils/GatherUtils.h>
 #include <Functions/GatherUtils/Algorithms.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -136,10 +137,14 @@ private:
 
         using ResultType = typename NumberTraits::ResultOfIf<T0, T1>::Type;
 
-        if (col_right_vec)
+        if (col_right_vec){
             NumIfImpl<T0, T1, ResultType>::vector_vector(cond_col->getData(), col_left->getData(), col_right_vec->getData(), block, result);
-        else
+            LOG_DEBUG(&Logger::get("FunctionIf"),"cond_col:" + cond_col->dumpStructure() + ",res_col:" + block.getByPosition(result).column->dumpStructure());
+        }
+        else{
             NumIfImpl<T0, T1, ResultType>::vector_constant(cond_col->getData(), col_left->getData(), col_right_const->template getValue<T1>(), block, result);
+            LOG_DEBUG(&Logger::get("FunctionIf"),"cond_col:" + cond_col->dumpStructure() + ",res_col:" + block.getByPosition(result).column->dumpStructure());
+        }
 
         return true;
     }
@@ -160,10 +165,14 @@ private:
 
         using ResultType = typename NumberTraits::ResultOfIf<T0, T1>::Type;
 
-        if (col_right_vec)
+        if (col_right_vec){
             NumIfImpl<T0, T1, ResultType>::constant_vector(cond_col->getData(), col_left->template getValue<T0>(), col_right_vec->getData(), block, result);
-        else
+            LOG_DEBUG(&Logger::get("FunctionIf"),"cond_col:" + cond_col->dumpStructure() + ",res_col:" + block.getByPosition(result).column->dumpStructure());
+        }
+        else{
             NumIfImpl<T0, T1, ResultType>::constant_constant(cond_col->getData(), col_left->template getValue<T0>(), col_right_const->template getValue<T1>(), block, result);
+            LOG_DEBUG(&Logger::get("FunctionIf"),"cond_col:" + cond_col->dumpStructure() + ",res_col:" + block.getByPosition(result).column->dumpStructure());
+        }
 
         return true;
     }

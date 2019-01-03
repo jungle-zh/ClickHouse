@@ -50,6 +50,8 @@ void ParallelAggregatingBlockInputStream::cancel(bool kill)
 
 Block ParallelAggregatingBlockInputStream::readImpl()
 {
+
+    LOG_DEBUG(&Logger::get("ParallelAggregatingBlockInputStream"),"start readImpl , executed is :" + std::to_string(executed) );
     if (!executed)
     {
         Aggregator::CancellationHook hook = [&]() { return this->isCancelled(); };
@@ -97,7 +99,9 @@ Block ParallelAggregatingBlockInputStream::readImpl()
     if (isCancelledOrThrowIfKilled() || !impl)
         return res;
 
-    return impl->read();
+    Block ret = impl->read();
+    LOG_DEBUG(&Logger::get("ParallelAggregatingBlockInputStream"),"end readImpl ");
+    return ret;
 }
 
 
@@ -109,6 +113,7 @@ ParallelAggregatingBlockInputStream::TemporaryFileStream::TemporaryFileStream(co
 
 void ParallelAggregatingBlockInputStream::Handler::onBlock(Block & block, size_t thread_num)
 {
+    LOG_DEBUG(&Logger::get("ParallelAggregatingBlockInputStream"),"onBlock ");
     parent.aggregator.executeOnBlock(block, *parent.many_data[thread_num],
         parent.threads_data[thread_num].key_columns, parent.threads_data[thread_num].aggregate_columns,
         parent.threads_data[thread_num].key, parent.no_more_keys);
@@ -164,7 +169,7 @@ void ParallelAggregatingBlockInputStream::execute()
     for (size_t i = 0; i < max_threads; ++i)
         threads_data.emplace_back(keys_size, aggregates_size);
 
-    LOG_TRACE(log, "Aggregating");
+    LOG_TRACE(log, "execute , start Aggregated");
 
     Stopwatch watch;
 
@@ -174,6 +179,8 @@ void ParallelAggregatingBlockInputStream::execute()
     processor.process();
     processor.wait();
 
+    LOG_TRACE(log, "all data Aggregated to HashMap ..");
+    // jungle comment : all data
     rethrowFirstException(exceptions);
 
     if (isCancelledOrThrowIfKilled())

@@ -11,6 +11,7 @@
 #include <optional>
 #include <Interpreters/Cluster.h>
 #include <Interpreters/Context.h>
+#include <Functions/IFunction.h>
 
 namespace Poco
 {
@@ -37,16 +38,27 @@ public:
     DistributedBlockOutputStream(StorageDistributed & storage, const ASTPtr & query_ast, const ClusterPtr & cluster_,
                                  const Settings & settings_, bool insert_sync_, UInt64 insert_timeout_);
 
+    DistributedBlockOutputStream(StorageDistributed * storage ,const ClusterPtr & cluster_,
+                                 const Settings & settings, bool insert_sync_, UInt64 insert_timeout_
+            ,Protocol::Client::Enum query_type  = Protocol::Client::Query ,const String & shuffle_table_name = "" );
+
+    void shuffleWrite(Block & block, const Names & key_names ,const  Context & context) ;
     Block getHeader() const override;
     void write(const Block & block) override;
+    void writeShuffleRemote(const Block & block,const  IColumn::Selector & selector);
     void writePrefix() override;
 
     void writeSuffix() override;
+    void writeSuffixForce();
+    //void writeSuffixShuffleMainTable();
+    //void writeSuffixShuffleRightTable();
+
+    IColumn::Selector createSelectorShuffleRemote(const Block & source_block ,const  Names &   key_names ,const Context  & context);
+
 
 private:
 
     IColumn::Selector createSelector(const Block & source_block);
-
 
     void writeAsync(const Block & block);
 
@@ -69,7 +81,7 @@ private:
     void initWritingJobs(const Block & first_block);
 
     struct JobReplica;
-    ThreadPool::Job runWritingJob(JobReplica & job, const Block & current_block);
+    ThreadPool::Job runWritingJob(JobReplica & job, const Block & current_block );
 
     void waitForJobs();
 
@@ -77,14 +89,18 @@ private:
     std::string getCurrentStateDescription();
 
 private:
-    StorageDistributed & storage;
+
+    StorageDistributed * storage;
     ASTPtr query_ast;
-    ClusterPtr cluster;
+    const ClusterPtr  cluster;
     const Settings & settings;
+   // Context  context;
     size_t inserted_blocks = 0;
     size_t inserted_rows = 0;
 
     bool insert_sync;
+    Protocol::Client::Enum  query_type;
+    String shuffle_table_name;
 
     /// Sync-related stuff
     UInt64 insert_timeout; // in seconds

@@ -43,6 +43,19 @@ ASTPtr ASTTableJoin::clone() const
     return res;
 }
 
+    ASTPtr ASTTableEnhanceJoin::clone() const
+    {
+        auto res = std::make_shared<ASTTableEnhanceJoin>(*this);
+        res->children.clear();
+
+        CLONE(using_expression_list);
+        CLONE(on_expression);
+        CLONE(left_table_expression);
+        CLONE(right_table_expression);
+
+        return res;
+    }
+
 ASTPtr ASTArrayJoin::clone() const
 {
     auto res = std::make_shared<ASTArrayJoin>(*this);
@@ -199,6 +212,103 @@ void ASTTableJoin::formatImpl(const FormatSettings & settings, FormatState & sta
     settings.ostr << " ... ";
     formatImplAfterTable(settings, state, frame);
 }
+
+
+
+    void ASTTableEnhanceJoin::formatImplBeforeTable(const FormatSettings & settings, FormatState & state, FormatStateStacked frame) const
+    {
+        settings.ostr << (settings.hilite ? hilite_keyword : "");
+
+        if(left_table_expression) {
+            left_table_expression->formatImpl(settings,state,frame);
+            settings.ostr << " ";
+        }
+        switch (locality)
+        {
+            case Locality::Unspecified:
+                break;
+            case Locality::Local:
+                break;
+            case Locality::Global:
+                settings.ostr << "GLOBAL ";
+                break;
+        }
+
+        if (kind != Kind::Cross && kind != Kind::Comma)
+        {
+            switch (strictness)
+            {
+                case Strictness::Unspecified:
+                    break;
+                case Strictness::Any:
+                    settings.ostr << "ANY ";
+                    break;
+                case Strictness::All:
+                    settings.ostr << "ALL ";
+                    break;
+            }
+        }
+
+        switch (kind)
+        {
+            case Kind::Inner:
+                settings.ostr << "INNER JOIN";
+                break;
+            case Kind::Left:
+                settings.ostr << "LEFT JOIN";
+                break;
+            case Kind::Right:
+                settings.ostr << "RIGHT JOIN";
+                break;
+            case Kind::Full:
+                settings.ostr << "FULL OUTER JOIN";
+                break;
+            case Kind::Cross:
+                settings.ostr << "CROSS JOIN";
+                break;
+            case Kind::Comma:
+                settings.ostr << ",";
+                break;
+        }
+
+        settings.ostr << (settings.hilite ? hilite_none : "");
+    }
+
+
+    void ASTTableEnhanceJoin::formatImplAfterTable(const FormatSettings & settings, FormatState & state, FormatStateStacked frame) const
+    {
+        frame.need_parens = false;
+
+        if(right_table_expression) {
+            settings.ostr << " ";
+            right_table_expression->formatImpl(settings,state,frame);
+        }
+
+        if (using_expression_list)
+        {
+            settings.ostr << (settings.hilite ? hilite_keyword : "") << "USING " << (settings.hilite ? hilite_none : "");
+            settings.ostr << "(";
+            using_expression_list->formatImpl(settings, state, frame);
+            settings.ostr << ")";
+        }
+        else if (on_expression)
+        {
+            settings.ostr << (settings.hilite ? hilite_keyword : "") << "ON " << (settings.hilite ? hilite_none : "");
+            on_expression->formatImpl(settings, state, frame);
+        }
+
+
+
+
+    }
+
+
+    void ASTTableEnhanceJoin::formatImpl(const FormatSettings & settings, FormatState & state, FormatStateStacked frame) const
+    {
+        formatImplBeforeTable(settings, state, frame);
+        settings.ostr << " ... ";
+        formatImplAfterTable(settings, state, frame);
+    }
 
 
 void ASTArrayJoin::formatImpl(const FormatSettings & settings, FormatState & state, FormatStateStacked frame) const

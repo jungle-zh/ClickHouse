@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <string>
 
 
 namespace DB
@@ -87,6 +88,10 @@ struct Token
     bool isSignificant() const { return type != TokenType::Whitespace && type != TokenType::Comment; }
     bool isError() const { return type > TokenType::EndOfStream; }
     bool isEnd() const { return type == TokenType::EndOfStream; }
+
+    std::string  debug_str() const {
+        return std::string(begin,size());
+    }
 };
 
 

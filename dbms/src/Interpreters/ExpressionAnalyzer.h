@@ -3,6 +3,7 @@
 #include <Interpreters/AggregateDescription.h>
 #include <Interpreters/Settings.h>
 #include <Core/Block.h>
+#include <Interpreters/Context.h>
 
 
 namespace DB
@@ -41,6 +42,9 @@ struct SubqueryForSet
 {
     /// The source is obtained using the InterpreterSelectQuery subquery.
     BlockInputStreamPtr source;
+    BlockOutputStreamPtr  out_stream;
+
+
 
     /// If set, build it from result.
     SetPtr set;
@@ -49,6 +53,8 @@ struct SubqueryForSet
     /// If set, put the result into the table.
     /// This is a temporary table for transferring to remote servers for distributed query processing.
     StoragePtr table;
+
+    bool is_shuffle_join = false;
 };
 
 /// ID of subquery -> what to do with it.
@@ -73,9 +79,15 @@ public:
         const Names & required_result_columns_ = {},
         size_t subquery_depth_ = 0,
         bool do_global_ = false,
-        const SubqueriesForSets & subqueries_for_set_ = {});
+        String  shuffle_main_table = "",
+        String  shuffle_right_table = "",
+        std::shared_ptr<std::map<String,StoragePtr >> shuffle_table = nullptr,
+    const SubqueriesForSets & subqueries_for_set_ = {});
+
+
 
     /// Does the expression have aggregate functions or a GROUP BY or HAVING section.
+    void init();
     bool hasAggregation() const { return has_aggregation; }
 
     /// Get a list of aggregation keys and descriptions of aggregate functions if the query contains GROUP BY.
@@ -102,7 +114,8 @@ public:
 
     /// Before aggregation:
     bool appendArrayJoin(ExpressionActionsChain & chain, bool only_types);
-    bool appendJoin(ExpressionActionsChain & chain, bool only_types);
+    bool appendJoin(ExpressionActionsChain & chain, bool only_types
+    ,bool is_shuffle_join = false );
     bool appendWhere(ExpressionActionsChain & chain, bool only_types);
     bool appendGroupBy(ExpressionActionsChain & chain, bool only_types);
     void appendAggregateFunctionsArguments(ExpressionActionsChain & chain, bool only_types);
@@ -144,6 +157,7 @@ private:
     ASTPtr ast;
     ASTSelectQuery * select_query;
     const Context & context;
+
     Settings settings;
     size_t subquery_depth;
 
@@ -171,7 +185,8 @@ private:
     /// Do I need to prepare for execution global subqueries when analyzing the query.
     bool do_global;
 
-    SubqueriesForSets subqueries_for_sets;
+
+
 
     PreparedSets prepared_sets;
 
@@ -184,6 +199,14 @@ private:
       *  - in the "left" table, it will be accessible by the name `expr(x)`, since `Project` action has not been executed yet.
       * You must remember both of these options.
       */
+
+     String    shuffle_main_table_name ;
+     String    shuffle_right_table_name ;
+
+    std::shared_ptr<std::map<String,StoragePtr >> shuffle_tables ;
+    SubqueriesForSets subqueries_for_sets;
+
+
     Names join_key_names_left;
     Names join_key_names_right;
 
@@ -209,7 +232,10 @@ private:
 
     /// All new temporary tables obtained by performing the GLOBAL IN/JOIN subqueries.
     Tables external_tables;
+    std::map<String , BlockOutputStreamPtr> external_out_streams;
     size_t external_table_id = 1;
+    size_t external_stream_id = 1;
+
 
     /** Remove all unnecessary columns from the list of all available columns of the table (`columns`).
       * At the same time, form a set of unknown columns (`unknown_required_source_columns`),
@@ -264,6 +290,8 @@ private:
       * create a temporary table of type Memory and store it in the external_tables dictionary.
       */
     void addExternalStorage(ASTPtr & subquery_or_table_name);
+
+    void addExternalShuffleStorage(ASTPtr & subquery_or_table_name,const String & cluster_name );
 
     void getArrayJoinedColumns();
     void getArrayJoinedColumnsImpl(const ASTPtr & ast);

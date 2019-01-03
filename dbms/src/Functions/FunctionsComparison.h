@@ -588,7 +588,7 @@ private:
             ColumnUInt8::Container & vec_res = col_res->getData();
             vec_res.resize(col_left->getData().size());
             NumComparisonImpl<T0, T1, Op<T0, T1>>::vector_vector(col_left->getData(), col_right->getData(), vec_res);
-
+            LOG_DEBUG(&Logger::get("FunctionComparison"),"col_left:" + col_left->dumpStructure() + ",col_right:" + col_right->dumpStructure());
             block.getByPosition(result).column = std::move(col_res);
             return true;
         }
@@ -599,7 +599,7 @@ private:
             ColumnUInt8::Container & vec_res = col_res->getData();
             vec_res.resize(col_left->size());
             NumComparisonImpl<T0, T1, Op<T0, T1>>::vector_constant(col_left->getData(), col_right->template getValue<T1>(), vec_res);
-
+            LOG_DEBUG(&Logger::get("FunctionComparison"),"col_left:" + col_left->dumpStructure() + ",col_right:" + col_right->dumpStructure());
             block.getByPosition(result).column = std::move(col_res);
             return true;
         }
@@ -617,7 +617,7 @@ private:
             ColumnUInt8::Container & vec_res = col_res->getData();
             vec_res.resize(col_left->size());
             NumComparisonImpl<T0, T1, Op<T0, T1>>::constant_vector(col_left->template getValue<T0>(), col_right->getData(), vec_res);
-
+            LOG_DEBUG(&Logger::get("FunctionComparison"),"col_left:" + col_left->dumpStructure() + ",col_right:" + col_right->dumpStructure());
             block.getByPosition(result).column = std::move(col_res);
             return true;
         }
@@ -625,7 +625,7 @@ private:
         {
             UInt8 res = 0;
             NumComparisonImpl<T0, T1, Op<T0, T1>>::constant_constant(col_left->template getValue<T0>(), col_right->template getValue<T1>(), res);
-
+            LOG_DEBUG(&Logger::get("FunctionComparison"),"col_left:" + col_left->dumpStructure() + ",col_right:" + col_right->dumpStructure());
             block.getByPosition(result).column = DataTypeUInt8().createColumnConst(col_left->size(), toField(res));
             return true;
         }

@@ -988,7 +988,7 @@ public:
         ColumnNumbers keys;
         AggregateDescriptions aggregates;
         size_t keys_size;
-        size_t aggregates_size;
+        size_t aggregates_size; //jungle comment : how many aggregate_descriptions in ExpressionAnalyzer
 
         /// The settings of approximate calculation of GROUP BY.
         const bool overflow_row;    /// Do we need to put into AggregatedDataVariants::without_key aggregates for keys that are not in max_rows_to_group_by.

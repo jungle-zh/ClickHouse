@@ -105,6 +105,7 @@ BlockInputStreams StorageMergeTree::read(
     const size_t max_block_size,
     const unsigned num_streams)
 {
+    LOG_DEBUG(&Logger::get("StorageMergeTree") ,"read..");
     return reader.read(column_names, query_info, context, processed_stage, max_block_size, num_streams, 0);
 }
 

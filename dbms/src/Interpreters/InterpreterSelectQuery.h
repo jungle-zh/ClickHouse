@@ -6,6 +6,8 @@
 #include <Interpreters/ExpressionAnalyzer.h>
 #include <Interpreters/ExpressionActions.h>
 #include <DataStreams/IBlockInputStream.h>
+#include <Poco/Logger.h>
+#include <common/logger_useful.h>
 
 
 namespace Poco { class Logger; }
@@ -100,6 +102,18 @@ private:
         bool hasMoreThanOneStream() const
         {
             return streams.size() + (stream_with_non_joined_data ? 1 : 0) > 1;
+        }
+
+        void printStream(){
+
+            int stream_index = 0;
+            LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"start to print stream ");
+            for(auto bs : streams){
+                std::stringstream log_str;
+                bs->dumpTree(log_str);
+                LOG_DEBUG(&Logger::get("InterpreterSelectQuery"),"number " + std::to_string(stream_index) + " pipeline streams:\n"    + log_str.str() );
+                stream_index ++;
+            }
         }
     };
 

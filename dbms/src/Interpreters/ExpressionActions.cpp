@@ -10,6 +10,7 @@
 
 #include <set>
 #include <optional>
+#include <common/logger_useful.h>
 
 
 namespace ProfileEvents
@@ -279,6 +280,7 @@ void ExpressionAction::prepare(Block & sample_block)
 void ExpressionAction::execute(Block & block) const
 {
 //    std::cerr << "executing: " << toString() << std::endl;
+    LOG_DEBUG(&Logger::get("ExpressionAction"),"action execute,type is : " << type);
 
     if (type == REMOVE_COLUMN || type == COPY_COLUMN)
         if (!block.has(source_name))
@@ -305,7 +307,7 @@ void ExpressionAction::execute(Block & block) const
 
             ProfileEvents::increment(ProfileEvents::FunctionExecute);
             function->execute(block, arguments, num_columns_without_result);
-
+            LOG_DEBUG(&Logger::get("ExpressionAction"),"after execute function ,block name:" + block.dumpNames());
             break;
         }
 
@@ -376,7 +378,9 @@ void ExpressionAction::execute(Block & block) const
 
         case JOIN:
         {
+            LOG_DEBUG(&Logger::get("ExpressionAction"), "before join , block name:" + block.dumpNames() +  ",block col num:"+  std::to_string(block.columns()) + ",block row num:" + std::to_string(block.rows()) );
             join->joinBlock(block);
+            LOG_DEBUG(&Logger::get("ExpressionAction"), "after  join , block name:" + block.dumpNames() +  ",block col num:"+  std::to_string(block.columns()) + ",block row num:" + std::to_string(block.rows()) );
             break;
         }
 
@@ -399,13 +403,18 @@ void ExpressionAction::execute(Block & block) const
             break;
         }
 
-        case REMOVE_COLUMN:
+        case REMOVE_COLUMN:{
             block.erase(source_name);
+            LOG_DEBUG(&Logger::get("ExpressionAction"),"remove column " +  source_name + " ,block name:" + block.dumpNames());
             break;
+        }
 
-        case ADD_COLUMN:
+
+        case ADD_COLUMN:{
             block.insert({ added_column->cloneResized(block.rows()), result_type, result_name });
+            LOG_DEBUG(&Logger::get("ExpressionAction"),"add column " + result_name + ", block name:" + block.dumpNames());
             break;
+        }
 
         case COPY_COLUMN:
             block.insert({ block.getByName(source_name).column, result_type, result_name });
@@ -573,7 +582,7 @@ void ExpressionActions::addImpl(ExpressionAction action, Names & new_names)
         action.result_type = action.function->getReturnType();
     }
 
-    action.prepare(sample_block);
+    action.prepare(sample_block); // if add column , add new column to sample_block
     actions.push_back(action);
 }
 
@@ -716,7 +725,7 @@ void ExpressionActions::finalize(const Names & output_columns)
 
     /// Let's go from the end and maintain set of required columns at this stage.
     /// We will throw out unnecessary actions, although usually they are absent by construction.
-    for (int i = static_cast<int>(actions.size()) - 1; i >= 0; --i)
+    for (int i = static_cast<int>(actions.size()) - 1; i >= 0; --i) //jungle comment : end action to previous
     {
         ExpressionAction & action = actions[i];
         Names in = action.getNeededColumns();
@@ -836,7 +845,7 @@ void ExpressionActions::finalize(const Names & output_columns)
     for (const auto & action : actions)
     {
         if (!action.source_name.empty())
-            ++columns_refcount[action.source_name];
+            ++columns_refcount[action.source_name];   // source
 
         for (const auto & name : action.argument_names)
             ++columns_refcount[name];
@@ -855,8 +864,9 @@ void ExpressionActions::finalize(const Names & output_columns)
         auto process = [&] (const String & name)
         {
             auto refcount = --columns_refcount[name];
-            if (refcount <= 0)
+            if (refcount <= 0)                       //jungle comment: previous action already used it, and no more action use it now
             {
+                LOG_DEBUG(&Logger::get("ExpressionActions"),"finalize ,removeColumn :"<<name);
                 new_actions.push_back(ExpressionAction::removeColumn(name));
                 if (sample_block.has(name))
                     sample_block.erase(name);

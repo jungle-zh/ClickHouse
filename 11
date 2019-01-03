@@ -1,0 +1,476 @@
+2018.11.13 13:40:21.837058 [ 20 ] <Trace> TCPHandlerFactory: TCP Request. Address: [::1]:45796
+2018.11.13 13:40:21.837168 [ 20 ] <Debug> TCPHandler: Connected ClickHouse client version 1.1.54378, user: default.
+2018.11.13 13:40:21.838171 [ 20 ] <Debug> executeQuery: (from [::1]:45796, query_id: b62d57b5-32dc-4f51-bde2-153b16c4b4ff)  select 1+Zid from user where Age < 4
+2018.11.13 13:40:21.838211 [ 20 ] <Debug> executeQuery: parsered ast:
+SelectWithUnionQuery, 0x998f570
+-ExpressionList, 0x999bd30
+--SelectQuery, 0x999f550
+---ExpressionList, 0x999bbb0
+----Function_plus, 0x9a22830
+-----ExpressionList, 0x999bc70
+------Literal_UInt64_1, 0x99f58d0
+------Identifier_Zid, 0x99f5980
+---TablesInSelectQuery, 0x999bc10
+----TablesInSelectQueryElement, 0x998f4e0
+-----TableExpression, 0x9a00e50
+------Identifier_user, 0x99f5ae0
+---Function_less, 0x9a22760
+----ExpressionList, 0x999bcd0
+-----Identifier_Age, 0x99f5a30
+-----Literal_UInt64_4, 0x99f5b90
+
+ , start to get interpreter
+2018.11.13 13:40:21.838232 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: InterpreterSelectWithUnionQuery construct
+2018.11.13 13:40:21.838261 [ 20 ] <Debug> InterpreterSelectQuery: InterpreterSelectQuery construct1
+2018.11.13 13:40:21.838371 [ 20 ] <Debug> InterpreterSelectQuery: create ExpressionAnalyzer
+
+2018.11.13 13:40:21.838401 [ 20 ] <Debug> ExpressionAnalyzer: ExpressionAnalyzer construct
+2018.11.13 13:40:21.838440 [ 20 ] <Debug> ExpressionAnalyzer: executeScalarSubqueries
+2018.11.13 13:40:21.838493 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: create InterpreterSelectQuery ,query tree :
+SelectQuery, 0x999f550
+-ExpressionList, 0x999bbb0
+--Function_plus, 0x9a22830
+---ExpressionList, 0x999bc70
+----Literal_UInt64_1, 0x99f58d0
+----Identifier_Zid, 0x99f5980
+-TablesInSelectQuery, 0x999bc10
+--TablesInSelectQueryElement, 0x998f4e0
+---TableExpression, 0x9a00e50
+----Identifier_user, 0x99f5ae0
+-Function_less, 0x9a22760
+--ExpressionList, 0x999bcd0
+---Identifier_Age, 0x99f5a30
+---Literal_UInt64_4, 0x99f5b90
+
+ ,InterpreterSelectWithUnionQuery query tree:
+SelectWithUnionQuery, 0x998f570
+-ExpressionList, 0x999bd30
+--SelectQuery, 0x999f550
+---ExpressionList, 0x999bbb0
+----Function_plus, 0x9a22830
+-----ExpressionList, 0x999bc70
+------Literal_UInt64_1, 0x99f58d0
+------Identifier_Zid, 0x99f5980
+---TablesInSelectQuery, 0x999bc10
+----TablesInSelectQueryElement, 0x998f4e0
+-----TableExpression, 0x9a00e50
+------Identifier_user, 0x99f5ae0
+---Function_less, 0x9a22760
+----ExpressionList, 0x999bcd0
+-----Identifier_Age, 0x99f5a30
+-----Literal_UInt64_4, 0x99f5b90
+
+2018.11.13 13:40:21.838503 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: num_selects is Attempt to read after eof, now getSampleBlock
+2018.11.13 13:40:21.838509 [ 20 ] <Debug> InterpreterSelectQuery: start of getSampleBlock
+
+2018.11.13 13:40:21.838515 [ 20 ] <Debug> InterpreterSelectQuery: executeImpl ,dry_run is :true
+2018.11.13 13:40:21.838526 [ 20 ] <Debug> InterpreterSelectQuery: query ast tree:
+SelectQuery, 0x999f690
+-ExpressionList, 0x999bb50
+--Function_plus, 0x9a22280
+---ExpressionList, 0x999bd90
+----Literal_UInt64_1, 0x99f5cf0
+----Identifier_Zid, 0x99f5da0
+-TablesInSelectQuery, 0x999bdf0
+--TablesInSelectQueryElement, 0x998f600
+---TableExpression, 0x9a00d90
+----Identifier_user, 0x99f5e50
+-Function_less, 0x9a22350
+--ExpressionList, 0x999be50
+---Identifier_Age, 0x99f5f00
+---Literal_UInt64_4, 0x99f5fb0
+
+2018.11.13 13:40:21.838556 [ 20 ] <Debug> ExpressionAnalyzer: ExpressionAnalyzer construct
+2018.11.13 13:40:21.838587 [ 20 ] <Debug> ExpressionAnalyzer: executeScalarSubqueries
+2018.11.13 13:40:21.838617 [ 20 ] <Debug> ExpressionAnalyzer: getConstActions
+2018.11.13 13:40:21.838631 [ 20 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:1,only_consts:1, ast tree:
+SelectQuery, 0x999f690
+-ExpressionList, 0x999bb50
+--Function_plus, 0x9a22280
+---ExpressionList, 0x999bd90
+----Literal_UInt64_1, 0x99f5cf0
+----Identifier_Zid, 0x99f5da0
+-TablesInSelectQuery, 0x999bdf0
+--TablesInSelectQueryElement, 0x998f600
+---TableExpression, 0x9a00d90
+----Identifier_user, 0x99f5e50
+-Function_less, 0x9a22350
+--ExpressionList, 0x999be50
+---Identifier_Age, 0x99f5f00
+---Literal_UInt64_4, 0x99f5fb0
+
+2018.11.13 13:40:21.838647 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:21.838656 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:21.838672 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 1 UInt8 Const(UInt8)
+2018.11.13 13:40:21.838685 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:21.838693 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:21.838699 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:21.838705 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:21.838712 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 4 UInt8 Const(UInt8)
+2018.11.13 13:40:21.838730 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:21.838737 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:21.838759 [ 20 ] <Debug> InterpreterSelectQuery: MergeTreeWhereOptimizer: condition `Age < 4` moved to PREWHERE
+2018.11.13 13:40:21.838782 [ 20 ] <Debug> InterpreterSelectQuery: ###### before read from storage :
+
+2018.11.13 13:40:21.838791 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:21.838800 [ 20 ] <Debug> InterpreterSelectQuery: ###### after read from storage :
+
+2018.11.13 13:40:21.838806 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:21.838818 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Null
+
+2018.11.13 13:40:21.838825 [ 20 ] <Debug> InterpreterSelectQuery: start analyzeExpressions 
+2018.11.13 13:40:21.838832 [ 20 ] <Debug> InterpreterSelectQuery: first_stage:1 , second_stage:1
+2018.11.13 13:40:21.838839 [ 20 ] <Debug> ExpressionAnalyzer: appendSelect 
+2018.11.13 13:40:21.838856 [ 20 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:0,only_consts:0, ast tree:
+ExpressionList, 0x999bb50
+-Function_plus, 0x9a22280
+--ExpressionList, 0x999bd90
+---Literal_UInt64_1, 0x99f5cf0
+---Identifier_Zid, 0x99f5da0
+
+2018.11.13 13:40:21.838864 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:21.838871 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:21.838879 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 1 UInt8 Const(UInt8)
+2018.11.13 13:40:21.838888 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:21.838897 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION plus(1, Zid) (no type) = (no function)(1, Zid)
+2018.11.13 13:40:21.838927 [ 20 ] <Debug> ExpressionAnalyzer: appendProjectResult 
+2018.11.13 13:40:21.838960 [ 20 ] <Debug> InterpreterSelectQuery: # chain:
+step 0
+required output:
+plus(1, Zid)
+
+input:
+Zid Int32
+Age Int32
+
+actions:
+ADD 1 UInt8 Const(UInt8)
+FUNCTION plus(1, Zid) Int64 = plus(1, Zid)
+
+output:
+Zid Int32
+Age Int32
+1 UInt8
+plus(1, Zid) Int64
+
+step 1
+required output:
+plus(1, Zid)
+
+input:
+Zid Int32
+Age Int32
+1 UInt8
+plus(1, Zid) Int64
+
+actions:
+PROJECT plus(1, Zid)
+
+output:
+plus(1, Zid) Int64
+
+
+2018.11.13 13:40:21.838983 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :1
+2018.11.13 13:40:21.838991 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :Zid
+2018.11.13 13:40:21.839004 [ 20 ] <Debug> InterpreterSelectQuery: executeExpression,action:input:
+Zid Int32
+
+actions:
+ADD 1 UInt8 Const(UInt8)
+FUNCTION plus(1, Zid) Int64 = plus(1, Zid)
+REMOVE 1
+REMOVE Zid
+
+output:
+plus(1, Zid) Int64
+
+2018.11.13 13:40:21.839019 [ 20 ] <Debug> InterpreterSelectQuery: executeProjection,action:input:
+plus(1, Zid) Int64
+
+actions:
+PROJECT plus(1, Zid)
+
+output:
+plus(1, Zid) Int64
+
+2018.11.13 13:40:21.839025 [ 20 ] <Debug> InterpreterSelectQuery: after execute expression 
+
+2018.11.13 13:40:21.839031 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:21.839059 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Expression : expressionActions 
+input:
+plus(1, Zid) Int64
+
+actions:
+PROJECT plus(1, Zid)
+
+output:
+plus(1, Zid) Int64
+
+ Expression : expressionActions 
+input:
+Zid Int32
+
+actions:
+ADD 1 UInt8 Const(UInt8)
+FUNCTION plus(1, Zid) Int64 = plus(1, Zid)
+REMOVE 1
+REMOVE Zid
+
+output:
+plus(1, Zid) Int64
+
+  Null
+
+2018.11.13 13:40:21.839071 [ 20 ] <Debug> InterpreterSelectQuery: start of  getHeader
+
+2018.11.13 13:40:21.839077 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:21.839084 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:21.839130 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:21.839142 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:21.839149 [ 20 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:21.839156 [ 20 ] <Debug> InterpreterSelectQuery: end of  getHeader
+
+2018.11.13 13:40:21.839161 [ 20 ] <Debug> InterpreterSelectQuery: end  of getSampleBlock
+
+2018.11.13 13:40:21.839172 [ 20 ] <Debug> executeQuery: after get interpreter ,start to execute
+2018.11.13 13:40:21.839179 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: execute 
+
+2018.11.13 13:40:21.839185 [ 20 ] <Debug> InterpreterSelectWithUnionQuery: executeWithMultipleStreams
+2018.11.13 13:40:21.839190 [ 20 ] <Debug> InterpreterSelectQuery: executeImpl ,dry_run is :false
+2018.11.13 13:40:21.839201 [ 20 ] <Debug> InterpreterSelectQuery: query ast tree:
+SelectQuery, 0x999f690
+-ExpressionList, 0x999bb50
+--Function_plus, 0x9a22280
+---ExpressionList, 0x999bd90
+----Literal_UInt64_1, 0x99f5cf0
+----Identifier_Zid, 0x99f5da0
+-TablesInSelectQuery, 0x999bdf0
+--TablesInSelectQueryElement, 0x998f600
+---TableExpression, 0x9a00d90
+----Identifier_user, 0x99f5e50
+-Function_less, 0x9a22350
+--ExpressionList, 0x999be50
+---Identifier_Age, 0x99f5f00
+---Literal_UInt64_4, 0x99f5fb0
+
+2018.11.13 13:40:21.839212 [ 20 ] <Debug> InterpreterSelectQuery: ###### before read from storage :
+
+2018.11.13 13:40:21.839219 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:21.839226 [ 20 ] <Debug> MergeTreeDataSelectExecutor: start read
+2018.11.13 13:40:21.839251 [ 20 ] <Debug> ExpressionAnalyzer: ExpressionAnalyzer construct
+2018.11.13 13:40:21.839276 [ 20 ] <Debug> ExpressionAnalyzer: executeScalarSubqueries
+2018.11.13 13:40:21.839307 [ 20 ] <Debug> ExpressionAnalyzer: getConstActions
+2018.11.13 13:40:21.839326 [ 20 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:1,only_consts:1, ast tree:
+SelectQuery, 0x999f690
+-ExpressionList, 0x999bb50
+--Function_plus, 0x9a22280
+---ExpressionList, 0x999bd90
+----Literal_UInt64_1, 0x99f5cf0
+----Identifier_Zid, 0x99f5da0
+-TablesInSelectQuery, 0x999bdf0
+--TablesInSelectQueryElement, 0x998f600
+---TableExpression, 0x9a00d90
+----Identifier_user, 0x99f5e50
+-Function_less, 0x9a22350
+--ExpressionList, 0x999be50
+---Identifier_Age, 0x99f5f00
+---Literal_UInt64_4, 0x99f5fb0
+
+2018.11.13 13:40:21.839335 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:21.839343 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:21.839350 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 1 UInt8 Const(UInt8)
+2018.11.13 13:40:21.839359 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:21.839366 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:21.839372 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:21.839378 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:21.839385 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 4 UInt8 Const(UInt8)
+2018.11.13 13:40:21.839394 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:21.839400 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:21.839421 [ 20 ] <Debug> default.user (SelectExecutor): Key condition: unknown
+2018.11.13 13:40:21.839428 [ 20 ] <Debug> MergeTreeDataSelectExecutor: get prewhere_expression and get prewhere_actions to set to spreadMarkRangesAmongStreamsFinal
+2018.11.13 13:40:21.839440 [ 20 ] <Debug> ExpressionAnalyzer: ExpressionAnalyzer construct
+2018.11.13 13:40:21.839451 [ 20 ] <Debug> ExpressionAnalyzer: executeScalarSubqueries
+2018.11.13 13:40:21.839464 [ 20 ] <Debug> ExpressionAnalyzer: getActions
+2018.11.13 13:40:21.839480 [ 20 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:0,only_consts:0, ast tree:
+Function_less, 0x9a22350
+-ExpressionList, 0x999be50
+--Identifier_Age, 0x99f5f00
+--Literal_UInt64_4, 0x99f5fb0
+
+2018.11.13 13:40:21.839492 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:21.839502 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:21.839511 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:21.839519 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 4 UInt8 Const(UInt8)
+2018.11.13 13:40:21.839529 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION less(Age, 4) (no type) = (no function)(Age, 4)
+2018.11.13 13:40:21.839564 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :4
+2018.11.13 13:40:21.839576 [ 20 ] <Debug> default.user (SelectExecutor): Selected 1 parts by date, 1 parts by key, 1 marks to read from 1 ranges
+2018.11.13 13:40:21.839745 [ 20 ] <Trace> default.user (SelectExecutor): Reading approx. 8192 rows
+2018.11.13 13:40:21.839760 [ 20 ] <Debug> InterpreterSelectQuery: ###### after read from storage :
+
+2018.11.13 13:40:21.839767 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:21.839773 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+MergeTreeThread
+
+2018.11.13 13:40:21.839780 [ 20 ] <Trace> InterpreterSelectQuery: FetchColumns -> Complete
+2018.11.13 13:40:21.839786 [ 20 ] <Debug> InterpreterSelectQuery: start analyzeExpressions 
+2018.11.13 13:40:21.839792 [ 20 ] <Debug> InterpreterSelectQuery: first_stage:1 , second_stage:1
+2018.11.13 13:40:21.839798 [ 20 ] <Debug> ExpressionAnalyzer: appendSelect 
+2018.11.13 13:40:21.839810 [ 20 ] <Debug> ExpressionAnalyzer: getRootActions , no_subqueries:0,only_consts:0, ast tree:
+ExpressionList, 0x999bb50
+-Function_plus, 0x9a22280
+--ExpressionList, 0x999bd90
+---Literal_UInt64_1, 0x99f5cf0
+---Identifier_Zid, 0x99f5da0
+
+2018.11.13 13:40:21.839819 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTFunction
+2018.11.13 13:40:21.839827 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl ,ast is ASTLiteral
+2018.11.13 13:40:21.839841 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :ADD 1 UInt8 Const(UInt8)
+2018.11.13 13:40:21.839855 [ 20 ] <Debug> ExpressionAnalyzer: getActionsImpl,ast is ASTIdentifier
+2018.11.13 13:40:21.839868 [ 20 ] <Debug> ExpressionAnalyzer: ScopeStack addAction :FUNCTION plus(1, Zid) (no type) = (no function)(1, Zid)
+2018.11.13 13:40:21.839885 [ 20 ] <Debug> ExpressionAnalyzer: appendProjectResult 
+2018.11.13 13:40:21.839905 [ 20 ] <Debug> InterpreterSelectQuery: # chain:
+step 0
+required output:
+plus(1, Zid)
+
+input:
+Zid Int32
+Age Int32
+
+actions:
+ADD 1 UInt8 Const(UInt8)
+FUNCTION plus(1, Zid) Int64 = plus(1, Zid)
+
+output:
+Zid Int32
+Age Int32
+1 UInt8
+plus(1, Zid) Int64
+
+step 1
+required output:
+plus(1, Zid)
+
+input:
+Zid Int32
+Age Int32
+1 UInt8
+plus(1, Zid) Int64
+
+actions:
+PROJECT plus(1, Zid)
+
+output:
+plus(1, Zid) Int64
+
+
+2018.11.13 13:40:21.839920 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :1
+2018.11.13 13:40:21.839927 [ 20 ] <Debug> ExpressionActions: finalize ,removeColumn :Zid
+2018.11.13 13:40:21.839940 [ 20 ] <Debug> InterpreterSelectQuery: executeExpression,action:input:
+Zid Int32
+
+actions:
+ADD 1 UInt8 Const(UInt8)
+FUNCTION plus(1, Zid) Int64 = plus(1, Zid)
+REMOVE 1
+REMOVE Zid
+
+output:
+plus(1, Zid) Int64
+
+2018.11.13 13:40:21.839948 [ 20 ] <Debug> InterpreterSelectQuery: executeProjection,action:input:
+plus(1, Zid) Int64
+
+actions:
+PROJECT plus(1, Zid)
+
+output:
+plus(1, Zid) Int64
+
+2018.11.13 13:40:21.839954 [ 20 ] <Debug> InterpreterSelectQuery: after execute expression 
+
+2018.11.13 13:40:21.839961 [ 20 ] <Debug> InterpreterSelectQuery: start to print stream
+
+2018.11.13 13:40:21.840029 [ 20 ] <Debug> InterpreterSelectQuery: pipeline streams:
+Expression : expressionActions 
+input:
+plus(1, Zid) Int64
+
+actions:
+PROJECT plus(1, Zid)
+
+output:
+plus(1, Zid) Int64
+
+ Expression : expressionActions 
+input:
+Zid Int32
+
+actions:
+ADD 1 UInt8 Const(UInt8)
+FUNCTION plus(1, Zid) Int64 = plus(1, Zid)
+REMOVE 1
+REMOVE Zid
+
+output:
+plus(1, Zid) Int64
+
+  MergeTreeThread
+
+2018.11.13 13:40:21.840047 [ 20 ] <Debug> executeQuery: interpreter finish to execute
+2018.11.13 13:40:21.840085 [ 20 ] <Debug> executeQuery: Query pipeline:
+Expression : expressionActions 
+input:
+plus(1, Zid) Int64
+
+actions:
+PROJECT plus(1, Zid)
+
+output:
+plus(1, Zid) Int64
+
+ Expression : expressionActions 
+input:
+Zid Int32
+
+actions:
+ADD 1 UInt8 Const(UInt8)
+FUNCTION plus(1, Zid) Int64 = plus(1, Zid)
+REMOVE 1
+REMOVE Zid
+
+output:
+plus(1, Zid) Int64
+
+  MergeTreeThread
+
+2018.11.13 13:40:21.840109 [ 20 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:21.840116 [ 20 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:21.840125 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:21.840131 [ 20 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:21.840137 [ 20 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:21.840263 [ 21 ] <Debug> ExpressionBlockInputStream: start readImpl
+2018.11.13 13:40:21.840286 [ 21 ] <Debug> ExpressionBlockInputStream: start readImpl
+2018.11.13 13:40:21.840505 [ 21 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:21.840517 [ 21 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:21.840584 [ 21 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:21.840671 [ 21 ] <Debug> ExpressionAction: action execute,type is : 0
+2018.11.13 13:40:21.840681 [ 21 ] <Debug> ExpressionAction: action execute,type is : 3
+2018.11.13 13:40:21.840691 [ 21 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:21.840697 [ 21 ] <Debug> ExpressionAction: action execute,type is : 1
+2018.11.13 13:40:21.840705 [ 21 ] <Debug> ExpressionBlockInputStream: end readImpl
+2018.11.13 13:40:21.840721 [ 21 ] <Debug> ExpressionAction: action execute,type is : 6
+2018.11.13 13:40:21.840734 [ 21 ] <Debug> ExpressionBlockInputStream: end readImpl
+2018.11.13 13:40:21.840786 [ 21 ] <Debug> ExpressionBlockInputStream: start readImpl
+2018.11.13 13:40:21.840795 [ 21 ] <Debug> ExpressionBlockInputStream: start readImpl
+2018.11.13 13:40:21.840987 [ 20 ] <Information> executeQuery: Read 1 rows, 8.00 B in 0.003 sec., 362 rows/sec., 2.83 KiB/sec.
+2018.11.13 13:40:21.841041 [ 20 ] <Debug> MemoryTracker: Peak memory usage (for query): 3.07 MiB.
+2018.11.13 13:40:21.841058 [ 20 ] <Debug> MemoryTracker: Peak memory usage (total): 3.07 MiB.
+2018.11.13 13:40:21.841076 [ 20 ] <Information> TCPHandler: Processed in 0.003 sec.
