@@ -4,3 +4,4 @@ set(COMMON_INCLUDE_DIR ${ClickHouse_SOURCE_DIR}/libs/libcommon/include ${ClickHo
 set(DBMS_INCLUDE_DIR ${ClickHouse_SOURCE_DIR}/dbms/src ${ClickHouse_BINARY_DIR}/dbms/src)
 set(DOUBLE_CONVERSION_CONTRIB_INCLUDE_DIR ${ClickHouse_SOURCE_DIR}/contrib/double-conversion)
 set(PCG_RANDOM_INCLUDE_DIR ${ClickHouse_SOURCE_DIR}/contrib/libpcg-random/include)
+set(THRIFT_INCLUDE_DIR ${ClickHouse_SOURCE_DIR}/contrib/thrift_install/include)

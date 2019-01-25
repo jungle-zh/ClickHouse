@@ -164,14 +164,14 @@ Aggregator::Aggregator(const Params & params_)
     {
         LOG_DEBUG(&Logger::get("Aggregator"), (std::to_string(i)  + " offsets_of_aggregate_states :" +  std::to_string(offsets_of_aggregate_states[i])) );
         offsets_of_aggregate_states[i] = total_size_of_aggregate_states;
-        total_size_of_aggregate_states += params.aggregates[i].function->sizeOfData();
+        total_size_of_aggregate_states += params.aggregates[i].function->sizeOfData(); //jungle comment :  maybe size of  AggregateFunctionSumData , QuantileExact ..
 
         if (!params.aggregates[i].function->hasTrivialDestructor())
             all_aggregates_has_trivial_destructor = false;
     }
     LOG_DEBUG(&Logger::get("Aggregator"), (" total_size_of_aggregate_states :" +  std::to_string(total_size_of_aggregate_states) ));
 
-    method = chooseAggregationMethod();
+    method = chooseAggregationMethod(); // jungle comment : will chose the key
 }
 
 
@@ -501,7 +501,7 @@ void Aggregator::createAggregateStates(AggregateDataPtr & aggregate_data) const
               * In order that then everything is properly destroyed, we "roll back" some of the created states.
               * The code is not very convenient.
               */
-            aggregate_functions[j]->create(aggregate_data + offsets_of_aggregate_states[j]);
+            aggregate_functions[j]->create(aggregate_data + offsets_of_aggregate_states[j]); //
         }
         catch (...)
         {
@@ -519,7 +519,7 @@ void Aggregator::createAggregateStates(AggregateDataPtr & aggregate_data) const
   * Inline does not make sense, since the inner loop is entirely inside this function.
   */
 template <typename Method>
-void NO_INLINE Aggregator::executeImpl(
+void NO_INLINE Aggregator::executeImpl(       //jungle comment : create and update ,data is in method
     Method & method,
     Arena * aggregates_pool,
     size_t rows,
@@ -589,7 +589,7 @@ void NO_INLINE Aggregator::executeImplCase(
                     prev_key = key;
             }
 
-            method.data.emplace(key, it, inserted);
+            method.data.emplace(key, it, inserted); //jungle comment : key for whole aggregate row  ,maybe mutiple agg  key
         }
         else
         {
@@ -610,7 +610,7 @@ void NO_INLINE Aggregator::executeImplCase(
         /// If a new key is inserted, initialize the states of the aggregate functions, and possibly something related to the key.
         if (inserted)
         {
-            AggregateDataPtr & aggregate_data = Method::getAggregateData(it->second); //jungle comment , get the HashMap value of aggregated key (char *)
+            AggregateDataPtr & aggregate_data = Method::getAggregateData(it->second); //jungle comment , it->second is cell value  ,type is AggregateDataPtr
 
             /// exception-safety - if you can not allocate memory or create states, then destructors will not be called.
             aggregate_data = nullptr;
@@ -618,8 +618,8 @@ void NO_INLINE Aggregator::executeImplCase(
             method.onNewKey(*it, params.keys_size, keys, *aggregates_pool);
 
             AggregateDataPtr place = aggregates_pool->alloc(total_size_of_aggregate_states);
-            createAggregateStates(place);   //jungle comment : placement new
-            aggregate_data = place;
+            createAggregateStates(place);   //jungle comment : placement new for struct such as AggregateFunctionSumData , QuantileExact  ..
+            aggregate_data = place;         //HashMap value is set to place
         }
         else
             method.onExistingKey(key, keys, *aggregates_pool);
@@ -627,8 +627,12 @@ void NO_INLINE Aggregator::executeImplCase(
         AggregateDataPtr value = (!no_more_keys || !overflow) ? Method::getAggregateData(it->second) : overflow_row;
 
         /// Add values to the aggregate functions.
+        // jungle comment :value + inst->state_offset is the aggregate states position ,
+        // inst->arguments is the add function args
         for (AggregateFunctionInstruction * inst = aggregate_instructions; inst->that; ++inst)
             (*inst->func)(inst->that, value + inst->state_offset, inst->arguments, i, aggregates_pool);
+        // if key is same ,will add to the same states ( as AggregateFunctionSumData , QuantileReservoirSampler ..)
+        // which address in value + inst->state_offset
     }
 }
 
@@ -715,7 +719,7 @@ bool Aggregator::executeOnBlock(const Block & block, AggregatedDataVariants & re
         aggregate_functions_instructions[i].that = aggregate_functions[i];
         aggregate_functions_instructions[i].func = aggregate_functions[i]->getAddressOfAddFunction();
         aggregate_functions_instructions[i].state_offset = offsets_of_aggregate_states[i];
-        aggregate_functions_instructions[i].arguments = aggregate_columns[i].data();
+        aggregate_functions_instructions[i].arguments = aggregate_columns[i].data(); // jungle comment : aggfunc need column
 
 
         LOG_DEBUG(&Logger::get("Aggregator"),"aggregate_functions name :" + aggregate_functions[i]->getName() + ",arguments:" + agg_arguments_name_s);
@@ -918,8 +922,8 @@ void Aggregator::writeToTemporaryFile(AggregatedDataVariants & data_variants)
 
 template <typename Method>
 Block Aggregator::convertOneBucketToBlock(
-    AggregatedDataVariants & data_variants,
-    Method & method,
+    AggregatedDataVariants & data_variants, //jungle comment : what is  this used for
+    Method & method,                        //method.data.impls is hashTable
     bool final,
     size_t bucket) const
 {
@@ -1114,11 +1118,11 @@ void NO_INLINE Aggregator::convertToBlockImplNotFinal(
 
     for (auto & value : data)
     {
-        method.insertKeyIntoColumns(value, key_columns, params.keys_size, key_sizes);
+        method.insertKeyIntoColumns(value, key_columns, params.keys_size, key_sizes); //jungle comment : value.first is key
 
         /// reserved, so push_back does not throw exceptions
         for (size_t i = 0; i < params.aggregates_size; ++i)
-            aggregate_columns[i]->push_back(Method::getAggregateData(value.second) + offsets_of_aggregate_states[i]);
+            aggregate_columns[i]->push_back(Method::getAggregateData(value.second) + offsets_of_aggregate_states[i]); //jungle comment :value.second is AggregateDataPtr
 
         Method::getAggregateData(value.second) = nullptr;
     }
@@ -2052,6 +2056,7 @@ void Aggregator::mergeStream(const BlockInputStreamPtr & stream, AggregatedDataV
 
         LOG_TRACE(log, "Merging partially aggregated two-level data.");
 
+        //jungle comment : result is empty
         auto merge_bucket = [&bucket_to_blocks, &result, this](Int32 bucket, Arena * aggregates_pool, MemoryTracker * memory_tracker)
         {
             current_memory_tracker = memory_tracker;

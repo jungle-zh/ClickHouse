@@ -50,6 +50,9 @@ add_headers_and_sources(dbms src/Dictionaries/Embedded)
 add_headers_and_sources(dbms src/Dictionaries/Embedded/GeodataProviders)
 add_headers_and_sources(dbms src/Interpreters)
 add_headers_and_sources(dbms src/Interpreters/ClusterProxy)
+add_headers_and_sources(dbms src/Interpreters/Expr)
+add_headers_and_sources(dbms src/Interpreters/Thrift)
+add_headers_and_sources(dbms src/Interpreters/ExecNode)
 add_headers_and_sources(dbms src/Columns)
 add_headers_and_sources(dbms src/Storages)
 add_headers_and_sources(dbms src/Storages/Distributed)
@@ -144,6 +147,7 @@ target_link_libraries (dbms
     clickhouse_parsers
     clickhouse_common_config
     clickhouse_common_io
+    clickhouse_thrift
     ${MYSQLXX_LIBRARY}
     ${RE2_LIBRARY}
     ${RE2_ST_LIBRARY}
@@ -233,6 +237,8 @@ target_include_directories (clickhouse_common_io BEFORE PUBLIC ${DOUBLE_CONVERSI
 
 # also for copy_headers.sh:
 target_include_directories (clickhouse_common_io BEFORE PRIVATE ${COMMON_INCLUDE_DIR})
+
+
 
 add_subdirectory (tests)
 

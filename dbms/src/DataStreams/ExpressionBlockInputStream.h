@@ -3,6 +3,8 @@
 #include <DataStreams/IProfilingBlockInputStream.h>
 
 #include <Interpreters/ExpressionActions.h>
+#include <common/logger_useful.h>
+
 namespace DB
 {
 

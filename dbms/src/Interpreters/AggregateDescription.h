@@ -12,7 +12,7 @@ struct AggregateDescription
 {
     AggregateFunctionPtr function;
     Array parameters;        /// Parameters of the (parametric) aggregate function.
-    ColumnNumbers arguments;
+    ColumnNumbers arguments;  // column index in block
     Names argument_names;    /// used if no `arguments` are specified.
     String column_name;      /// What name to use for a column with aggregate function values
 

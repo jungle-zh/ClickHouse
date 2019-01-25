@@ -22,6 +22,7 @@ void test1()
     static constexpr size_t stack_threshold = 32;
     using Array = PODArray<UInt64, initial_size, AllocatorWithStackMemory<Allocator<false>, stack_threshold>>;
 
+    std::cout<<" PODArray size :" << sizeof(Array) << std::endl;
     bool res = true;
 
     {

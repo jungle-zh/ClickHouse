@@ -164,7 +164,7 @@ struct HashTableGrower
     size_t place(size_t x) const         { return x & mask(); }
 
     /// The next cell in the collision resolution chain.
-    size_t next(size_t pos) const        { ++pos; return pos & mask(); }
+    size_t next(size_t pos) const        { ++pos; return pos & mask(); } // jungle comment  : if pos is larger than mask ,  place_value will to to head
 
     /// Whether the hash table is sufficiently full. You need to increase the size of the hash table, or remove something unnecessary from it.
     bool overflow(size_t elems) const    { return elems > maxFill(); }
@@ -376,7 +376,7 @@ protected:
           *    after transferring all the elements from the old halves you need to     [         o   x    ]
           *    process tail from the collision resolution chain immediately after it   [        o    x    ]
           */
-        for (; !buf[i].isZero(*this) && !buf[i].isDeleted(); ++i)
+        for (; !buf[i].isZero(*this) && !buf[i].isDeleted(); ++i) //do not leave the gap
             reinsert(buf[i], buf[i].getHash(*this));
 
 #ifdef DBMS_HASH_MAP_DEBUG_RESIZES
@@ -393,7 +393,7 @@ protected:
       */
     void reinsert(Cell & x, size_t hash_value)
     {
-        size_t place_value = grower.place(hash_value);
+        size_t place_value = grower.place(hash_value); //jungle comment: place_value is larger than the older  one ?
 
         /// If the element is in its place.
         if (&x == &buf[place_value])

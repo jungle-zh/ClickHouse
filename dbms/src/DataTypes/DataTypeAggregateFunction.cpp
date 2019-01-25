@@ -108,7 +108,7 @@ void DataTypeAggregateFunction::serializeBinaryBulk(const IColumn & column, Writ
         end = vec.end();
 
     for (; it != end; ++it)
-        function->serialize(*it, ostr);
+        function->serialize(*it, ostr);//jungle comment: *it is address of agg status
 }
 
 void DataTypeAggregateFunction::deserializeBinaryBulk(IColumn & column, ReadBuffer & istr, size_t limit, double /*avg_value_size_hint*/) const

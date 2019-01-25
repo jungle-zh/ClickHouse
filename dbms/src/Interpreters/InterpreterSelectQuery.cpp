@@ -464,7 +464,7 @@ void InterpreterSelectQuery::executeImpl(Pipeline & pipeline, const BlockInputSt
             {
                 /// If you need to combine aggregated results from multiple servers
                 if (!expressions.first_stage)
-                    executeMergeAggregated(pipeline, aggregate_overflow_row, aggregate_final);
+                    executeMergeAggregated(pipeline, aggregate_overflow_row, aggregate_final); //jungle comment: final agg here ,middle agg result need to tranfer to other server
 
                 if (!aggregate_final)
                     executeTotalsAndHaving(pipeline, expressions.has_having, expressions.before_having, aggregate_overflow_row);
@@ -938,7 +938,7 @@ void InterpreterSelectQuery::executeMergeAggregated(Pipeline & pipeline, bool ov
       *  but it can work more slowly.
       */
 
-    Aggregator::Params params(header, keys, aggregates, overflow_row);
+    Aggregator::Params params(header, keys, aggregates, overflow_row);//jungle  comment : header is intermediate_header
 
     const Settings & settings = context.getSettingsRef();
 

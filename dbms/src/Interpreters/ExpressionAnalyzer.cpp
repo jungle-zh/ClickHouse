@@ -2572,7 +2572,7 @@ void ExpressionAnalyzer::getAggregates(const ASTPtr & ast, ExpressionActionsPtr 
 
             getRootActions(arguments[i], true, false, actions);
             const std::string & name = arguments[i]->getColumnName();
-            types[i] = actions->getSampleBlock().getByName(name).type;
+            types[i] = actions->getSampleBlock().getByName(name).type; //jungle comment
             aggregate.argument_names[i] = name;
         }
 
@@ -2851,7 +2851,7 @@ void ExpressionAnalyzer::appendAggregateFunctionsArguments(ExpressionActionsChai
     {
         for (size_t j = 0; j < aggregate_descriptions[i].argument_names.size(); ++j)
         {
-            step.required_output.push_back(aggregate_descriptions[i].argument_names[j]);
+            step.required_output.push_back(aggregate_descriptions[i].argument_names[j]);//jungle comment agg need arg
         }
         log_str  += aggregate_descriptions[i].to_string() + "\n";
     }

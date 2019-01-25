@@ -48,7 +48,7 @@ struct AggregateIndependent
                 {
                     typename Map::iterator place;
                     bool inserted;
-                    map.emplace(*it, place, inserted);
+                    map.emplace(*it, place, inserted);//jungle comment  (*it) is the key ,place is the cell element iterator
 
                     if (inserted)
                         creator(place->second);
@@ -131,7 +131,7 @@ struct MergeSequential
             auto begin = source_maps[i]->begin();
             auto end = source_maps[i]->end();
             for (auto it = begin; it != end; ++it)
-                merger((*source_maps[0])[it->first], it->second);
+                merger((*source_maps[0])[it->first], it->second); //jungle comment : it->first is key , call operator [] ,return value reference
         }
 
         result_map = source_maps[0];

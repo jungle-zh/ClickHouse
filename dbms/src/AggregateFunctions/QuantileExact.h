@@ -28,7 +28,7 @@ struct QuantileExact
     /// The memory will be allocated to several elements at once, so that the state occupies 64 bytes.
     static constexpr size_t bytes_in_arena = 64 - sizeof(PODArray<Value>);
 
-    using Array = PODArray<Value, bytes_in_arena, AllocatorWithStackMemory<Allocator<false>, bytes_in_arena>>;
+    using Array = PODArray<Value, bytes_in_arena, AllocatorWithStackMemory<Allocator<false>, bytes_in_arena>>; //jungle comment : 64 byte in stack ?
     Array array;
 
     void add(const Value & x)
