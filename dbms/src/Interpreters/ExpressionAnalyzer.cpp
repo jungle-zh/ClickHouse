@@ -308,6 +308,13 @@ void  ExpressionAnalyzer::init(){
 
 }
 
+void ExpressionAnalyzer::buildLogicPlan(){
+    //
+
+
+
+}
+
 
 void ExpressionAnalyzer::translateQualifiedNames()
 {
