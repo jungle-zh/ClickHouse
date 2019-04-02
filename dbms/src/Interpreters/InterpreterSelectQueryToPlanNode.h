@@ -1,17 +1,23 @@
 //
 // Created by Administrator on 2019/4/1.
 //
+#pragma once
 
-#ifndef CLICKHOUSE_INTERPRETERSELECTQUERYTOPLANNODE_H
-#define CLICKHOUSE_INTERPRETERSELECTQUERYTOPLANNODE_H
+#include <Interpreters/ExpressionActions.h>
+#include <Interpreters/ExpressionAnalyzer.h>
+
+
 
 namespace DB {
+
+class PlanNode ;
+class PlanStage;
 
 
 class InterpreterSelectQueryToPlanNode {
 
 
-
+public:
     struct AnalysisResult1
     {
         //bool has_join       = false;
@@ -20,12 +26,14 @@ class InterpreterSelectQueryToPlanNode {
         bool has_having     = false;
         bool has_order_by   = false;
         bool has_limit_by   = false;
+        bool has_distinct   = false;
 
         //ExpressionActionsPtr before_join;   /// including JOIN
         ExpressionActionsPtr before_where;
         ExpressionActionsPtr before_aggregation;
         ExpressionActionsPtr before_having;
-        ExpressionActionsPtr before_order_and_select;
+        ExpressionActionsPtr before_select;
+        ExpressionActionsPtr before_order ;
         ExpressionActionsPtr before_limit_by;
         ExpressionActionsPtr final_projection;
 
@@ -40,18 +48,31 @@ class InterpreterSelectQueryToPlanNode {
         //SubqueriesForSets subqueries_for_sets;
     };
 
-    AnalysisResult1 analyzeExpressions(QueryProcessingStage::Enum from_stage);
+    AnalysisResult1 analyzeExpressions();
 
-    void buildPlanNodeTree(PlanNode & root);
+    void buildPlanNodeDepedent(PlanNode & root);
 
     void buildPlanNodeHeader(PlanNode & root);
 
     void createStageTree(PlanNode & root);
 
     void createExecNode(PlanStage & root);
+
+private:
+    std::unique_ptr<ExpressionAnalyzer> query_analyzer;
+
+    AnalysisResult1 analysisResult ;
+
+
+    std::shared_ptr<PlanNode>  header  ;
+
+
+
+
+
 };
 
 
 }
 
-#endif //CLICKHOUSE_INTERPRETERSELECTQUERYTOPLANNODE_H
+

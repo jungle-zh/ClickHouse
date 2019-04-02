@@ -1,6 +1,8 @@
 //
-// Created by Administrator on 2019/3/31.
+// Created by usser on 2019/4/2.
 //
+
+
 
 #pragma  once
 
@@ -9,7 +11,7 @@
 
 namespace DB {
 
-class  ProjectNode  : public  PlanNode {
+class  OrderByNode  : public  PlanNode {
 
 private:
 
@@ -18,4 +20,3 @@ private:
 
 
 }
-

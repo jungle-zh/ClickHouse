@@ -6,5 +6,18 @@
 #define CLICKHOUSE_SCANNODE_H
 
 
+#include <Interpreters/PlanNode/PlanNode.h>
+
+
+namespace DB {
+
+class ScanNode : public PlanNode {
+
+private:
+
+
+};
+
+}
 
 #endif //CLICKHOUSE_SCANNODE_H

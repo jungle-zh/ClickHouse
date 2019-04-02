@@ -7,6 +7,8 @@
 
 
 #include <vector>
+#include <IO/WriteBuffer.h>
+#include <IO/ReadBuffer.h>
 
 
 
@@ -19,8 +21,10 @@ using PlanNodePtr = std::shared_ptr<PlanNode>;
 public:
 
 
-    virtual void serialize(WriteBuffer & ostr) ;
-    virtual void deserialze(ReadBuffer & istr) ;
+    //virtual void serialize(WriteBuffer & ostr) ;
+    //virtual void deserialze(ReadBuffer & istr) ;
+
+    void addChild(PlanNodePtr child);
 
 
 private:
