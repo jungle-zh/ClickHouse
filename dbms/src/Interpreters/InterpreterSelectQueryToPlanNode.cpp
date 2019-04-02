@@ -3,7 +3,7 @@
 //
 #include <Interpreters/InterpreterSelectQueryToPlanNode.h>
 #include <common/logger_useful.h>
-#include <Interpreters/PlanNode/PlanNode.h>
+
 #include <Interpreters/PlanNode/ProjectNode.h>
 #include <Interpreters/PlanNode/LimitNode.h>
 #include <Interpreters/PlanNode/OrderByNode.h>
@@ -11,12 +11,14 @@
 #include <Interpreters/PlanNode/AggSecondLevelNode.h>
 #include <Interpreters/PlanNode/HavingNode.h>
 #include <Interpreters/PlanNode/DistinctNode.h>
+#include <Interpreters/PlanNode/ScanNode.h>
 namespace DB {
 
 InterpreterSelectQueryToPlanNode::AnalysisResult1 InterpreterSelectQueryToPlanNode::analyzeExpressions(){
 
     ExpressionActionsChain chain;
     //AnalysisResult1  res;
+    query_analyzer->init();
     analysisResult.need_aggregate = query_analyzer->hasAggregation();
 
     if(query_analyzer->appendArrayJoin(chain, false)){
@@ -96,19 +98,22 @@ InterpreterSelectQueryToPlanNode::AnalysisResult1 InterpreterSelectQueryToPlanNo
 
 void InterpreterSelectQueryToPlanNode::buildPlanNodeDepedent(PlanNode  & node){
 
-    // scanNode
-    // agg  or distinct
-    // having
-    // order
-    // limit
     // project
-
-
-    header = std::make_shared<ProjectNode>(analysisResult.before_select) ; // ProjectNode  must be set
-
+    // limit
+    // order
+    // having
+    // agg  or distinct
+    // from -> {
+    //     table
+    //     select
+    //     join
+    // }
+    std::shared_ptr<PlanNode> header = std::make_shared<ProjectNode>(analysisResult.before_select) ; // ProjectNode  must be set
+    planNodeRoot = header;
     if(analysisResult.has_limit_by){
         auto  limitNode = std::make_shared<LimitNode>(analysisResult.before_limit_by) ;
         header->addChild(limitNode) ;
+
         header = limitNode ;
     }
 
@@ -145,13 +150,17 @@ void InterpreterSelectQueryToPlanNode::buildPlanNodeDepedent(PlanNode  & node){
     }
 
 
-    auto  scanNode  =  std::make_shared<ProjectNode>(analysisResult.before_select) ; // ProjectNode  must be set
+    auto  scanNode  =  std::make_shared<ScanNode>(analysisResult.before_where) ; // ProjectNode  must be set
+    header->addChild(scanNode);
+    header = scanNode;
+}
 
+Block  InterpreterSelectQueryToPlanNode::initPlanNodeHeader(PlanNode::PlanNodePtr  root){
 
-
-
+    header = root->initHeader();
 
 }
+
 
 
 }

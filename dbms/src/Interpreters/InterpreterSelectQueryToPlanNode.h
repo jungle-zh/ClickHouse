@@ -5,17 +5,23 @@
 
 #include <Interpreters/ExpressionActions.h>
 #include <Interpreters/ExpressionAnalyzer.h>
-
+#include <Interpreters/PlanNode/PlanNode.h>
 
 
 namespace DB {
 
 class PlanNode ;
+
 class PlanStage;
 
 
 class InterpreterSelectQueryToPlanNode {
 
+    //对于 当前 ASTPtr ,如果 from 是 table ,
+    //说明到叶子节点了，不需要go deeper
+    //如果 from 是 join/in/union 或者 select
+    // go deeper and build sub planNode, from 构建完成,
+    // 在构建当前 ASTPtr planNode
 
 public:
     struct AnalysisResult1
@@ -52,11 +58,11 @@ public:
 
     void buildPlanNodeDepedent(PlanNode & root);
 
-    void buildPlanNodeHeader(PlanNode & root);
+    Block initPlanNodeHeader(PlanNode::PlanNodePtr  root);
 
-    void createStageTree(PlanNode & root);
+    //void createStageTree(PlanNode & root);
 
-    void createExecNode(PlanStage & root);
+    //void createExecNode(PlanStage & root);
 
 private:
     std::unique_ptr<ExpressionAnalyzer> query_analyzer;
@@ -64,8 +70,10 @@ private:
     AnalysisResult1 analysisResult ;
 
 
-    std::shared_ptr<PlanNode>  header  ;
+    std::shared_ptr<PlanNode>  planNodeRoot  ;
 
+
+    Block header;
 
 
 

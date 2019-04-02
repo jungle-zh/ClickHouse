@@ -11,7 +11,10 @@ namespace DB {
 
 class  ProjectNode  : public  PlanNode {
 
-private:
+public:
+    Block initHeader() override;
+
+
 
 
 };

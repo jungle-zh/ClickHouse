@@ -14,10 +14,12 @@
 
 namespace DB {
 
+
 class  PlanNode {
 
-using PlanNodePtr = std::shared_ptr<PlanNode>;
 
+public:
+    using PlanNodePtr = std::shared_ptr<PlanNode>;
 public:
 
 
@@ -25,13 +27,21 @@ public:
     //virtual void deserialze(ReadBuffer & istr) ;
 
     void addChild(PlanNodePtr child);
+    Block getHeader()  { return isHeaderInited ? header :initHeader() ; }
 
+
+    virtual  Block  initHeader() ;
+
+
+    PlanNodePtr getFirstChild() { return  childs[0]; }
 
 private:
 
+    //std::shared_ptr<PlanNodePtr> father;
     std::vector<PlanNodePtr> childs;
-
-
+    Block  header;
+    bool   isHeaderInited ;
+    ExpressionActionsPtr     expressionActions;
 
 };
 
