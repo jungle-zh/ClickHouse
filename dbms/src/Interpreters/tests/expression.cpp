@@ -23,6 +23,7 @@
 #include <Interpreters/ExpressionAnalyzer.h>
 #include <Interpreters/ExpressionActions.h>
 #include <Interpreters/Context.h>
+#include <Interpreters/PlanNode/AggPartialNode.h>
 
 
 int main(int argc, char ** argv)
@@ -134,5 +135,7 @@ int main(int argc, char ** argv)
         std::cerr << e.displayText() << std::endl;
     }
 
+    AggPartialNode  node;
+    node.read();
     return 0;
 }

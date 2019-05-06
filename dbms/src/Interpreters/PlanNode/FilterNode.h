@@ -1,22 +1,19 @@
 //
-// Created by usser on 2019/4/2.
+// Created by Administrator on 2019/3/31.
 //
-
-
-
 #pragma  once
+
 
 #include <Interpreters/PlanNode/PlanNode.h>
 
 
 namespace DB {
 
-class  OrderByNode  : public  PlanNode {
+class FilterNode : public PlanNode {
 
 private:
 
 
 };
-
 
 }

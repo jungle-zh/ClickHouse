@@ -14,6 +14,7 @@ class PlanNode ;
 
 class PlanStage;
 
+class ASTTableExpression;
 
 class InterpreterSelectQueryToPlanNode {
 
@@ -55,8 +56,11 @@ public:
     };
 
     AnalysisResult1 analyzeExpressions();
+    PlanNode::PlanNodePtr buildTableExpression(ASTTableExpression *  table);
 
-    void buildPlanNodeDepedent(PlanNode & root);
+    PlanNode::PlanNodePtr buildPlanNode(ASTPtr  top);
+
+    ASTPtr  fromClauseAST(ASTPtr top ) ;
 
     Block initPlanNodeHeader(PlanNode::PlanNodePtr  root);
 
@@ -64,6 +68,14 @@ public:
 
     //void createExecNode(PlanStage & root);
 
+    PlanNode dealSubPlan(ASTPtr fromClause)  ;
+
+    PlanNode::PlanNodePtr  WhereClause(ASTPtr current,Block & header);
+    PlanNode::PlanNodePtr  AggClause(ASTPtr current,Block  header);
+    PlanNode::PlanNodePtr  HavingClause(ASTPtr current,Block  header);
+    PlanNode::PlanNodePtr  OrderByClause(ASTPtr current,Block  header);
+    PlanNode::PlanNodePtr  LimitClause(ASTPtr current,Block  header);
+    PlanNode::PlanNodePtr  SelectClause(ASTPtr current,Block  header);
 private:
     std::unique_ptr<ExpressionAnalyzer> query_analyzer;
 
@@ -75,9 +87,13 @@ private:
 
     Block header;
 
+    Settings settings;
 
 
+    PlanNode WhereClause(ASTPtr shared_ptr);
 
+
+    int stageId;
 };
 
 

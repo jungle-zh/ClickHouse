@@ -1,10 +1,7 @@
 //
 // Created by Administrator on 2019/3/31.
 //
-
-#ifndef CLICKHOUSE_PLANNODE_H
-#define CLICKHOUSE_PLANNODE_H
-
+#pragma once
 
 #include <vector>
 #include <IO/WriteBuffer.h>
@@ -26,14 +23,32 @@ public:
     //virtual void serialize(WriteBuffer & ostr) ;
     //virtual void deserialze(ReadBuffer & istr) ;
 
-    void addChild(PlanNodePtr child);
-    Block getHeader()  { return isHeaderInited ? header :initHeader() ; }
+   // void addChild(PlanNodePtr child);
+    void clearChild();
 
+    void setUnaryChild();
+    void setLeftChild();
+    void setRightChild();
+
+    std::string virtual type();
+    Block getHeader()  { return isHeaderInited ? header :initHeader() ; }
+    std::string getName() ;
 
     virtual  Block  initHeader() ;
 
+    virtual Block  read();
+    virtual void init();
 
-    PlanNodePtr getFirstChild() { return  childs[0]; }
+    static void  serialize (WriteBuffer & buffer);
+
+    static void  deserialize (WriteBuffer & buffer,PlanNode * res);
+
+
+    PlanNodePtr getUnaryChild() { return  childs[0]; }
+
+    PlanNodePtr getLeftChild() { return childs[0]; }
+
+    PlanNodePtr getRightChild() { return  childs[1];}
 
 private:
 
@@ -47,5 +62,3 @@ private:
 
 
 }
-
-#endif //CLICKHOUSE_PLANNODE_H

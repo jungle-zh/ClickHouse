@@ -160,7 +160,6 @@ public:
 
     void getActionsBeforeAggregation(const ASTPtr & ast, ExpressionActionsPtr & actions, bool no_subqueries);
 
-    void analyzeAggregation(ASTSelectQuery * select_query ,Block  & header);
 private:
     ASTPtr ast;
     ASTSelectQuery * select_query;
@@ -316,7 +315,6 @@ private:
       * Set has_aggregation = true if there is GROUP BY or at least one aggregate function.
       */
     void analyzeAggregation();
-
     void getAggregates(const ASTPtr & ast, ExpressionActionsPtr & actions);
     void assertNoAggregates(const ASTPtr & ast, const char * description);
 

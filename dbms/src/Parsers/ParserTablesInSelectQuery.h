@@ -33,6 +33,7 @@ public:
 protected:
     const char * getName() const { return "table, table function, subquery or list of joined tables"; }
     bool parseImpl(Pos & pos, ASTPtr & node, Expected & expected);
+    bool parseEnhanceJoinImpl1(Pos & pos, ASTPtr & node,Expected & expected);
     bool parseEnhanceJoinImpl(Pos & pos, ASTPtr & node,Expected & expected);
     bool parseUsing(Pos & pos,  std::shared_ptr<ASTTableEnhanceJoin> & node,Expected & expected);
     bool parseJoinInfo(Pos & pos, Expected & expected,std::shared_ptr<ASTTableEnhanceJoin> & table_join);

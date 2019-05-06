@@ -37,7 +37,7 @@ namespace ErrorCodes
 }
 
 class IBlockOutputStream;
-
+class PlanNode;
 
 /** Different data structures that can be used for aggregation
   * For efficiency, the aggregation data itself is put into the pool.
@@ -1051,6 +1051,7 @@ public:
 
     /// Aggregate the source. Get the result in the form of one of the data structures.
     void execute(const BlockInputStreamPtr & stream, AggregatedDataVariants & result);
+    void execute(std::shared_ptr<PlanNode>  node, AggregatedDataVariants & result);
 
     using AggregateColumns = std::vector<ColumnRawPtrs>;
     using AggregateColumnsData = std::vector<ColumnAggregateFunction::Container *>;
@@ -1080,7 +1081,7 @@ public:
       * (Pre-aggregate several blocks that represent the result of independent aggregations from remote servers.)
       */
     void mergeStream(const BlockInputStreamPtr & stream, AggregatedDataVariants & result, size_t max_threads);
-
+    void mergeStream( std::shared_ptr<PlanNode> node, AggregatedDataVariants & result, size_t max_threads);
     /// Merge several partially aggregated blocks into one.
     /// Precondition: for all blocks block.info.is_overflows flag must be the same.
     /// (either all blocks are from overflow data or none blocks are).

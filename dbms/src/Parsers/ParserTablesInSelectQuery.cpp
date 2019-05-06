@@ -10,6 +10,7 @@
 #include <stack>
 #include <common/logger_useful.h>
 #include <iostream>
+#include <Common/typeid_cast.h>
 #include "queryToString.h"
 
 namespace DB
@@ -108,7 +109,7 @@ bool ParserArrayJoin::parseImpl(Pos & pos, ASTPtr & node, Expected & expected)
 
 
 
-bool ParserTablesInSelectQueryElement::parseEnhanceJoinImpl(DB::IParser::Pos &pos, DB::ASTPtr &node, DB::Expected &expected) {
+bool ParserTablesInSelectQueryElement::parseEnhanceJoinImpl1(DB::IParser::Pos &pos, DB::ASTPtr &node, DB::Expected &expected) {
 
     //  From
     //  has join ?
@@ -367,7 +368,7 @@ bool ParserTablesInSelectQueryElement::parseImpl(Pos & pos, ASTPtr & node, Expec
 {
 
     LOG_DEBUG(&Logger::get("ParserTablesInSelectQuery")," #### parseImpl ") ;
-    //return  parseEnhanceJoinImpl(pos,node,expected);
+    return  parseEnhanceJoinImpl(pos,node,expected);
 
     auto res = std::make_shared<ASTTablesInSelectQueryElement>();
 
@@ -488,8 +489,141 @@ bool ParserTablesInSelectQueryElement::parseImpl(Pos & pos, ASTPtr & node, Expec
 }
 
 
+    bool ParserTablesInSelectQueryElement::parseEnhanceJoinImpl(Pos & pos, ASTPtr & node, Expected & expected)
+    {
+
+        LOG_DEBUG(&Logger::get("ParserTablesInSelectQuery")," #### parseEnhanceJoinImpl ") ;
+        //return  parseEnhanceJoinImpl(pos,node,expected);
+
+        auto res = std::make_shared<ASTTablesInSelectQueryElement>();
+
+        if (is_first)
+        {
+            if (!ParserTableExpression().parse(pos, res->table_expression, expected))
+                return false;
+        }
+        else if (ParserArrayJoin().parse(pos, res->array_join, expected))
+        {
+        }
+        else
+        {
+            auto table_join = std::make_shared<ASTTableEnhanceJoin>();
+
+            if (pos->type == TokenType::Comma)
+            {
+                ++pos;
+                table_join->kind = ASTTableEnhanceJoin::Kind::Comma;
+            }
+            else
+            {
+                if (ParserKeyword("GLOBAL").ignore(pos))
+                    table_join->locality = ASTTableEnhanceJoin::Locality::Global;
+                else if (ParserKeyword("LOCAL").ignore(pos))
+                    table_join->locality = ASTTableEnhanceJoin::Locality::Local;
+
+                if (ParserKeyword("ANY").ignore(pos))
+                    table_join->strictness = ASTTableEnhanceJoin::Strictness::Any;
+                else if (ParserKeyword("ALL").ignore(pos))
+                    table_join->strictness = ASTTableEnhanceJoin::Strictness::All;
+
+                if (ParserKeyword("INNER").ignore(pos))
+                    table_join->kind = ASTTableEnhanceJoin::Kind::Inner;
+                else if (ParserKeyword("LEFT").ignore(pos))
+                    table_join->kind = ASTTableEnhanceJoin::Kind::Left;
+                else if (ParserKeyword("RIGHT").ignore(pos))
+                    table_join->kind = ASTTableEnhanceJoin::Kind::Right;
+                else if (ParserKeyword("FULL").ignore(pos))
+                    table_join->kind = ASTTableEnhanceJoin::Kind::Full;
+                else if (ParserKeyword("CROSS").ignore(pos))
+                    table_join->kind = ASTTableEnhanceJoin::Kind::Cross;
+                else
+                {
+                    /// Maybe need use INNER by default as in another DBMS.
+                    return false;
+                }
+
+                if (table_join->strictness != ASTTableEnhanceJoin::Strictness::Unspecified
+                    && table_join->kind == ASTTableEnhanceJoin::Kind::Cross)
+                    throw Exception("You must not specify ANY or ALL for CROSS JOIN.", ErrorCodes::SYNTAX_ERROR);
+
+                /// Optional OUTER keyword for outer joins.
+                if (table_join->kind == ASTTableEnhanceJoin::Kind::Left
+                    || table_join->kind == ASTTableEnhanceJoin::Kind::Right
+                    || table_join->kind == ASTTableEnhanceJoin::Kind::Full)
+                {
+                    ParserKeyword("OUTER").ignore(pos);
+                }
+
+                if (!ParserKeyword("JOIN").ignore(pos, expected))
+                    return false;
+            }
+
+            ASTPtr right_table_expression  ;
+            //if (!ParserTableExpression().parse(pos, res->table_expression, expected))
+            //    return false;
+            if (!ParserTableExpression().parse(pos, right_table_expression, expected))
+                return false;
+            table_join->right_table_expression = right_table_expression;
+
+            if (table_join->kind != ASTTableEnhanceJoin::Kind::Comma
+                && table_join->kind != ASTTableEnhanceJoin::Kind::Cross)
+            {
+                if (ParserKeyword("USING").ignore(pos, expected))
+                {
+                    /// Expression for USING could be in parentheses or not.
+                    bool in_parens = pos->type == TokenType::OpeningRoundBracket;
+                    if (in_parens)
+                        ++pos;
+
+                    if (!ParserExpressionList(false).parse(pos, table_join->using_expression_list, expected))
+                        return false;
+
+                    if (in_parens)
+                    {
+                        if (pos->type != TokenType::ClosingRoundBracket)
+                            return false;
+                        ++pos;
+                    }
+                }
+                else if (ParserKeyword("ON").ignore(pos, expected))
+                {
+                    /// OR is operator with lowest priority, so start parsing from it.
+                    if (!ParserLogicalOrExpression().parse(pos, table_join->on_expression, expected))
+                        return false;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            if (table_join->using_expression_list)
+                table_join->children.emplace_back(table_join->using_expression_list);
+            if (table_join->on_expression)
+                table_join->children.emplace_back(table_join->on_expression);
+
+            if (table_join->right_table_expression)
+                table_join->children.emplace_back(table_join->right_table_expression);
+            res->table_join = table_join;
+        }
+        //jungle comment: table_join and table_expression is in the same level
+
+        if (res->table_expression)
+            res->children.emplace_back(res->table_expression);
+        if (res->table_join)
+            res->children.emplace_back(res->table_join);
+        if (res->array_join)
+            res->children.emplace_back(res->array_join);
+
+        node = res;
+        return true;
+    }
+
+
+
 bool ParserTablesInSelectQuery::parseImpl(Pos & pos, ASTPtr & node, Expected & expected)  //jungle coment: parse From clause
 {
+    /*
     auto res = std::make_shared<ASTTablesInSelectQuery>();
 
     ASTPtr child;
@@ -501,6 +635,39 @@ bool ParserTablesInSelectQuery::parseImpl(Pos & pos, ASTPtr & node, Expected & e
 
     while (ParserTablesInSelectQueryElement(false).parse(pos, child, expected))
         res->children.emplace_back(child);
+
+    node = res;
+    return true;
+    */
+
+    auto res = std::make_shared<ASTTablesInSelectQuery>();
+
+    ASTPtr child1;
+    ASTPtr child2;
+
+    if (ParserTablesInSelectQueryElement(true).parse(pos, child1, expected))
+        res->children.emplace_back(child1);
+    else
+        return false;
+
+    while (ParserTablesInSelectQueryElement(false).parse(pos, child2, expected)){
+
+        ASTTableEnhanceJoin * join  =  typeid_cast<ASTTableEnhanceJoin * >( typeid_cast< ASTTablesInSelectQueryElement*>(child2.get())->table_join.get());
+        if( join ){
+
+            ASTPtr pre_table =  typeid_cast< ASTTablesInSelectQueryElement*>(res->children.back().get())->table_expression;
+            res->children.clear();
+            join->left_table_expression  = pre_table ;
+            join->children.emplace_back(join->left_table_expression );
+
+            res->children.emplace_back(child2);
+        }else{
+            res->children.emplace_back(child2);
+            // array join not change
+        }
+
+    }
+
 
     node = res;
     return true;
