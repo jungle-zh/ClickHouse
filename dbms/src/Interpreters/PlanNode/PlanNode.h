@@ -6,7 +6,7 @@
 #include <vector>
 #include <IO/WriteBuffer.h>
 #include <IO/ReadBuffer.h>
-
+#include <Core/Block.h>
 
 
 namespace DB {
@@ -19,6 +19,7 @@ public:
     using PlanNodePtr = std::shared_ptr<PlanNode>;
 public:
 
+    PlanNode();
 
     //virtual void serialize(WriteBuffer & ostr) ;
     //virtual void deserialze(ReadBuffer & istr) ;
@@ -31,10 +32,9 @@ public:
     void setRightChild();
 
     std::string virtual type();
-    Block getHeader()  { return isHeaderInited ? header :initHeader() ; }
+    virtual  Block getHeader();
     std::string getName() ;
 
-    virtual  Block  initHeader() ;
 
     virtual Block  read();
     virtual void init();
@@ -56,7 +56,7 @@ private:
     std::vector<PlanNodePtr> childs;
     Block  header;
     bool   isHeaderInited ;
-    ExpressionActionsPtr     expressionActions;
+    //ExpressionActionsPtr     expressionActions;
 
 };
 

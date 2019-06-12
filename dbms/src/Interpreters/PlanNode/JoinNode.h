@@ -17,6 +17,8 @@ private:
     std::shared_ptr<Join> join;
 public:
     JoinNode(std::shared_ptr<Join> & join_):join(join_) {}
+
+    JoinNode()
     Block read() override ;
     void prepareRightTable();
 
