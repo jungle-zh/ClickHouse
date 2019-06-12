@@ -260,7 +260,7 @@ include (cmake/find_rt.cmake)
 include (cmake/find_execinfo.cmake)
 include (cmake/find_readline_edit.cmake)
 include (cmake/find_re2.cmake)
-include (cmake/find_rdkafka.cmake)
+#include (cmake/find_rdkafka.cmake)
 include (cmake/find_capnp.cmake)
 include (cmake/find_llvm.cmake)
 
