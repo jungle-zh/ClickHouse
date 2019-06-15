@@ -17,7 +17,7 @@ namespace DB {
 
     class PlanNode;
     class ASTSelectQuery;
-    //select query ast to planNode
+    class ASTTableJoin;
     class QueryAnalyzer {
 
         private:
@@ -31,6 +31,8 @@ namespace DB {
         void getRootActions(const ASTPtr & ast, bool no_subqueries, bool only_consts, ExpressionActionsPtr & actions);
 
         std::shared_ptr<PlanNode> analyse( ASTSelectQuery * query);
+
+        std::shared_ptr<PlanNode> analyseJoin (std::shared_ptr<PlanNode> left ,std::shared_ptr<PlanNode> right,ASTTableJoin * joininfo,ASTSelectQuery * query);
 
         std::shared_ptr<PlanNode> analyseWhereClause(std::shared_ptr<PlanNode> shared_ptr,ASTSelectQuery *query);
 
@@ -47,5 +49,7 @@ namespace DB {
 
 
     };
+
+
 
 }

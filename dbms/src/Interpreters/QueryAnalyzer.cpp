@@ -152,6 +152,8 @@ namespace DB {
                     query->tables->children[0].get());
             ASTTablesInSelectQueryElement *right = typeid_cast<ASTTablesInSelectQueryElement *>(
                     query->tables->children[1].get());
+
+
             ASTTableExpression *leftexp = typeid_cast<ASTTableExpression *>(left->table_expression.get());
             ASTTableExpression *rightexp = typeid_cast<ASTTableExpression *>(right->table_expression.get());
             if (leftexp->subquery) {
@@ -193,8 +195,9 @@ namespace DB {
                 throw Exception("unknow table Expression");
             }
 
+            ASTTableJoin * joininfo = typeid_cast<ASTTableJoin *>(right->table_join.get() );
 
-            std::shared_ptr<JoinNode> joinNode = analyseJoin(leftNode, rightNode,query);
+            std::shared_ptr<JoinNode> joinNode = analyseJoin(leftNode, rightNode,joininfo,query);
 
 
             fromClauseNode->add(joinNode);
@@ -219,9 +222,27 @@ namespace DB {
 
     }
     std::shared_ptr<PlanNode>
-    analyseJoin (std::shared_ptr<PlanNode> left ,std::shared_ptr<PlanNode> right,ASTSelectQuery * query) {
+    analyseJoin (std::shared_ptr<PlanNode> left ,std::shared_ptr<PlanNode> right,ASTTableJoin * joininfo,ASTSelectQuery * query) {
 
-         left->getHeader();
+
+        Block leftHeader = left->getHeader();
+        Block rightHeader = right->getHeader();
+
+       // auto leftActions = std::make_shared<ExpressionActions>(leftHeader.getColumnsWithTypeAndName(), settings);
+       // auto rightActions = std::make_shared<ExpressionActions>(rightHeader.getColumnsWithTypeAndName(), settings);
+       // getRootActions(joininfo->using_expression_list, true, false, leftActions);
+       // getRootActions(joininfo->using_expression_list, true, false, rightActions);
+
+        auto & keys = typeid_cast<ASTExpressionList &>(*joininfo->using_expression_list);
+        Names join_key;
+
+        for (const auto & key : keys.children)
+        {
+
+            join_key.push_back(key->getColumnName());
+
+        }
+        std::shared_ptr<JoinNode> joinNode = std::make_shared<JoinNode>(leftHeader,rightHeader,join_key);
 
     }
 
@@ -595,7 +616,7 @@ namespace DB {
 
             if (arguments_present)
                 actions_stack.addAction(
-                        ExpressionAction::applyFunction(function_builder, argument_names, node->getColumnName()));
+                        ExpressionAction::applyFunction(function_builder, argument_names, node->getColumnName()),node->name);
         } else if (ASTLiteral * node = typeid_cast<ASTLiteral *>(ast.get())) {
             DataTypePtr type = applyVisitor(FieldToDataType(), node->value);
 

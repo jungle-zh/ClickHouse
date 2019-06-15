@@ -50,7 +50,7 @@ Names ExpressionAction::getNeededColumns() const
 
 ExpressionAction ExpressionAction::applyFunction(const FunctionBuilderPtr & function_,
     const std::vector<std::string> & argument_names_,
-    std::string result_name_)
+    std::string result_name_,std::string function_name_)
 {
     if (result_name_ == "")
     {
@@ -69,6 +69,7 @@ ExpressionAction ExpressionAction::applyFunction(const FunctionBuilderPtr & func
     a.result_name = result_name_;
     a.function_builder = function_;
     a.argument_names = argument_names_;
+    a.function_name = function_name_;
     return a;
 }
 

@@ -5,6 +5,7 @@
 #pragma  once
 
 #include <Poco/Net/TCPServer.h>
+#include "PlanNode.h"
 
 namespace DB {
 
