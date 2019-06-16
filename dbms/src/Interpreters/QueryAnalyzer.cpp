@@ -10,15 +10,17 @@
 #include <Parsers/ASTFunction.h>
 #include <Functions/FunctionFactory.h>
 #include <AggregateFunctions/AggregateFunctionFactory.h>
-#include <Interpreters/PlanNode/JoinNode.h>
+#include <Interpreters/PlanNode/JoinPlanNode.h>
 #include <Interpreters/PlanNode/UnionNode.h>
 #include <Interpreters/PlanNode/FromClauseNode.h>
 #include <Interpreters/PlanNode/FilterNode.h>
+#include <Interpreters/PlanNode/AggPlanNode.h>
 #include <Interpreters/AggregateDescription.h>
 #include <AggregateFunctions/parseAggregateFunctionParameters.h>
 #include <Parsers/ASTIdentifier.h>
 #include <DataTypes/DataTypeFunction.h>
-
+#include <Interpreters/PlanNode/ExechangeNode.h>
+#include <Interpreters/PlanNode/MergePlanNode.h>
 
 
 namespace DB {
@@ -128,7 +130,7 @@ namespace DB {
                 for (size_t i = 0; i < unionQuery->list_of_selects->children.size(); ++i) {
                     ASTSelectQuery *selectQuery = typeid_cast<ASTSelectQuery *>(
                             unionQuery->list_of_selects->children[i].get());
-                    childNode->add(analyse(selectQuery));
+                    childNode->addChild(analyse(selectQuery));
                 }
 
 
@@ -140,7 +142,7 @@ namespace DB {
                 throw Exception("unknow table Expression");
             }
 
-            fromClauseNode->add(childNode);
+            fromClauseNode->addChild(childNode);
 
 
         } else if (cnum == 2) {
@@ -164,7 +166,7 @@ namespace DB {
                 for (size_t i = 0; i < unionQuery->list_of_selects->children.size(); ++i) {
                     ASTSelectQuery *selectQuery = typeid_cast<ASTSelectQuery *>(
                             unionQuery->list_of_selects->children[i].get());
-                    leftNode.add(analyse(selectQuery));
+                    leftNode.addChild(analyse(selectQuery));
                 }
 
             } else if (leftexp->database_and_table_name) {
@@ -183,7 +185,7 @@ namespace DB {
                 for (size_t i = 0; i < unionQuery->list_of_selects->children.size(); ++i) {
                     ASTSelectQuery *selectQuery = typeid_cast<ASTSelectQuery *>(
                             unionQuery->list_of_selects->children[i].get());
-                    rightNode.add(analyse(selectQuery));
+                    rightNode.addChild(analyse(selectQuery));
                 }
 
             } else if (rightexp->database_and_table_name) {
@@ -197,10 +199,10 @@ namespace DB {
 
             ASTTableJoin * joininfo = typeid_cast<ASTTableJoin *>(right->table_join.get() );
 
-            std::shared_ptr<JoinNode> joinNode = analyseJoin(leftNode, rightNode,joininfo,query);
+            std::shared_ptr<PlanNode> joinNode = analyseJoin(leftNode, rightNode,joininfo,query);
 
 
-            fromClauseNode->add(joinNode);
+            fromClauseNode->addChild(joinNode);
 
 
         } else {
@@ -219,6 +221,8 @@ namespace DB {
         std::shared_ptr<PlanNode> afterLimit = analyseLimitClause(afterOrder,query);
 
         std::shared_ptr<PlanNode> aferSelectExp = analyseSelectExp(afterLimit,query);
+
+        return  aferSelectExp;
 
     }
     std::shared_ptr<PlanNode>
@@ -242,7 +246,7 @@ namespace DB {
             join_key.push_back(key->getColumnName());
 
         }
-        std::shared_ptr<JoinNode> joinNode = std::make_shared<JoinNode>(leftHeader,rightHeader,join_key);
+        std::shared_ptr<PlanNode> joinNode = std::make_shared<JoinPlanNode>(leftHeader,rightHeader,join_key);
 
     }
 
@@ -259,7 +263,7 @@ namespace DB {
 
         std::shared_ptr<PlanNode> filterNode = std::make_shared<FilterNode>(header,actions,query->where_expression->getColumnName());
 
-        filterNode->add(child);
+        filterNode->addChild(child);
         return filterNode;
     }
 
@@ -355,8 +359,11 @@ namespace DB {
                 aggregated_columns.emplace_back(desc.column_name, desc.function->getReturnType());
             }
 
-            ret = std::make_shared<AggNode>(header, actions,aggregation_keys,aggregated_columns,aggregate_descriptions);
-            ret->add(child);
+            ret = std::make_shared<MergePlanNode>(header,aggregation_keys,aggregated_columns,aggregate_descriptions);
+            auto aggNode = std::make_shared<AggPlanNode>(header, actions,aggregation_keys,aggregated_columns,aggregate_descriptions);
+
+            aggNode->addChild(child);
+            ret->addChild(aggNode);
         } else {
             ret = child ;
         }
@@ -376,7 +383,7 @@ namespace DB {
 
         std::shared_ptr<PlanNode> filterNode = std::make_shared<FilterNode>(header,actions,query->having_expression->getColumnName());
 
-        filterNode->add(child);
+        filterNode->addChild(child);
         return filterNode;
     }
 
@@ -634,6 +641,293 @@ namespace DB {
                     getActionsImpl(child, no_subqueries, only_consts, actions_stack);
             }
         }
+    }
+
+    std::shared_ptr<PlanNode> normilizePlanTree(std::shared_ptr<PlanNode> root){ //remove fromClauseNode and unionNode with one child
+
+        return root;
+    }
+
+    void addExechangeNode(std::shared_ptr<PlanNode> root){ //from root to leaf
+
+        // agg -> agg + merge
+        // join -> shuffle join  , broadcast  join
+
+
+        for(std::shared_ptr<PlanNode> child : root->getChilds()){
+            addExechangeNode(child);
+        }
+
+        if( ScanPlanNode* scanPlanNode = typeid_cast<ScanPlanNode*> (root.get())){
+            //get distribution from static module
+            //todo
+            std::shared_ptr<PlanNode::Distribution> dis = std::make_shared<PlanNode::Distribution>();
+
+            root->setDistribution(dis);
+        }
+
+
+        if( JoinPlanNode* joinPlanNode = typeid_cast<JoinPlanNode*>(root.get())){
+
+           assert(root->getChilds().size() ==2 );
+
+           //todo broadcast case
+
+
+            std::shared_ptr<PlanNode::Distribution>  joinNodeDistribution ;
+
+           if(root->getChild(0)->getDistribution().equals(root->getChild(1)->getDistribution()) &&
+                   root->getChild(0)->getDistribution().keyEquals(joinPlanNode->joinKeys)){
+
+               joinNodeDistribution = root->getChild(0)->getDistribution();
+               std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(ExechangeNode::NARROW,joinNodeDistribution); // exechangeNode sender distribution,
+               if( root->getChild(0)->exechangeCost() > root->getChild(1)->exechangeCost()){                                       // submit father stage will set executor info in distribution for child
+                   enode->addChild(root->getChild(1));
+                   root->setChild(enode,1);
+                } else{
+                   enode->addChild(root->getChild(0));
+                   root->setChild(enode,0);
+                }
+               enode->addDest(root);
+
+
+           }else if( root->getChild(0)->getDistribution().keyEquals(joinPlanNode->joinKeys)){
+
+               joinNodeDistribution = root->getChild(0)->getDistribution();
+               std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(ExechangeNode::SHUFFLE,joinNodeDistribution); // exechangeNode sender distribution
+               enode->addChild(root->getChild(1));                                                                                  // submit father stage will set executor info in distribution for child
+               enode->addDest(root);
+               root->setChild(enode,1);
+
+
+           }else if( root->getChild(1)->getDistribution().keyEquals(joinPlanNode->joinKeys)){
+
+               joinNodeDistribution = root->getChild(1)->getDistribution();
+               std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(ExechangeNode::SHUFFLE,joinNodeDistribution);
+               enode->addChild(root->getChild(0)); //add child1 distribution ,child 0 know how to redistribute
+               enode->addDest(root);
+               root->setChild(enode,0);
+
+           }else {
+
+               joinNodeDistribution = std::make_shared<PlanNode::Distribution>(joinPlanNode->joinKeys,64);
+
+               std::shared_ptr<ExechangeNode> enode0 = std::make_shared<ExechangeNode>(ExechangeNode::SHUFFLE,joinNodeDistribution);
+               enode0->addChild(root->getChild(0));
+               enode0->addDest(root);
+               root->setChild(enode0,0);
+
+               std::shared_ptr<ExechangeNode> enode1 = std::make_shared<ExechangeNode>(ExechangeNode::SHUFFLE,joinNodeDistribution);
+               enode1->addChild(root->getChild(1));
+               enode1->addDest(root);
+               root->setChild(enode1,1);
+
+
+           }
+
+           root->setDistribution(joinNodeDistribution);
+
+
+        } else if(MergePlanNode* mergePlanNode = typeid_cast<MergePlanNode*>(root.get())){
+
+
+            std::shared_ptr<PlanNode::Distribution> distribution = std::make_shared<PlanNode::Distribution>();
+            assert(root->getChilds().size() ==1 );
+
+            if(root->getChild(0)->getDistribution()->partitionNum > 1){  //need to merge
+
+                distribution->partitionNum = 1;
+                distribution->distributeKeys = std::vector<std::string>();
+
+                std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(ExechangeNode::MERGE,distribution);// submit stage will set executor info in distribution
+                enode->addChild(root->getChild(0));
+                enode->addDest(root);
+                root->setChild(enode,0);
+
+                root->setDistribution(distribution);
+
+            } else {
+
+                //need to delete the mergePlanNode;
+            }
+
+
+
+
+        } else if(UnionPlanNode* unionPlanNode = typeid_cast<UnionPlanNode*>(root.get())){
+
+            std::shared_ptr<PlanNode::Distribution> distribution = std::make_shared<PlanNode::Distribution>();
+            std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(ExechangeNode::UNION,distribution); // submit stage will set executor info in distribution
+
+            distribution->partitionNum = 1;
+            distribution->distributeKeys = std::vector<std::string>();
+            for(auto child : root->getChilds()){
+                enode->addChild(child);
+            }
+            enode->addDest(root);
+            root->setChild(enode,0);
+
+
+
+           root->setDistribution(distribution);
+
+
+        }  else {
+
+
+            assert(root->getChilds().size() ==1 );
+
+            root->setDistribution(root->getChild(0)->getDistribution());
+        }
+
+
+
+
+
+    }
+
+    void remoteUnusedMergePlanNode(std::shared_ptr<PlanNode> root){
+
+        for(size_t i=0;i < root->getChilds().size() ;++i){
+
+            if(MergePlanNode* mergePlanNode = typeid_cast<MergePlanNode*>(root->getChilds()[i].get())){
+                if(mergePlanNode->getChild(0)->getName() != "ExechangeNode"){
+                    root->setChild(mergePlanNode->getChild(0),i);
+                }
+            }
+        }
+
+    }
+
+
+    void splitStageByExechangeNode(std::shared_ptr<PlanNode> root, std::shared_ptr<Stage>  currentStage){
+
+
+
+        if( JoinPlanNode* joinPlanNode = typeid_cast<JoinPlanNode*>(root.get())){
+
+            ExechangeNode * left = typeid_cast<ExechangeNode *>(joinPlanNode->getChild(0).get());
+            ExechangeNode * right = typeid_cast<ExechangeNode *>(joinPlanNode->getChild(1).get());
+
+            if(left && right){
+
+                currentStage->addPlanNode(root);
+                auto leftEnode = joinPlanNode->getChild(0);
+                auto rightEnode = joinPlanNode->getChild(1);
+                currentStage->addExechangeReceiver(leftEnode,rightEnode);
+               // currentStage->addExechangeReceiver(rightEnode);
+
+               auto leftStage =   std::make_shared<Stage>(leftEnode)  ;
+               auto rightStage =  std::make_shared<Stage>(rightEnode)  ;
+
+               assert(leftEnode->getChilds().size() == 1);
+               assert(rightEnode->getChilds().size() == 1);
+               splitStageByExechangeNode(leftEnode->getChild(0),leftStage);
+               splitStageByExechangeNode(rightEnode->getChild(0),rightStage);
+
+               currentStage->addChild(leftStage);
+               currentStage->addChild(rightStage);
+            } else if(left) {
+
+                currentStage->addPlanNode(root);
+                auto leftEnode = joinPlanNode->getChild(0);
+                //currentStage->addExechangeHelperReceiver(leftEnode);
+                auto leftStage =   std::make_shared<Stage>(leftEnode)  ;
+                assert(leftEnode->getChilds().size() == 1);
+                splitStageByExechangeNode(leftEnode->getChild(0),leftStage);
+                splitStageByExechangeNode(joinPlanNode->getChild(1),currentStage);// right child is not exechangeNode,currentStage go throw this path
+
+                currentStage->addChild(leftStage);
+            } else if(right){
+
+                currentStage->addPlanNode(root);
+                auto rightEnode = joinPlanNode->getChild(1);
+                //currentStage->addExechangeHelperReceiver(rightEnode);
+                auto rightStage =   std::make_shared<Stage>(rightEnode)  ;
+                assert(rightEnode->getChilds().size() == 1);
+                splitStageByExechangeNode(rightEnode->getChild(0),rightStage);
+                splitStageByExechangeNode(joinPlanNode->getChild(0),currentStage);// left child is not exechangeNode,currentStage go throw this path
+
+                currentStage->addChild(rightStage);
+
+            } else {
+                throw  Exception("join child with no exechange node");
+            }
+
+        } else if(MergePlanNode* mergePlanNode = typeid_cast<MergePlanNode*>(root.get())){
+
+            assert(typeid_cast<ExechangeNode*> (mergePlanNode->getChild(0).get()));
+
+            auto enode = mergePlanNode->getChild(0);
+            currentStage->addPlanNode(root);
+            currentStage->addExechangeReceiver(enode);
+            auto childStage =   std::make_shared<Stage>(enode)  ;
+
+            assert(enode->getChilds().size() == 1); // aggPlanNode
+            splitStageByExechangeNode(enode->getChild(0),childStage);
+
+            currentStage->addChild(childStage);
+
+        } else if(UnionPlanNode* unionPlanNode = typeid_cast<UnionPlanNode*>(root.get())){
+
+            assert(typeid_cast<ExechangeNode*> (unionPlanNode->getChild(0).get()));
+
+            auto enode = unionPlanNode->getChild(0);
+            currentStage->addPlanNode(root);
+            currentStage->addExechangeReceiver(enode);
+
+            std::vector<PlanNodePtr> childs = enode->getChilds();
+
+            assert(childs.size() > 1);
+            for(size_t i=0;i< childs.size() ;++i){
+
+                auto childStage =   std::make_shared<Stage>(enode)  ;
+
+                splitStageByExechangeNode(childs[i],childStage);
+
+                currentStage->addChild(childStage);
+            }
+
+
+        } else if(ScanPlanNode* scanPlanNode = typeid_cast<ScanPlanNode*>(root.get())){
+
+            currentStage->addPlanNode(root);
+            //no exechange receiver
+
+        } else if(!typeid_cast<ExechangeNode*>(root.get())){
+            assert(root->getChilds().size() == 1);
+            currentStage.addPlanNode(root);
+            splitStageByExechangeNode(root->getChild(0),currentStage);
+        } else {
+            throw Exception("unexpected node path");
+        }
+
+
+
+
+
+    }
+
+
+    void submitStage(){
+
+
+        //first submit father ;
+        //then father stage distribution thus exechanage node receiver distribution is set
+        //father stage exechange node receiver is the same with child stage exechange node sender
+        //then submit child stage, child know where to send data by exechange node sender
+
+        // stage bottom node is exechange node receiver
+        // stage know his distribution, exechange receiver -> mergePlanNode ,
+        // exechange receiver-> UnionPlanNode , exechange receiver-> JoinPlanNode , ScanPlanNode
+        // if father stage submited and they set their exechange receiver and exechange receiver helper distribution
+        // child stage' exechange sender know his distribution ,and sender know where to send
+
+        // child                                          ==>  father
+        //exechanage receiver -> ... -> exechange sender  ==>  exechanage receiver -> ... -> exechange sender
+        //set stage father's exechanage receiver distribution info  will effect
+        //stage child's exechange sender distribution info
+        //all distribution ptr is created in  addExechangeNode
     }
 
 

@@ -7,14 +7,14 @@
 #include <Interpreters/PlanNode/ProjectNode.h>
 #include <Interpreters/PlanNode/LimitNode.h>
 #include <Interpreters/PlanNode/SortPartialNode.h>
-#include <Interpreters/PlanNode/AggPartialNode.h>
-#include <Interpreters/PlanNode/AggMergeNode.h>
+#include <Interpreters/PlanNode/AggPlanNode.h>
+#include <Interpreters/PlanNode/MergePlanNode.h>
 #include <Interpreters/PlanNode/HavingNode.h>
 #include <Interpreters/PlanNode/DistinctNode.h>
 #include <Interpreters/PlanNode/ScanNode.h>
 #include <Interpreters/PlanNode/FilterNode.h>
-#include <Interpreters/PlanNode/ExchangeNode.h>
-#include <Interpreters/PlanNode/JoinNode.h>
+#include <Interpreters/PlanNode/ExechangeNode.h>
+#include <Interpreters/PlanNode/JoinPlanNode.h>
 #include <Parsers/ASTSelectQuery.h>
 #include <Parsers/ASTSelectWithUnionQuery.h>
 #include <Common/typeid_cast.h>
@@ -301,7 +301,7 @@ void InterpreterSelectQueryToPlanNode::buildStageExchageNode(std::shared_ptr<Sta
      if(curStage->getChilds().size() == 1 ){ // agg exchage
 
          //one agg exchage node
-         std::shared_ptr<ExchangeNode> exchange = std::make_shared<ExchangeNode>(curStage);
+         std::shared_ptr<ExechangeNode> exchange = std::make_shared<ExechangeNode>(curStage);
 
          curStage->addInput(exchange);
 
@@ -311,7 +311,7 @@ void InterpreterSelectQueryToPlanNode::buildStageExchageNode(std::shared_ptr<Sta
          int  hashPartition = curStage->getHashPartitionNum();
 
          for(int i=0;i<hashPartition ;++i ){
-             std::shared_ptr<ExchangeNode> exchange = std::make_shared<ExchangeNode>(curStage);
+             std::shared_ptr<ExechangeNode> exchange = std::make_shared<ExechangeNode>(curStage);
 
              curStage->addInput(exchange);
 

@@ -12,11 +12,11 @@ namespace DB {
 class ExchangeNodeTcpHandlerFactory : public Poco::Net::TCPServerConnectionFactory {
 
 private:
-    ExchangeNode & node;
+    ExechangeNode & node;
     Poco::Logger * log;
 
 public:
-    explicit ExchangeNodeTcpHandlerFactory(ExchangeNode & node_, bool secure_ = false)
+    explicit ExchangeNodeTcpHandlerFactory(ExechangeNode & node_, bool secure_ = false)
     : node(node_)
     , log(&Logger::get(std::string("TCP") + (secure_ ? "S" : "") + "HandlerFactory"))
     {

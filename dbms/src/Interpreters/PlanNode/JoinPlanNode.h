@@ -10,18 +10,16 @@ namespace DB {
 
 
 
-class  JoinNode : public PlanNode {
+class  JoinPlanNode : public PlanNode {
 
 private:
 
-    std::shared_ptr<Join> join;
 public:
-    JoinNode(std::shared_ptr<Join> & join_):join(join_) {}
 
-    JoinNode()
-    Block read() override ;
-    void prepareRightTable();
 
+    JoinPlanNode();
+
+    Names joinKeys;
     bool prepared;
 
 

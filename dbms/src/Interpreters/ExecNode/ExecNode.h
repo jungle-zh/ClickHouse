@@ -5,19 +5,15 @@
 
 #include <vector>
 #include <Interpreters/ExpressionActions.h>
+#include <DataStreams/IProfilingBlockInputStream.h>
 
 namespace DB {
 
 
 
-class ExecNode {
+class ExecNode : public IProfilingBlockInputStream {
 
 
-    virtual void open();
-
-    virtual Block read() ;
-
-    virtual void close() ;
 
     virtual void serialize();
 

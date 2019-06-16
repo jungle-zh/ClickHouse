@@ -10,6 +10,7 @@
 #include <Interpreters/Settings.h>
 #include <Core/ColumnWithTypeAndName.h>
 #include <Interpreters/ExpressionActions.h>
+#include <Interpreters/ExecNode/ExecNode.h>
 
 
 namespace DB {
@@ -47,6 +48,7 @@ namespace DB {
         std::shared_ptr<PlanNode> analyseSelectExp(std::shared_ptr<PlanNode> shared_ptr,ASTSelectQuery *query);
 
 
+        std::shared_ptr<ExecNode> planToExecNode(std::shared_ptr<PlanNode> root);
 
     };
 

@@ -2,8 +2,8 @@
 // Created by Administrator on 2019/5/2.
 //
 
-#include <Interpreters/PlanNode/JoinNode.h>
-#include <Interpreters/PlanNode/ExchangeNode.h>
+#include <Interpreters/PlanNode/JoinPlanNode.h>
+#include <Interpreters/PlanNode/ExechangeNode.h>
 
 namespace DB {
 

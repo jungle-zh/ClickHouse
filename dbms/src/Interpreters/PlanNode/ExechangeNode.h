@@ -12,7 +12,7 @@ namespace DB {
 // receive data from lower task and hold for upper task to read
 
 class ExchangeNodeTcpHandler;
-class ExchangeNode  : public PlanNode {
+class ExechangeNode  : public PlanNode {
 
 
 private:
@@ -23,11 +23,9 @@ private:
     std::string type  ;
     size_t currentHandlerIndex ;
 
+    std::shared_ptr<PlanNode::Distribution> distribution;
 public:
 
-    void init() override ;
-
-    Block read() override ;
     Block readRightTable(std::string table) ;
     void  addHandler(std::shared_ptr<ExchangeNodeTcpHandler> handler);
     static void serialize(WriteBuffer & buffer);

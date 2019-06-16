@@ -14,17 +14,39 @@ namespace DB {
 
 class  PlanNode {
 
+public:
+    struct Distribution {
+
+        Distribution(Names keys_,int partitionNum_):distributeKeys(keys_),partitionNum(partitionNum_){};
+        Distribution(){};
+
+        Names distributeKeys;
+
+
+        int partitionNum ;
+
+        std::vector<int> executorId;
+
+        bool equals(Distribution  right); // paritionNum and distributeKeys all equal
+        bool keyEquals(std::vector<std::string> keys);
+
+    };
 
 public:
     using PlanNodePtr = std::shared_ptr<PlanNode>;
 public:
 
     PlanNode();
+    virtual ~PlanNode();
 
     //virtual void serialize(WriteBuffer & ostr) ;
     //virtual void deserialze(ReadBuffer & istr) ;
 
-   // void addChild(PlanNodePtr child);
+    void addChild(PlanNodePtr child){
+        childs.push_back(child);
+      //  child->setFather(this);
+    }
+    //void setFather(PlanNode *father_){ father  = father_;}
     void clearChild();
 
     void setUnaryChild();
@@ -36,27 +58,29 @@ public:
     std::string getName() ;
 
 
-    virtual Block  read();
-    virtual void init();
-
-    static void  serialize (WriteBuffer & buffer);
-
-    static void  deserialize (WriteBuffer & buffer,PlanNode * res);
 
 
     PlanNodePtr getUnaryChild() { return  childs[0]; }
 
-    PlanNodePtr getLeftChild() { return childs[0]; }
+    std::vector<PlanNodePtr> getChilds () { return childs ;}
 
-    PlanNodePtr getRightChild() { return  childs[1];}
+    void setChild(PlanNodePtr child ,int index) { childs[index] = child;}
+    PlanNodePtr getChild(int index) { return childs[index];}
+    virtual int  exechangeCost();
+    virtual void initDistribution();
+    virtual void initDistribution(std::shared_ptr<Distribution>  distribution);
+    std::shared_ptr<Distribution> getDistribution()  { return distribution;} // data flow  after the planNode ,what data's distribution
 
+    void setDistribution(std::shared_ptr<Distribution>  distribution_) { distribution = distribution_ ;}
+protected:
+    std::shared_ptr<Distribution> distribution;
 private:
 
-    //std::shared_ptr<PlanNodePtr> father;
     std::vector<PlanNodePtr> childs;
     Block  header;
-    bool   isHeaderInited ;
-    //ExpressionActionsPtr     expressionActions;
+    //PlanNode *   father ;
+
+
 
 };
 

@@ -2,13 +2,13 @@
 // Created by admin on 19/1/20.
 //
 
-#include <Interpreters/PlanNode/ExchangeNode.h>
+#include <Interpreters/PlanNode/ExechangeNode.h>
 #include <Interpreters/PlanNode/ExchangeNodeTcpHandler.h>
 #include <Interpreters/PlanNode/ExchangeNodeTcpHandlerFactory.h>
 
 namespace DB {
 
-void ExchangeNode::init(){
+void ExechangeNode::init(){
 
 
    server = new Poco::Net::TCPServer(
@@ -21,12 +21,12 @@ void ExchangeNode::init(){
 
 }
 
-void ExchangeNode::addHandler(std::shared_ptr<ExchangeNodeTcpHandler> handler) {
+void ExechangeNode::addHandler(std::shared_ptr<ExchangeNodeTcpHandler> handler) {
 
    handlers.push_back(handler);
 }
 
-Block ExchangeNode::read() {
+Block ExechangeNode::read() {
 
     if(type == "shuffleJoin"){
         for(std::shared_ptr<ExchangeNodeTcpHandler>  conn : handlers){
@@ -50,7 +50,7 @@ Block ExchangeNode::read() {
 
 }
 
-Block ExchangeNode::readRightTable() {}
+Block ExechangeNode::readRightTable() {}
 
 
     for(std::shared_ptr<ExchangeNodeTcpHandler>  conn : handlers){
