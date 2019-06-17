@@ -11,7 +11,7 @@
 #include <Interpreters/PlanNode/MergePlanNode.h>
 #include <Interpreters/PlanNode/HavingNode.h>
 #include <Interpreters/PlanNode/DistinctNode.h>
-#include <Interpreters/PlanNode/ScanNode.h>
+#include <Interpreters/PlanNode/ScanPlanNode.h>
 #include <Interpreters/PlanNode/FilterNode.h>
 #include <Interpreters/PlanNode/ExechangeNode.h>
 #include <Interpreters/PlanNode/JoinPlanNode.h>

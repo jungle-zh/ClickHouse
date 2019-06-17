@@ -10,7 +10,7 @@
 
 namespace DB {
 
-class ScanNode : public PlanNode {
+class ScanPlanNode : public PlanNode {
 
 
 private:

@@ -11,10 +11,11 @@
 
 namespace DB {
 
-
+using  executorId =  int;
 class  PlanNode {
 
 public:
+
     struct Distribution {
 
         Distribution(Names keys_,int partitionNum_):distributeKeys(keys_),partitionNum(partitionNum_){};
@@ -25,9 +26,9 @@ public:
 
         int partitionNum ;
 
-        std::vector<int> executorId;
+        std::vector<executorId> executors;
 
-        bool equals(Distribution  right); // paritionNum and distributeKeys all equal
+        bool equals(std::shared_ptr<Distribution> right); // paritionNum and distributeKeys all equal
         bool keyEquals(std::vector<std::string> keys);
 
     };

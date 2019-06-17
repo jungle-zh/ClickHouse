@@ -11,7 +11,7 @@
 #include <Functions/FunctionFactory.h>
 #include <AggregateFunctions/AggregateFunctionFactory.h>
 #include <Interpreters/PlanNode/JoinPlanNode.h>
-#include <Interpreters/PlanNode/UnionNode.h>
+#include <Interpreters/PlanNode/UnionPlanNode.h>
 #include <Interpreters/PlanNode/FromClauseNode.h>
 #include <Interpreters/PlanNode/FilterNode.h>
 #include <Interpreters/PlanNode/AggPlanNode.h>
@@ -21,6 +21,7 @@
 #include <DataTypes/DataTypeFunction.h>
 #include <Interpreters/PlanNode/ExechangeNode.h>
 #include <Interpreters/PlanNode/MergePlanNode.h>
+#include <Interpreters/PlanNode/ScanPlanNode.h>
 
 
 namespace DB {
@@ -676,8 +677,8 @@ namespace DB {
 
             std::shared_ptr<PlanNode::Distribution>  joinNodeDistribution ;
 
-           if(root->getChild(0)->getDistribution().equals(root->getChild(1)->getDistribution()) &&
-                   root->getChild(0)->getDistribution().keyEquals(joinPlanNode->joinKeys)){
+           if(root->getChild(0)->getDistribution()->equals(root->getChild(1)->getDistribution()) &&
+                   root->getChild(0)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
 
                joinNodeDistribution = root->getChild(0)->getDistribution();
                std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(ExechangeNode::NARROW,joinNodeDistribution); // exechangeNode sender distribution,
@@ -691,7 +692,7 @@ namespace DB {
                enode->addDest(root);
 
 
-           }else if( root->getChild(0)->getDistribution().keyEquals(joinPlanNode->joinKeys)){
+           }else if( root->getChild(0)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
 
                joinNodeDistribution = root->getChild(0)->getDistribution();
                std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(ExechangeNode::SHUFFLE,joinNodeDistribution); // exechangeNode sender distribution
@@ -700,7 +701,7 @@ namespace DB {
                root->setChild(enode,1);
 
 
-           }else if( root->getChild(1)->getDistribution().keyEquals(joinPlanNode->joinKeys)){
+           }else if( root->getChild(1)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
 
                joinNodeDistribution = root->getChild(1)->getDistribution();
                std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(ExechangeNode::SHUFFLE,joinNodeDistribution);
@@ -721,8 +722,6 @@ namespace DB {
                enode1->addChild(root->getChild(1));
                enode1->addDest(root);
                root->setChild(enode1,1);
-
-
            }
 
            root->setDistribution(joinNodeDistribution);
@@ -743,7 +742,6 @@ namespace DB {
                 enode->addChild(root->getChild(0));
                 enode->addDest(root);
                 root->setChild(enode,0);
-
                 root->setDistribution(distribution);
 
             } else {
@@ -767,26 +765,19 @@ namespace DB {
             enode->addDest(root);
             root->setChild(enode,0);
 
-
-
            root->setDistribution(distribution);
 
 
         }  else {
 
-
             assert(root->getChilds().size() ==1 );
-
             root->setDistribution(root->getChild(0)->getDistribution());
         }
 
 
-
-
-
     }
 
-    void remoteUnusedMergePlanNode(std::shared_ptr<PlanNode> root){
+    void removeUnusedMergePlanNode(std::shared_ptr<PlanNode> root){
 
         for(size_t i=0;i < root->getChilds().size() ;++i){
 
@@ -876,7 +867,7 @@ namespace DB {
             currentStage->addPlanNode(root);
             currentStage->addExechangeReceiver(enode);
 
-            std::vector<PlanNodePtr> childs = enode->getChilds();
+            std::vector<std::shared_ptr<PlanNode>> childs = enode->getChilds();
 
             assert(childs.size() > 1);
             for(size_t i=0;i< childs.size() ;++i){
@@ -928,6 +919,8 @@ namespace DB {
         //set stage father's exechanage receiver distribution info  will effect
         //stage child's exechange sender distribution info
         //all distribution ptr is created in  addExechangeNode
+
+
     }
 
 

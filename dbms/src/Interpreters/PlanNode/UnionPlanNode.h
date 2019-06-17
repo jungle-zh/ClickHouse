@@ -7,11 +7,11 @@
 namespace DB {
 
 
-class UnionNode :public  PlanNode{
+class UnionPlanNode :public  PlanNode{
 
 public:
 
-    UnionNode();
+    UnionPlanNode();
 
     Block getHeader() override;
 
