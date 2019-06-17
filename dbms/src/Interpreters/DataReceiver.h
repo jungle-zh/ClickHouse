@@ -11,7 +11,7 @@ namespace DB {
 class DataReceiver {
 
 
-    void startReceiver(); // receive and deserialize
+    void startReceiver(); // receive and deserialize data
     Block read();
 
 };
