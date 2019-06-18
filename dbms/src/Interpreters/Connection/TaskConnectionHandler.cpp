@@ -2,6 +2,8 @@
 // Created by jungle on 19-6-17.
 //
 
+#include <IO/ReadBufferFromPocoSocket.h>
+#include <IO/WriteBufferFromPocoSocket.h>
 #include "TaskConnectionHandler.h"
 
 
@@ -20,7 +22,7 @@ namespace DB {
         socket().setNoDelay(true);
 
         in = std::make_shared<TaskInputStream>(std::make_shared<ReadBufferFromPocoSocket>(socket()),version);
-        out = std::make_shared<NativeBlockOutputStream>(std::make_shared<WriteBufferFromPocoSocket>(socket()),version);
+        out = std::make_shared<WriteBufferFromPocoSocket>(socket());
 
 
         connection_context.setProgressCallback([this](const Progress &value) { return this->updateProgress(value); });
@@ -36,23 +38,42 @@ namespace DB {
                 break;
 
 
-            if(!receiveData())  // return false  at end of data
+            if(!receiveTask())  // return false  at end of data
                 break;
-
 
         }
 
+        initTask();
+        execTask(); // after execute ,all data is send to task dest ,
+        finishTask();
+
+        // out->write()  task finish flag
     }
 
     bool TaskConnectionHandler::receiveTask() {
 
-        Task task = in->read(); // read and deserialize , include execNode info and task source and dest info
-
+        task = in->read(); // read and deserialize , include execNode info and task source and dest info
         if (task){
-
+            return true;
         } else {
-
+            return false;
         }
     }
+
+    void TaskConnectionHandler::initTask(){
+
+        task->init(); // create sender and receiver for task
+    }
+    void TaskConnectionHandler::execTask() {
+
+        task->execute();
+    }
+
+    void TaskConnectionHandler::finishTask() {
+
+        task->finish();
+    }
+
+
 
 }

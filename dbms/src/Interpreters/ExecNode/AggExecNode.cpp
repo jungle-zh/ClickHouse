@@ -5,6 +5,8 @@
 #include <Interpreters/ExecNode/AggExecNode.h>
 #include <DataStreams/MergingAggregatedMemoryEfficientBlockInputStream.h>
 #include <DataStreams/ExpressionBlockInputStream.h>
+#include <IO/VarInt.h>
+#include <IO/WriteHelpers.h>
 
 namespace ProfileEvents
 {
@@ -13,13 +15,55 @@ namespace ProfileEvents
 namespace DB {
 
 
+    void AggExecNode::serialize(WriteBuffer & buffer) {
+
+        ExecNode::serializeHeader(inputHeader,buffer);
+        ExecNode::serializeExpressActions(actions,buffer);
+        aggregationKeys.writeText(buffer);
+        aggregateColumns.writeText(buffer);
+        serializeAggDesc(buffer);
+
+
+    }
+
+    void AggExecNode::serializeAggDesc(WriteBuffer & buffer){
+
+        int descNum = aggregateDescriptions.size();
+        writeVarInt(descNum,buffer);
+        for(int i=0;i<descNum ; ++i){
+
+        }
+
+    }
+
+    AggregateDescriptions AggExecNode::deseralizeAggDesc(ReadBuffer & buffer){
+
+
+
+    }
+
+    std::shared_ptr<ExecNode> AggExecNode::deserialize(ReadBuffer & buffer) {
+
+        Block header =  ExecNode::deSerializeHeader(buffer);
+        ExpressionActions actions = ExecNode::deSerializeExpressActions(buffer);
+        NamesAndTypesList aggregationKeys_ ;
+        NamesAndTypesList  aggregateColumns_;
+        aggregationKeys_.readText(buffer);
+        aggregateColumns_.readText(buffer);
+        AggregateDescriptions desc_ = deserializeAggDesc(buffer);
+
+        return std::make_shared<AggExecNode>(header,aggregationKeys_,aggregateColumns_,desc_,actions, NULL);
+
+
+    }
 
     void AggExecNode::readPrefix() {
 
         if(actions){
-            actions->execute(inputHeader);
+            actions.execute(inputHeader);
             assert(children.size() == 1);
-            auto expressionStream =  std::make_shared<ExpressionBlockInputStream>(children.back(),actions);
+            auto actionsPtr = std::shared_ptr<ExpressionActions>(&actions);
+            auto expressionStream =  std::make_shared<ExpressionBlockInputStream>(children.back(),actionsPtr);
             children[0] = expressionStream;
         }
 

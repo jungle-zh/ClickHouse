@@ -5,10 +5,14 @@
 #pragma once
 
 
+#include <Poco/Net/TCPServerConnectionFactory.h>
+#include <Poco/Net/TCPServer.h>
+#include <Server/IServer.h>
+
 namespace DB {
 
  // receive task and fork process to deal(DataServer will be created in new process)
-    class TaskServer  {
+    class TaskServer  : public IServer{
 
     public:
         TaskServer(Poco::Net::TCPServerConnectionFactory * connectionFactory_,int port):
@@ -18,6 +22,7 @@ namespace DB {
         void start() {
             server->start();
         }
+        bool  isCancelled() const override;
 
 
     private:

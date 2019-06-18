@@ -5,26 +5,37 @@
 #pragma once
 
 #include <Poco/Net/TCPServer.h>
+#include <Server/IServer.h>
+#include "DataConnectionHandlerFactory.h"
 
 namespace DB {
 
-
-class DataServer  {
+class DataReceiver;
+class DataServer : public IServer {
 
 public:
-    DataServer(Poco::Net::TCPServerConnectionFactory * connectionFactory_,int port):
-    connectionFactory(connectionFactory_),portNum(port){
-        server = std::make_unique<Poco::Net::TCPServer>(connectionFactory_,portNum);
+    DataServer(int port,DataReceiver * receiver1):
+    portNum(port),receiver_(receiver1){
+        connectionFactory = std::make_unique<DataConnectionHandlerFactory>();
+        server = std::make_unique<Poco::Net::TCPServer>(connectionFactory,portNum);
+
+        connectionFactory->setServer(this);
+
     }
     void start() {
         server->start();
     }
+    void fill(Block & block);
 
+    bool  isCancelled() const override;
+
+    DataReceiver * receiver() { return receiver_; }
 
 private:
     int portNum ;
+    DataReceiver * receiver_;
     std::unique_ptr<Poco::Net::TCPServer> server;
-    Poco::Net::TCPServerConnectionFactory * connectionFactory;
+    std::unique_ptr<DataConnectionHandlerFactory > connectionFactory;
 
 };
 

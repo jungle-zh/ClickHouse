@@ -15,13 +15,21 @@ class ExecNode : public IProfilingBlockInputStream {
 
 
 
-    virtual void serialize();
+    //virtual void serialize(WriteBuffer & buffer);
 
-    virtual void deserialize();
+    //virtual std::shared_ptr<ExecNode> deserialize(ReadBuffer & buffer);
 
+public:
+    enum NodeType {
+
+        Agg,
+        Join,
+        Filter,
+        Scan
+    };
     static void serializeExpressActions( ExpressionActions & actions,WriteBuffer & buffer );
 
-    static void deSerializeExpressActions(ExpressionActions & actions , ReadBuffer & buffer);
+    static ExpressionActions deSerializeExpressActions( ReadBuffer & buffer);
 
     static void serializeHeader(Block & header ,WriteBuffer & buffer);
 

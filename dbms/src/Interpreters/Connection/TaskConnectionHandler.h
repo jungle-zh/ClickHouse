@@ -3,6 +3,12 @@
 //
 
 #pragma once
+
+#include <IO/ReadBuffer.h>
+#include <Poco/Net/TCPServerConnection.h>
+#include "TaskInputStream.h"
+#include "TaskServer.h"
+
 namespace DB {
 
 
@@ -10,13 +16,19 @@ class TaskConnectionHandler : public Poco::Net::TCPServerConnection {
 
 
 private:
-    std::shared_ptr <ReadBuffer> in;
+    std::shared_ptr <TaskInputStream> in;
     std::shared_ptr <WriteBuffer> out;
-    DataServer &server;
+    TaskServer &server;
+    std::shared_ptr <Task> task;
 public:
     void runImpl();
 
-    void receiveTask();
+
+
+    bool receiveTask();
+    void initTask();
+    void execTask();
+    void finishTask();
 
 
 };

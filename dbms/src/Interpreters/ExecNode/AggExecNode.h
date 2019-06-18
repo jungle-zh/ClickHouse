@@ -28,6 +28,10 @@ namespace DB {
     public:
 
 
+        void   serialize(WriteBuffer & buffer) ;
+        static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer) ;
+        void  serializeAggDesc(WriteBuffer & buffer);
+        static AggregateDescriptions deserializeAggDesc (ReadBuffer & buffer);
         void  readPrefix() override;
         void  readSuffix() override;
         Block readImpl() override ;
@@ -55,7 +59,12 @@ namespace DB {
         NamesAndTypesList aggregateColumns;
         AggregateDescriptions  aggregateDescriptions ;
 
-        ExpressionActionsPtr actions;
+
+        bool allow_to_use_two_level_group_by;
+        bool overflow_row;
+        bool executed;
+       // ExpressionActionsPtr actions;
+        ExpressionActions actions;
 
         bool  final;
 
@@ -65,9 +74,6 @@ namespace DB {
 
         Settings  settings  ;
 
-        bool allow_to_use_two_level_group_by;
-        bool overflow_row;
-        bool executed;
 
         Context & context;
         std::vector<std::unique_ptr<TemporaryFileStream>> temporary_inputs;

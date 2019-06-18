@@ -4,17 +4,34 @@
 
 #pragma once
 
+#include <Interpreters/PlanNode/PlanNode.h>
+#include <Client/Connection.h>
+#include <Interpreters/Task.h>
+
+
 namespace DB {
 
 
+class Block;
 
 class DataSender {
 
-    std::vector<executorId> executors;
+public:
 
-    std::map<executorId,Connections> connections;
+    DataSender(DataDest &  dest_ );
 
-    void send(Block & block,executorId);
+    DataDest dest;
+
+
+    std::map<UInt32 , partitionInfo> partitions; // partitionid -> info
+    std::map<UInt32 , Connection> connections;   // partitionid -> connnections
+
+
+
+    void send(Block & block);
+
+    std::map<UInt32,Block> repartitionByKey(Block & block);
+    void addConnection();
 
 
 };
