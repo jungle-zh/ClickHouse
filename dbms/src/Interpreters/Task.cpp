@@ -5,6 +5,7 @@
 
 #include <Interpreters/DataReceiver.h>
 #include <Interpreters/DataSender.h>
+#include <Interpreters/ExecNode/ExecNode.h>
 #include "Task.h"
 namespace DB {
 

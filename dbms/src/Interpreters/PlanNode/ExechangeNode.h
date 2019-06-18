@@ -23,7 +23,7 @@ private:
     std::string type  ;
     size_t currentHandlerIndex ;
 
-    std::shared_ptr<PlanNode::Distribution> distribution;
+    //std::shared_ptr<Distribution> distribution;
 public:
 
     Block readRightTable(std::string table) ;

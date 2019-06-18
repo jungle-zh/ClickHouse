@@ -22,6 +22,7 @@
 #include <Interpreters/PlanNode/ExechangeNode.h>
 #include <Interpreters/PlanNode/MergePlanNode.h>
 #include <Interpreters/PlanNode/ScanPlanNode.h>
+#include "Stage.h"
 
 
 namespace DB {
@@ -662,7 +663,7 @@ namespace DB {
         if( ScanPlanNode* scanPlanNode = typeid_cast<ScanPlanNode*> (root.get())){
             //get distribution from static module
             //todo
-            std::shared_ptr<PlanNode::Distribution> dis = std::make_shared<PlanNode::Distribution>();
+            std::shared_ptr<Distribution> dis = std::make_shared<Distribution>();
 
             root->setDistribution(dis);
         }
@@ -675,7 +676,7 @@ namespace DB {
            //todo broadcast case
 
 
-            std::shared_ptr<PlanNode::Distribution>  joinNodeDistribution ;
+            std::shared_ptr<Distribution>  joinNodeDistribution ;
 
            if(root->getChild(0)->getDistribution()->equals(root->getChild(1)->getDistribution()) &&
                    root->getChild(0)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
@@ -711,7 +712,7 @@ namespace DB {
 
            }else {
 
-               joinNodeDistribution = std::make_shared<PlanNode::Distribution>(joinPlanNode->joinKeys,64);
+               joinNodeDistribution = std::make_shared<Distribution>(joinPlanNode->joinKeys,64);
 
                std::shared_ptr<ExechangeNode> enode0 = std::make_shared<ExechangeNode>(ExechangeNode::SHUFFLE,joinNodeDistribution);
                enode0->addChild(root->getChild(0));
@@ -730,7 +731,7 @@ namespace DB {
         } else if(MergePlanNode* mergePlanNode = typeid_cast<MergePlanNode*>(root.get())){
 
 
-            std::shared_ptr<PlanNode::Distribution> distribution = std::make_shared<PlanNode::Distribution>();
+            std::shared_ptr<Distribution> distribution = std::make_shared<Distribution>();
             assert(root->getChilds().size() ==1 );
 
             if(root->getChild(0)->getDistribution()->partitionNum > 1){  //need to merge
@@ -754,7 +755,7 @@ namespace DB {
 
         } else if(UnionPlanNode* unionPlanNode = typeid_cast<UnionPlanNode*>(root.get())){
 
-            std::shared_ptr<PlanNode::Distribution> distribution = std::make_shared<PlanNode::Distribution>();
+            std::shared_ptr<Distribution> distribution = std::make_shared<Distribution>();
             std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(ExechangeNode::UNION,distribution); // submit stage will set executor info in distribution
 
             distribution->partitionNum = 1;
@@ -887,7 +888,7 @@ namespace DB {
 
         } else if(!typeid_cast<ExechangeNode*>(root.get())){
             assert(root->getChilds().size() == 1);
-            currentStage.addPlanNode(root);
+            currentStage->addPlanNode(root);
             splitStageByExechangeNode(root->getChild(0),currentStage);
         } else {
             throw Exception("unexpected node path");
@@ -900,7 +901,8 @@ namespace DB {
     }
 
 
-    void submitStage(){
+    void submitStage(std::shared_ptr<Stage> root){
+
 
 
         //first submit father ;

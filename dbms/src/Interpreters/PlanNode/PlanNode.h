@@ -7,6 +7,7 @@
 #include <IO/WriteBuffer.h>
 #include <IO/ReadBuffer.h>
 #include <Core/Block.h>
+#include <Interpreters/Partition.h>
 
 
 namespace DB {
@@ -16,22 +17,7 @@ class  PlanNode {
 
 public:
 
-    struct Distribution {
 
-        Distribution(Names keys_,int partitionNum_):distributeKeys(keys_),partitionNum(partitionNum_){};
-        Distribution(){};
-
-        Names distributeKeys;
-
-
-        int partitionNum ;
-
-        std::vector<executorId> executors;
-
-        bool equals(std::shared_ptr<Distribution> right); // paritionNum and distributeKeys all equal
-        bool keyEquals(std::vector<std::string> keys);
-
-    };
 
 public:
     using PlanNodePtr = std::shared_ptr<PlanNode>;

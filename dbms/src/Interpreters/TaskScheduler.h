@@ -13,10 +13,10 @@ class TaskScheduler {
 
 
 public:
-    std::vector<executorId> applyExecutorsForStage(std::shared_ptr<Stage> stage);
+    std::vector<Partition> applyExecutorsForStage(std::shared_ptr<Stage> stage);
     void submitStage(std::shared_ptr<Stage> root);
 
-    std::map<int,Connection> executorConnection;
+    //std::map<int,Connection> executorConnection;
 
 
 

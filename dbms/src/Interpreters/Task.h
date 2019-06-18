@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <Interpreters/ExecNode/ExecNode.h>
-
+//#include <Interpreters/ExecNode/ExecNode.h>
+#include <Interpreters/Partition.h>
 
 
 namespace DB {
@@ -13,27 +13,9 @@ namespace DB {
 
 class DataSender;
 class DataReceiver;
+class ExecNode;
 
-    enum DataSourceType {
-        table,
-        exechange
-    };
 
-    struct DataSource {
-        DataSourceType type;
-    };
-
-    struct partitionInfo{
-        UInt32 partitionId;
-        std::string ip ;
-        UInt32 port ;
-        std::string taskId;
-    };
-
-    struct DataDest {
-        Names distributeKeys;
-        std::vector<partitionInfo> partitions;
-    };
 
     class Task {
     public:
