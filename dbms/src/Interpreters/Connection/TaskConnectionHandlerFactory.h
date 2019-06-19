@@ -4,6 +4,8 @@
 
 #pragma  once
 
+#include "TaskConnectionHandler.h"
+
 namespace DB {
 
 

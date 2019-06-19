@@ -8,7 +8,7 @@
 namespace DB {
 
  void DataReceiver::startToReceive() {
-     server = std::make_unique<DataServer>(8000,buffer);
+     server = std::make_unique<DataServer>(port,buffer);
      server->start(); // start receive data connection and create handler
  }
 

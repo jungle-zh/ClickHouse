@@ -20,11 +20,14 @@ private:
     std::shared_ptr <WriteBuffer> out;
     TaskServer &server;
     std::shared_ptr <Task> task;
+    std::map<std::string , UInt32> taskIdToPort;
+
 public:
     void runImpl();
 
 
-
+    void receivePackage();
+    void receiveApplyRequest(); // start task exec and data receive thread , need to be thread safe
     bool receiveTask();
     void initTask();
     void execTask();

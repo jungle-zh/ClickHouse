@@ -22,7 +22,8 @@ class ExecNode;
         void init();  // start receiver
         void execute();
         void finish();
-
+        DataSource getSource() { return  dataSource;}
+        DataDest getDest() { return dataDest; }
         Task(DataSource source, DataDest dest, std::vector<std::shared_ptr<ExecNode>> nodes);
 
     private:

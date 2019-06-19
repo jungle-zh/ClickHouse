@@ -15,13 +15,23 @@ namespace DB {
 class DataReceiver {
 
 public:
-    DataReceiver(DataSource source, Blocks & inputHeader);
+    DataReceiver(DataSource source, Blocks & inputHeader){
+        taskId = source.partition.executor.taskId;
+        port = source.partition.executor.dataPort;
+        ip = source.partition.executor.ip;
+        inputHeader = inputHeader;
+    }
     void startToReceive(); // receive and deserialize data
     Block read();             // call by logic thread
     void fill(Block & block); // call by io thread
 
     std::unique_ptr<DataServer>  server;
     std::shared_ptr<DataBuffer>  buffer; // read and fill in different thread ,buffer need to be thread safe
+
+    std::string taskId;
+    UInt32  port;
+    std::string ip;
+    Blocks inputHeader ;
 
 };
 

@@ -6,6 +6,7 @@
 
 #include <Interpreters/Stage.h>
 #include <Client/Connection.h>
+#include <Interpreters/Connection/TaskConnectionClient.h>
 namespace DB {
 
 
@@ -13,10 +14,21 @@ class TaskScheduler {
 
 
 public:
-    std::vector<Partition> applyExecutorsForStage(std::shared_ptr<Stage> stage);
+    void applyResourceAndSubmitStage(std::shared_ptr<Stage> root);
+    void assignExecutor(std::shared_ptr<Stage> root);
+    std::vector<Partition> applyResourceForTask(std::shared_ptr<Stage> stage);
     void submitStage(std::shared_ptr<Stage> root);
+    void submitTask(Task & task);
 
-    //std::map<int,Connection> executorConnection;
+    void checkTaskStatus(std::string taskId); // check task and close connection if task is finished  in seperate thread
+
+
+    std::shared_ptr<TaskConnectionClient> createConnection(TaskReceiver receiver );
+    std::vector<TaskReceiver> receivers;
+    std::map<std::string , std::shared_ptr<TaskConnectionClient>> taskToConnection;
+
+    int receiverIndex;
+    int totalReceiverNum;
 
 
 

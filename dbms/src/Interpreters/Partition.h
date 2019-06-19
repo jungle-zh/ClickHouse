@@ -12,17 +12,37 @@ enum DataSourceType {
     exechange
 };
 
-struct DataSource {
-    DataSourceType type;
+struct ServerNode {
+    std::string ip;
+    UInt32 port;
 };
+struct TaskReceiver {
 
+    TaskReceiver(std::string ip_,UInt32 port_){
+        ip = ip_;
+        taskPort = port_;
+
+    }
+    std::string ip;
+    UInt32 taskPort;
+};
+struct Executor {
+    std::string ip;
+    UInt32 dataPort;
+    std::string taskId;
+};
 struct Partition{
     UInt32 partitionId;
-    std::string ip ;
-    UInt32 port ;
+    Executor executor;
     std::string taskId;
 };
 
+
+struct DataSource {
+    DataSourceType type;
+    std::vector<std::string> distributeKeys;
+    Partition partition;
+};
 struct DataDest {
     std::vector<std::string> distributeKeys;
     std::vector<Partition> partitions;

@@ -38,25 +38,34 @@ namespace DB {
                 break;
 
 
-            if(!receiveTask())  // return false  at end of data
-                break;
-
+            receivePackage();
         }
 
-        initTask();
-        execTask(); // after execute ,all data is send to task dest ,
-        finishTask();
 
-        // out->write()  task finish flag
+    }
+
+    void TaskConnectionHandler::receivePackage() {
+
+        //first receive apply resource req , then task  req;
+
+    }
+    void TaskConnectionHandler::receiveApplyRequest() {
+
+        //server.applyResource() // need to be thread safe
+        //send Executor info to client
+
     }
 
     bool TaskConnectionHandler::receiveTask() {
 
         task = in->read(); // read and deserialize , include execNode info and task source and dest info
-        if (task){
-            return true;
-        } else {
-            return false;
+        if (task) {
+
+           initTask(); //
+           execTask(); // after execute ,all data is send to task dest ,
+           finishTask();
+
+           out->write()  //task finish flag
         }
     }
 
@@ -64,7 +73,7 @@ namespace DB {
 
         task->init(); // create sender and receiver for task
     }
-    void TaskConnectionHandler::execTask() {
+    void TaskConnectionHandler::execTask(){
 
         task->execute();
     }

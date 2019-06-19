@@ -3,15 +3,25 @@
 //
 
 #pragma once
-class DataConnectionClient {
+
+namespace DB {
 
 
-    //BlockInputStreamPtr block_in;  //ReadBufferFromPocoSocket::poll(size_t timeout_microseconds)
-
-    BlockOutputStreamPtr block_out; //NativeBlockOutputStream
+    class DataConnectionClient {
 
 
+    public:
 
-};
+        BlockOutputStreamPtr block_out; //NativeBlockOutputStream
+
+
+        std::unique_ptr <Poco::Net::StreamSocket> socket;
+        std::shared_ptr <ReadBuffer> in;
+        std::shared_ptr <WriteBuffer> out;
+
+    };
+
+
+}
 
 

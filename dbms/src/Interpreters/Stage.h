@@ -20,7 +20,7 @@ namespace DB {
         std::vector<std::shared_ptr<PlanNode>> planNodes;
         std::vector<std::shared_ptr<ExecNode>> execNodes;
         //std::shared_ptr<Distribution> distribution;
-        std::vector<Task> tasks ;
+        //std::vector<Task> tasks ;
     public:
         Stage(std::shared_ptr<PlanNode>  exechangeSender_)
         :exechangeSender(exechangeSender_){};
@@ -35,6 +35,12 @@ namespace DB {
         void init();
         bool isScanStage() { return  isScanStage_;}
         bool isResultStage()  { return isResultStage_ ;}
+        bool noChildStage();
+        std::string getTaskId(int partitionNum);
+        void buildTask();
+        std::vector<std::shared_ptr<Task>> getTasks();
+        std::vector<std::shared_ptr<Stage>> getChildStage();
+
         bool isScanStage_;
         bool isResultStage_;
 
