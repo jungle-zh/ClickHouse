@@ -34,7 +34,7 @@ public:
       //  child->setFather(this);
     }
     //void setFather(PlanNode *father_){ father  = father_;}
-    void clearChild();
+    void cleanChild();
 
     void setUnaryChild();
     void setLeftChild();

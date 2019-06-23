@@ -63,8 +63,8 @@ namespace DB {
         bool allow_to_use_two_level_group_by;
         bool overflow_row;
         bool executed;
-       // ExpressionActionsPtr actions;
-        ExpressionActions actions;
+        ExpressionActionsPtr actions;
+        //ExpressionActions actions;
 
         bool  final;
 

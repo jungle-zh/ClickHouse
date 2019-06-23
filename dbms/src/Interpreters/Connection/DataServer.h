@@ -25,7 +25,7 @@ public:
     void start() {
         server->start();
     }
-    void fill(Block & block);
+    void fill(Block & block,std::string senderId);
 
     bool  isCancelled() const override;
 

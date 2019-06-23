@@ -1,73 +1,139 @@
 //
 // Created by jungle on 19-6-18.
 //
+#pragma  once
 
-#ifndef CLICKHOUSE_PARTITION_H
-#define CLICKHOUSE_PARTITION_H
+#include <vector>
+#include <string>
+#include <memory>
+#include <Core/Types.h>
+
+namespace DB {
 
 
+enum DataExechangeType {
 
-enum DataSourceType {
-    table,
-    exechange
+    tone2onejoin,
+    toneshufflejoin,
+    ttwoshufflejoin,
+    taggmerge,
+    tunion,
+    tresult
 };
 
 struct ServerNode {
     std::string ip;
     UInt32 port;
 };
-struct TaskReceiver {
+struct TaskReceiverInfo {
 
-    TaskReceiver(std::string ip_,UInt32 port_){
+    TaskReceiverInfo(std::string ip_,UInt32 port_){
         ip = ip_;
         taskPort = port_;
-
     }
-    std::string ip;
+    std::string ip; // is static
     UInt32 taskPort;
+
 };
-struct Executor {
-    std::string ip;
+struct DataReceiverInfo {
+    std::string ip;  //dynamic allocate 
     UInt32 dataPort;
-    std::string taskId;
 };
-struct Partition{
+struct ExechangePartition{
     UInt32 partitionId;
-    Executor executor;
+    DataReceiverInfo dataReceiverInfo;
     std::string taskId;
 };
 
+struct scanTableInfo {
+    std::string host ;// todo :current set one host one shard
+    std::string dbName ;
+    std::string tableName;
 
-struct DataSource {
-    DataSourceType type;
-    std::vector<std::string> distributeKeys;
-    Partition partition;
 };
-struct DataDest {
+struct ScanPartition{
+    UInt32 partitionId;
+    std::string taskId;
+    scanTableInfo info ;
+};
+
+struct ScanTaskDataSource {
     std::vector<std::string> distributeKeys;
-    std::vector<Partition> partitions;
+    ScanPartition partition;
+};
+
+struct ExechangeTaskDataSource {
+    DataExechangeType type;
+    std::vector<std::string> distributeKeys;
+    ExechangePartition partition;
+    std::vector<std::string> inputTaskIds;
+
+};
+struct ExechangeTaskDataDest {
+    std::vector<std::string> distributeKeys;
+    std::vector<ExechangePartition> partitions;
 };
 
 
-struct Distribution {
+class Distribution {
 
-    Distribution(std::vector<std::string> keys_,int partitionNum_):distributeKeys(keys_),partitionNum(partitionNum_){};
-    Distribution(){};
+public:
 
-    std::vector<std::string> distributeKeys;
+    bool equals(Distribution *  right); // paritionNum and distributeKeys all equal
+    bool keyEquals(std::vector<std::string> keys);
+    Distribution();
+
+    std::vector<std::string> distributeKeys; //exechangePartitions and scanPartitions partition num and distribute key must be the same
 
 
     int partitionNum ;
 
-    std::vector<Partition> partitions;
 
-    bool isPartitionAssigned = false;
-
-    void setPartitions( std::vector<Partition> part){ partitions = part;isPartitionAssigned = true;}
-
-    bool equals(std::shared_ptr<Distribution> right); // paritionNum and distributeKeys all equal
-    bool keyEquals(std::vector<std::string> keys);
 
 };
 
-#endif //CLICKHOUSE_PARTITION_H
+class ScanDistribution : public Distribution {
+
+public:
+
+    ScanDistribution(std::vector<std::string> keys_,int partitionNum_){
+        distributeKeys = keys_;
+        partitionNum = partitionNum_;
+    }
+
+    ScanDistribution(){};
+
+
+
+    std::vector<ScanPartition> scanPartitions;
+
+    bool isPartitionTaskAssigned = false;
+
+    void setScanPartitions(std::vector<ScanPartition> part){ scanPartitions = part;isPartitionTaskAssigned = true;}
+
+
+};
+
+
+class ExechangeDistribution  : public Distribution{
+
+public:
+    ExechangeDistribution(std::vector<std::string> keys_,int partitionNum_){
+        distributeKeys = keys_;
+        partitionNum = partitionNum_;
+    }
+    ExechangeDistribution(){};
+
+
+    std::vector<ExechangePartition> exechangePartitions;
+
+    bool isPartitionTaskAssigned = false;
+
+    void setExechangePartitions(std::vector<ExechangePartition> part){ exechangePartitions = part;isPartitionTaskAssigned = true;}
+
+
+
+};
+
+}
+

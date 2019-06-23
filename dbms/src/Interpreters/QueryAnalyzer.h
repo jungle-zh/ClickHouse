@@ -11,6 +11,8 @@
 #include <Core/ColumnWithTypeAndName.h>
 #include <Interpreters/ExpressionActions.h>
 #include <Interpreters/ExecNode/ExecNode.h>
+#include "Stage.h"
+#include "Context.h"
 
 
 namespace DB {
@@ -21,9 +23,14 @@ namespace DB {
     class ASTTableJoin;
     class QueryAnalyzer {
 
-        private:
 
-        Settings settings;
+    public:
+        QueryAnalyzer(const Context & context_): context(context_){
+
+            settings = context_.getSettings();
+        }
+
+
         struct ScopeStack;
         public:
 
@@ -33,7 +40,7 @@ namespace DB {
 
         std::shared_ptr<PlanNode> analyse( ASTSelectQuery * query);
 
-        std::shared_ptr<PlanNode> analyseJoin (std::shared_ptr<PlanNode> left ,std::shared_ptr<PlanNode> right,ASTTableJoin * joininfo,ASTSelectQuery * query);
+        std::shared_ptr<PlanNode> analyseJoin (std::shared_ptr<PlanNode> left ,std::shared_ptr<PlanNode> right,ASTTableJoin * joininfo);
 
         std::shared_ptr<PlanNode> analyseWhereClause(std::shared_ptr<PlanNode> shared_ptr,ASTSelectQuery *query);
 
@@ -47,9 +54,19 @@ namespace DB {
 
         std::shared_ptr<PlanNode> analyseSelectExp(std::shared_ptr<PlanNode> shared_ptr,ASTSelectQuery *query);
 
+        std::shared_ptr<PlanNode> addResultPlanNode(std::shared_ptr<PlanNode> root);
+        void normilizePlanTree(std::shared_ptr<PlanNode> root);
+        void addExechangeNode(std::shared_ptr<PlanNode> root);
 
-        std::shared_ptr<ExecNode> planToExecNode(std::shared_ptr<PlanNode> root);
+        void removeUnusedMergePlanNode(std::shared_ptr<PlanNode> root);
+        void splitStageByExechangeNode(std::shared_ptr<PlanNode> root, std::shared_ptr<Stage>  currentStage);
 
+
+    private:
+
+        Settings settings;
+
+        const Context & context ;
     };
 
 

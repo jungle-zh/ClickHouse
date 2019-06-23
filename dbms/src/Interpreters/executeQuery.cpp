@@ -394,7 +394,52 @@ BlockIO executeQuery(
     std::tie(std::ignore, streams) = executeQueryImpl(query.data(), query.data() + query.size(), context, internal, stage);
     return streams;
 }
+void executeQuery(Context & context, std::string & query , std::string receiverIp ,int receiverPort){
 
+    char * begin = query.data();
+    char * end = query.data() + query.size();
+    ProfileEvents::increment(ProfileEvents::Query);
+    time_t current_time = time(nullptr);
+
+    context.setQueryContext(context);
+
+    const Settings & settings = context.getSettingsRef();
+
+    ParserQuery parser(end);
+    ASTPtr ast;
+    size_t query_size;
+
+    /// Don't limit the size of internal queries.
+    size_t max_query_size = 0;
+    if (!internal)
+        max_query_size = settings.max_query_size;
+
+    try
+    {
+        /// TODO Parser should fail early when max_query_size limit is reached.
+        ast = parseQuery(parser, begin, end, "", max_query_size);
+
+        /// Copy query into string. It will be written to log and presented in processlist. If an INSERT query, string will not include data to insertion.
+        if (!(begin <= ast->range.first && ast->range.second <= end))
+            throw Exception("Unexpected behavior: AST chars range is not inside source range", ErrorCodes::LOGICAL_ERROR);
+        query_size = ast->range.second - begin;
+    }
+    catch (...)
+    {
+        if (!internal)
+        {
+            /// Anyway log the query.
+            String query = String(begin, begin + std::min(end - begin, static_cast<ptrdiff_t>(max_query_size)));
+            logQuery(query.substr(0, settings.log_queries_cut_to_length), context);
+            onExceptionBeforeStart(query, context, current_time);
+        }
+
+        throw;
+    }
+
+    auto interpreter = InterpreterFactory::get(ast, context, stage);
+    interpreter->execute(receiverIp,receiverPort);
+}
 
 void executeQuery(
     ReadBuffer & istr,

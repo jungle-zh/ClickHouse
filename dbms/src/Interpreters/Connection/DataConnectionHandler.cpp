@@ -24,6 +24,47 @@ namespace DB {
 
         connection_context.setProgressCallback([this](const Progress &value) { return this->updateProgress(value); });
 
+
+        in = std::make_shared<ReadBufferFromPocoSocket>(socket());
+        out = std::make_shared<WriteBufferFromPocoSocket>(socket());
+
+        if (in->eof())
+        {
+            LOG_WARNING(log, "Client has not sent any data.");
+            return;
+        }
+
+        try
+        {
+            receiveHello();
+        }
+        catch (const Exception & e) /// Typical for an incorrect username, password, or address.
+        {
+            if (e.code() == ErrorCodes::CLIENT_HAS_CONNECTED_TO_WRONG_PORT)
+            {
+                LOG_DEBUG(log, "Client has connected to wrong port.");
+                return;
+            }
+
+            if (e.code() == ErrorCodes::ATTEMPT_TO_READ_AFTER_EOF)
+            {
+                LOG_WARNING(log, "Client has gone away.");
+                return;
+            }
+
+            try
+            {
+                /// We try to send error information to the client.
+                sendException(e);
+            }
+            catch (...) {}
+
+            throw;
+        }
+
+
+        sendHello();
+
         while (1) {
             /// We are waiting for a packet from the client. Thus, every `POLL_INTERVAL` seconds check whether we need to shut down.
             while (!static_cast<ReadBufferFromPocoSocket &>(*in).poll(
@@ -47,7 +88,7 @@ namespace DB {
         Block block = in->read(); //NativeBlockInputStream read and deserialize
 
         if (block){
-            server->fill(block);
+            server->fill(block,senderId);
             return true;
         } else {
             return false;

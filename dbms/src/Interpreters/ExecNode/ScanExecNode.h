@@ -4,9 +4,18 @@
 
 #pragma once
 
+#include "ExecNode.h"
+
 namespace DB {
 
     class ScanExecNode : public ExecNode{
+
+
+        void serialize(WriteBuffer & buffer);
+        static  std::shared_ptr<ScanExecNode> deseralize(ReadBuffer & buffer);
+
+        Block readImpl() override;
+
 
     };
 
@@ -14,4 +23,3 @@ namespace DB {
 
 
 
-#endif //CLICKHOUSE_SCANEXECNODE_H

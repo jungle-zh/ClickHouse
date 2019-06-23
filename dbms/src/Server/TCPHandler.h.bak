@@ -79,22 +79,21 @@ struct QueryState
 class TCPHandler : public Poco::Net::TCPServerConnection
 {
 public:
-    TCPHandler(IServer * server_, const Poco::Net::StreamSocket & socket_)
+    TCPHandler(IServer & server_, const Poco::Net::StreamSocket & socket_)
         : Poco::Net::TCPServerConnection(socket_)
         , server(server_)
         , log(&Poco::Logger::get("TCPHandler"))
-        , connection_context(server->context())
-        , query_context(server->context())
+        , connection_context(server.context())
+        , query_context(server.context())
     {
-        server_display_name =  server->config().getString("display_name", getFQDNOrHostName());
+        server_display_name =  server.config().getString("display_name", getFQDNOrHostName());
     }
 
     void run();
 
 private:
-    IServer * server;
+    IServer & server;
     Poco::Logger * log;
-    std::unique_ptr<DataReceiver> receiver ;
 
     String client_name;
     UInt64 client_version_major = 0;
@@ -134,9 +133,7 @@ private:
     void processInsertQuery(const Settings & global_settings);
 
     /// Process a request that does not require the receiving of data blocks from the client
-    void startReceiver();
     void processOrdinaryQuery();
-    void pullQueryResultAndSend();
 
     void processTablesStatusRequest();
 

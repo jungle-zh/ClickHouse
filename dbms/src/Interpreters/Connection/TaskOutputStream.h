@@ -2,13 +2,33 @@
 // Created by jungle on 19-6-18.
 //
 
-#ifndef CLICKHOUSE_TASKOUTPUTSTREAM_H
-#define CLICKHOUSE_TASKOUTPUTSTREAM_H
+#pragma once
+
+#include <Interpreters/Task.h>
+
+namespace DB {
 
 
-class TaskOutputStream {
+class TaskOutputStream {  //
+
+
+public:
+    void init();
+    void write(std::shared_ptr<Task> task );
+
+
+private:
+    void  writeTaskSource(DataSource source);
+    void  writeTaskDest(DataDest dest);
+    void  writeExecNode(std::shared_ptr<ExecNode> ndoe);
+
+    std::shared_ptr<Poco::Net::StreamSocket> socket;
+    std::shared_ptr<WriteBuffer> out;
+
 
 };
 
 
-#endif //CLICKHOUSE_TASKOUTPUTSTREAM_H
+
+}
+

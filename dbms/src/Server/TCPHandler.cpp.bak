@@ -22,7 +22,6 @@
 #include <Interpreters/executeQuery.h>
 #include <Interpreters/Quota.h>
 #include <Interpreters/TablesStatus.h>
-#include <Interpreters/DataReceiver.h>
 
 #include <Storages/StorageMemory.h>
 #include <Storages/StorageReplicatedMergeTree.h>
@@ -33,7 +32,6 @@
 
 #include <Common/NetException.h>
 #include <ext/scope_guard.h>
-#include "Server.h"
 
 
 namespace DB
@@ -161,9 +159,7 @@ void TCPHandler::runImpl()
             state.maybe_compressed_in.reset();  /// For more accurate accounting by MemoryTracker.
 
             /// Processing Query
-            startReceiver();
-            //state.io = executeQuery(state.query, query_context, false, state.stage);
-            executeQuery(query_context,state.query,receiver->ip,receiver->port);
+            state.io = executeQuery(state.query, query_context, false, state.stage);
 
             if (state.io.out)
                 state.need_receive_data_for_insert = true;
@@ -172,14 +168,10 @@ void TCPHandler::runImpl()
             after_send_progress.restart();
 
             /// Does the request require receive data from client?
-            if (state.need_receive_data_for_insert){
+            if (state.need_receive_data_for_insert)
                 processInsertQuery(global_settings);
-            }
-            else {
-               // processOrdinaryQuery();
-                pullQueryResultAndSend();
-            }
-
+            else
+                processOrdinaryQuery();
 
             sendEndOfStream();
 
@@ -281,7 +273,7 @@ void TCPHandler::readData(const Settings & global_settings)
                 break;
 
             /// Do we need to shut down?
-            if (server->isCancelled())
+            if (server.isCancelled())
                 return;
 
             /** Have we waited for data for too long?
@@ -327,23 +319,6 @@ void TCPHandler::processInsertQuery(const Settings & global_settings)
     state.io.onFinish();
 }
 
-void TCPHandler::startReceiver(){
-    receiver = std::make_unique<DataReceiver>();
-    receiver->startToReceive();
-}
-void TCPHandler::pullQueryResultAndSend(){
-
-
-   while(1){
-       Block block  = receiver->read();
-       sendData(block);
-       if (!block)
-           break;
-   }
-
-
-
-}
 
 void TCPHandler::processOrdinaryQuery()
 {

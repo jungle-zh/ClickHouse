@@ -12,20 +12,15 @@ namespace DB {
 
 class ScanPlanNode : public PlanNode {
 
+    ScanPlanNode(std::string dbName_ ,std::string tableName_){
+        dbName = dbName_;
+        tableName = tableName_;
+    }
 
 private:
 
-// info about how to  create storageMergeTree
-
-// part of StorageMergeTree::read result
-BlockInputStreamPtr  table;
-
-size_t index ;
-
-public:
-
-Block read() override ;
-
+    std::string dbName ;
+    std::string tableName;
 
 
 };

@@ -22,10 +22,10 @@ class ExecNode : public IProfilingBlockInputStream {
 public:
     enum NodeType {
 
-        Agg,
-        Join,
-        Filter,
-        Scan
+        TAgg,
+        TJoin,
+        TFilter,
+        TScan
     };
     static void serializeExpressActions( ExpressionActions & actions,WriteBuffer & buffer );
 

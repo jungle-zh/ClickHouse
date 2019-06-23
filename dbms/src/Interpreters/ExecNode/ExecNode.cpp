@@ -106,7 +106,7 @@ namespace DB {
 
         Int64  actionNum ;
         readVarInt(actionNum,buffer);
-        for(size_t i = 0;i< actionNum ; ++i){
+        for(int i = 0;i< actionNum ; ++i){
 
             Int64  type ;
             ExpressionAction action;

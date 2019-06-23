@@ -36,7 +36,7 @@ namespace DB {
 
     }
 
-    AggregateDescriptions AggExecNode::deseralizeAggDesc(ReadBuffer & buffer){
+    AggregateDescriptions AggExecNode::deserializeAggDesc(ReadBuffer & buffer){
 
 
 

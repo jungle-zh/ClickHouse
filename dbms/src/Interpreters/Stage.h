@@ -15,21 +15,18 @@ namespace DB {
 
 
     private:
-        std::shared_ptr<PlanNode> exechangeSender;
-        std::shared_ptr<PlanNode> exechangeReceiver;
+        //std::shared_ptr<PlanNode> exechangeSender;
+        //std::shared_ptr<PlanNode> exechangeReceiver;
         std::vector<std::shared_ptr<PlanNode>> planNodes;
         std::vector<std::shared_ptr<ExecNode>> execNodes;
         //std::shared_ptr<Distribution> distribution;
-        //std::vector<Task> tasks ;
+        std::vector<std::shared_ptr<Stage>>   childs;
+        std::shared_ptr<Stage> father;
     public:
-        Stage(std::shared_ptr<PlanNode>  exechangeSender_)
-        :exechangeSender(exechangeSender_){};
+
+        Stage();
         void addPlanNode(std::shared_ptr<PlanNode>  node);
-        void addExechangeReceiver(std::shared_ptr<PlanNode> exechangeReceiver_){
-            //planNodes.push_back(exechangeReceiver_);
-            exechangeReceiver = exechangeReceiver_;
-            //distribution = exechangeReceiver->getDistribution();
-        }
+
         void addChild(std::shared_ptr<Stage>  child);
 
         void init();
@@ -37,20 +34,23 @@ namespace DB {
         bool isResultStage()  { return isResultStage_ ;}
         bool noChildStage();
         std::string getTaskId(int partitionNum);
-        void buildTask();
+        void buildTask();// convert planNode to execNode
         std::vector<std::shared_ptr<Task>> getTasks();
         std::vector<std::shared_ptr<Stage>> getChildStage();
 
         bool isScanStage_;
         bool isResultStage_;
 
-        //std::shared_ptr<Distribution> Distribution() { return  distribution;}
 
-        std::shared_ptr<PlanNode> getExechangeReceiver() { return  exechangeReceiver; }
-        std::shared_ptr<PlanNode> getExechangeSender() {return exechangeSender;}
-        //void getExechangeReceiverDistributionPartition();
+        std::shared_ptr<Distribution> exechangeDistribution;
+        std::shared_ptr<Distribution> scanDistribution;
+        ExechangeDistribution *  getExechangeDistribution() { return static_cast<ExechangeDistribution * > (exechangeDistribution.get());}
+        ScanDistribution *  getScanDistribution() { return static_cast<ScanDistribution*> (scanDistribution.get());}
+        void setExechangeDistribution(std::shared_ptr<Distribution> dis ) {  exechangeDistribution = dis; }
+        void setScanDistribution(std::shared_ptr<Distribution> dis) { scanDistribution = dis ;}
 
-
+        DataExechangeType  sourceExechangeType;
+        DataExechangeType  destExechangeType;
 
 
     };

@@ -39,4 +39,6 @@ BlockIO executeQuery(
     QueryProcessingStage::Enum stage = QueryProcessingStage::Complete    /// To which stage the query must be executed.
     );
 
+    void executeQuery(Context & context, std::string & query , std::string receiverIp ,int receiverPort);
+
 }

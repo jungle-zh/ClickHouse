@@ -11,7 +11,17 @@ namespace DB {
 
 class FilterNode : public PlanNode {
 
+public:
+    FilterNode(Block inputHeade_,std::shared_ptr<ExpressionActions> actions_,std::string filterColumn_){
+        inputHeader = inputHeade_;
+        actions = actions_;
+        filterColumn = filterColumn_;
+    }
 private:
+    Block inputHeader;
+    std::shared_ptr<ExpressionActions> actions;
+    std::string filterColumn;
+
 
 
 };

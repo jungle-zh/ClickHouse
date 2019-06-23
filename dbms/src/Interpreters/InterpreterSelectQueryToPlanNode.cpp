@@ -4,7 +4,7 @@
 #include <Interpreters/InterpreterSelectQueryToPlanNode.h>
 #include <common/logger_useful.h>
 
-#include <Interpreters/PlanNode/ProjectNode.h>
+#include <Interpreters/PlanNode/ProjectPlanNode.h>
 #include <Interpreters/PlanNode/LimitNode.h>
 #include <Interpreters/PlanNode/SortPartialNode.h>
 #include <Interpreters/PlanNode/AggPlanNode.h>

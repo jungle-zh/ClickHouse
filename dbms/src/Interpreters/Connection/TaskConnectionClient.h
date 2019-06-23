@@ -4,6 +4,11 @@
 
 #pragma once
 
+#include <Poco/Net/StreamSocket.h>
+#include <IO/ReadBuffer.h>
+#include <IO/WriteBuffer.h>
+#include "TaskOutputStream.h"
+
 namespace DB {
 
 
@@ -14,7 +19,7 @@ namespace DB {
         std::shared_ptr<ReadBuffer> in;
         std::shared_ptr<WriteBuffer> out;
 
-        //std::shared_ptr<TaskOutputStream> block_out = std::make_shared<TaskOutputStream>(*in, server_revision);
+        std::shared_ptr<TaskOutputStream> block_out;
 
         Executor applyResource(std::string TaskId);
         void sendTask(Task & task);

@@ -22,9 +22,10 @@ class ExecNode;
         void init();  // start receiver
         void execute();
         void finish();
-        DataSource getSource() { return  dataSource;}
-        DataDest getDest() { return dataDest; }
-        Task(DataSource source, DataDest dest, std::vector<std::shared_ptr<ExecNode>> nodes);
+        ExechangeTaskDataSource getExecSource() { return  exechangeTaskDataSource;}
+        ExechangeTaskDataDest getExecDest() { return exechangeTaskDataDest; }
+        ScanTaskDataSource getScanSource() { return scanTaskDataSource;}
+        Task(ExechangeTaskDataSource source, ExechangeTaskDataDest dest, std::vector<std::shared_ptr<ExecNode>> nodes);
 
     private:
         std::vector<std::shared_ptr<ExecNode>> execNodes;
@@ -33,8 +34,9 @@ class ExecNode;
         std::unique_ptr<DataSender> sender;
 
         Block inputHeader;
-        DataSource dataSource;
-        DataDest dataDest;
+        ExechangeTaskDataSource exechangeTaskDataSource;
+        ExechangeTaskDataDest exechangeTaskDataDest;
+        ScanTaskDataSource scanTaskDataSource;
 
     };
 
