@@ -58,30 +58,24 @@ namespace DB {
 
     bool TaskConnectionHandler::receiveTask() {
 
+
         task = in->read(); // read and deserialize , include execNode info and task source and dest info
         if (task) {
 
-           initTask(); //
-           execTask(); // after execute ,all data is send to task dest ,
-           finishTask();
+            // create new thread to run task
 
-           out->write()  //task finish flag
         }
+
     }
 
-    void TaskConnectionHandler::initTask(){
+    void TaskConnectionHandler::receiveTaskDone(){ // taskSceduler send task done and finish the handler
 
-        task->init(); // create sender and receiver for task
-    }
-    void TaskConnectionHandler::execTask(){
-
-        task->execute();
     }
 
-    void TaskConnectionHandler::finishTask() {
+    void TaskConnectionHandler::receiveCheckTask(){
 
-        task->finish();
     }
+
 
 
 

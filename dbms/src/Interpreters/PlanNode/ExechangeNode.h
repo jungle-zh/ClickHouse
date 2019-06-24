@@ -17,11 +17,13 @@ class ExechangeNode  : public PlanNode {
 
 private:
 
-    std::string type  ;
+    DataExechangeType  type  ;
 
 
    // std::vector<std::shared_ptr<Distribution>> senderDistributions;
 public:
+
+    DataExechangeType getDateExechangeType();
 
   //  std::shared_ptr<Distribution> getSenderDistribution();
   //  void addSenderDistribution(std::shared_ptr<Distribution>  sender){ senderDistributions.push_back(sender);}

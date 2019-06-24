@@ -25,9 +25,11 @@ struct ServerNode {
     std::string ip;
     UInt32 port;
 };
+
 struct TaskReceiverInfo {
 
     TaskReceiverInfo(std::string ip_,UInt32 port_){
+
         ip = ip_;
         taskPort = port_;
     }
@@ -87,8 +89,6 @@ public:
 
 
     int partitionNum ;
-
-
 
 };
 

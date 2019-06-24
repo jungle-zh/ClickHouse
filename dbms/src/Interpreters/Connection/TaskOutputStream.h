@@ -4,7 +4,9 @@
 
 #pragma once
 
+#include <Poco/Net/StreamSocket.h>
 #include <Interpreters/Task.h>
+#include <IO/WriteBuffer.h>
 
 namespace DB {
 
@@ -25,6 +27,14 @@ private:
     std::shared_ptr<Poco::Net::StreamSocket> socket;
     std::shared_ptr<WriteBuffer> out;
 
+
+public:
+    void init();
+    void write(std::shared_ptr<Task>  task);
+
+private:
+    std::shared_ptr<Poco::Net::StreamSocket> socket;
+    std::shared_ptr<WriteBuffer> out;
 
 };
 

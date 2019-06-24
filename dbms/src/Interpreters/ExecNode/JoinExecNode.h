@@ -32,7 +32,9 @@ public:
 
     }
 
+public:
 
+    Join * getJoin(){ return  join.get();}
 private:
     Names joinKey;
     Block inputLeftHeader;

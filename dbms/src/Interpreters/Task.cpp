@@ -6,6 +6,7 @@
 #include <Interpreters/DataReceiver.h>
 #include <Interpreters/DataSender.h>
 #include <Interpreters/ExecNode/ExecNode.h>
+#include <Interpreters/ExecNode/JoinExecNode.h>
 #include "Task.h"
 namespace DB {
 
@@ -18,6 +19,22 @@ namespace DB {
             receiver->startToReceive();
         }
         sender = std::make_unique<DataSender>(dataDest);
+    }
+    void Task::prepareHashTable(){
+
+        if(exechangeTaskDataSource && scanTaskDataSource){
+        JoinExecNode * node = getJoinExecNode();
+
+        while(1){
+            Block block = receiver->read();
+            if(!block)
+                break;
+
+            node->getJoin()->insertFromBlock(block);
+        }
+
+        }
+
     }
     void Task::execute(){
 

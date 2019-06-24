@@ -29,9 +29,7 @@ public:
     void receivePackage();
     void receiveApplyRequest(); // start task exec and data receive thread , need to be thread safe
     bool receiveTask();
-    void initTask();
-    void execTask();
-    void finishTask();
+
 
 
 };

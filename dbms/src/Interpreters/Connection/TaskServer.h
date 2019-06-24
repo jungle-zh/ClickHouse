@@ -29,6 +29,7 @@ namespace DB {
         int portNum ;
         std::unique_ptr<Poco::Net::TCPServer> server;
         Poco::Net::TCPServerConnectionFactory * connectionFactory;
+        std::map<std::string,std::shared_ptr<DataBuffer>> resultTaskBuffer;
 
     };
 

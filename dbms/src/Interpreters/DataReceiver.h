@@ -15,10 +15,10 @@ namespace DB {
 class DataReceiver {
 
 public:
-    DataReceiver(DataSource source, Blocks & inputHeader_){
-        taskId = source.partition.executor.taskId;
-        port = source.partition.executor.dataPort;
-        ip = source.partition.executor.ip;
+    DataReceiver(ExechangeTaskDataSource source, Blocks & inputHeader_){
+        taskId = source.partition.taskId;
+        port = source.partition.dataReceiverInfo.dataPort;
+        ip = source.partition.dataReceiverInfo.ip;
         inputHeader = inputHeader_;
     }
     void startToReceive(); // receive and deserialize data

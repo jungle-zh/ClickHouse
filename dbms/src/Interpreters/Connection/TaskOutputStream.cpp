@@ -3,3 +3,15 @@
 //
 
 #include "TaskOutputStream.h"
+
+namespace DB {
+
+    void TaskOutputStream::init() {
+
+    }
+
+    void TaskOutputStream::write(std::shared_ptr<DB::Task> task) {
+
+    }
+
+}

@@ -11,6 +11,9 @@
 
 namespace DB {
 
+
+
+    class ScanPlanNode;
     class Stage {
 
 
@@ -34,10 +37,16 @@ namespace DB {
         bool isResultStage()  { return isResultStage_ ;}
         bool noChildStage();
         std::string getTaskId(int partitionNum);
+
         void buildTask();// convert planNode to execNode
+
         std::vector<std::shared_ptr<Task>> getTasks();
         std::vector<std::shared_ptr<Stage>> getChildStage();
 
+        void setSourceExechangeType(DataExechangeType type);
+        void setFather(std::shared_ptr<Stage> father_){ father = father_; }
+
+        ScanPlanNode *  getScanNode();
         bool isScanStage_;
         bool isResultStage_;
 
@@ -51,6 +60,7 @@ namespace DB {
 
         DataExechangeType  sourceExechangeType;
         DataExechangeType  destExechangeType;
+
 
 
     };
