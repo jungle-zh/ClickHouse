@@ -16,35 +16,40 @@ namespace DB {
 
         if(exechangeDistribution && ! scanDistribution) {
 
-            std::vector<std::string> inputTaskIds;
+
+            std::map<int,std::vector<std::string>>  childStageToTask;
             for (size_t i = 0; i < childs.size(); ++i) {
+
+                std::vector<std::string> inputTaskIds;
                 if(childs[i]->getScanDistribution()){
-                    for (size_t j = 0; j < childs[i]->getScanDistribution()->scanPartitions.size(); ++j) {
-                        inputTaskIds.push_back(childs[i]->getScanDistribution()->scanPartitions[j].taskId);
+                    for (int j = 0; j < childs[i]->getScanDistribution()->partitionNum; ++j) {
+                        inputTaskIds.push_back(childs[i]->getTaskId(j));
                     }
                 } else {
-                    for (size_t j = 0; j < childs[i]->getExechangeDistribution()->exechangePartitions.size(); ++j) {
-                        inputTaskIds.push_back(childs[i]->getExechangeDistribution()->exechangePartitions[j].taskId);
+                    for (int j = 0; j < childs[i]->getExechangeDistribution()->partitionNum; ++j) {
+                        inputTaskIds.push_back(childs[i]->getTaskId(j));
                     }
                 }
-
+                childStageToTask[childs[i]->stageId] = inputTaskIds;
             }
 
-            for (size_t i = 0; i < getExechangeDistribution()->exechangePartitions.size(); ++i) {
+            for (int i = 0; i < getExechangeDistribution()->partitionNum; ++i) {
 
                 auto task = std::make_shared<Task>() ;
 
-                ExechangeTaskDataSource source;
-                source.type = sourceExechangeType;
-                source.distributeKeys = exechangeDistribution->distributeKeys;
-                source.partition = getExechangeDistribution()->exechangePartitions[i];
-                source.inputTaskIds = inputTaskIds; // one2one maybe only one input
+                for(size_t j ;j< childs.size(); ++j){
+                    ExechangeTaskDataSource source;
+                    source.childStageId = childs[j]->stageId;
+                    source.distributeKeys = exechangeDistribution->distributeKeys;
+                    source.partition = getExechangeDistribution()->childStageToExechangePartitions[source.childStageId][i];
+                    source.inputTaskIds = childStageToTask[childs[j]->stageId]; // one2one maybe only one input
+                    task.addSource(source);
 
+                }
 
-                task->setExechangeSource(source);
                 if(!isResultStage()){
                     ExechangeTaskDataDest dest ;
-                    dest.partitions = father->getExechangeDistribution()->exechangePartitions;   //father receiver is already set
+                    dest.partitions = father->getExechangeDistribution()->childStageToExechangePartitions[stageId];   //father receiver is already set
                     dest.distributeKeys = father->getExechangeDistribution()->distributeKeys;
                     task->setDest(dest);
                 }else {
@@ -61,36 +66,47 @@ namespace DB {
             }
         } else {
 
-            assert(getScanDistribution()->equals(getExechangeDistribution()));
-            std::vector<std::string> inputTaskIds;
+
+            std::map<int,std::vector<std::string>>  childStageToTask;
             for (size_t i = 0; i < childs.size(); ++i) {
+
+                std::vector<std::string> inputTaskIds;
                 if(childs[i]->getScanDistribution()){
-                    for (size_t j = 0; j < childs[i]->getScanDistribution()->scanPartitions.size(); ++j) {
-                        inputTaskIds.push_back(childs[i]->getScanDistribution()->scanPartitions[j].taskId);
+                    for (int j = 0; j < childs[i]->getScanDistribution()->partitionNum; ++j) {
+                        inputTaskIds.push_back(childs[i]->getTaskId(j));
                     }
                 } else {
-                    for (size_t j = 0; j < childs[i]->getExechangeDistribution()->exechangePartitions.size(); ++j) {
-                        inputTaskIds.push_back(childs[i]->getExechangeDistribution()->exechangePartitions[j].taskId);
+                    for (int j = 0; j < childs[i]->getExechangeDistribution()->partitionNum; ++j) {
+                        inputTaskIds.push_back(childs[i]->getTaskId(j));
                     }
                 }
-            }
-            std::map<UInt32,ScanPartition> scanPartitions ;
-            for (size_t i = 0; i < getScanDistribution()->scanPartitions.size(); ++i) {
-                scanPartitions.insert({getScanDistribution()->scanPartitions[i].partitionId,getScanDistribution()->scanPartitions[i]});
+                childStageToTask[childs[i]->stageId] = inputTaskIds;
             }
 
-            for (size_t i = 0; i < getExechangeDistribution()->exechangePartitions.size(); ++i) {
+            assert(getScanDistribution()->equals(getExechangeDistribution()));
+
+            std::map<int,ScanPartition> scanPartitions ;
+            for (int i = 0; i < getScanDistribution()->partitionNum; ++i) {
+                scanPartitions.insert({i,getScanDistribution()->scanPartitions[i]});
+            }
+
+            for (int i = 0; i < getExechangeDistribution()->partitionNum; ++i) {
 
                 auto task = std::make_shared<Task>() ;
-                ExechangeTaskDataSource source;
-                source.type = sourceExechangeType;
-                source.distributeKeys = exechangeDistribution->distributeKeys;
-                source.partition = getExechangeDistribution()->exechangePartitions[i];
-                source.inputTaskIds = inputTaskIds; // one2one maybe only one input
-                task->setExechangeSource(source);
+                for(size_t j ;j< childs.size(); ++j){
+                    ExechangeTaskDataSource source;
+                    source.childStageId = childs[j]->stageId;
+                    source.distributeKeys = exechangeDistribution->distributeKeys;
+                    source.partition = getExechangeDistribution()->childStageToExechangePartitions[source.childStageId][i];
+                    source.inputTaskIds = childStageToTask[childs[j]->stageId]; // one2one maybe only one input
+                    task.addSource(source);
+
+                }
+
+
                 if(!isResultStage()){
                     ExechangeTaskDataDest dest ;
-                    dest.partitions = father->getExechangeDistribution()->exechangePartitions;   //father receiver is already set
+                    dest.partitions = father->getExechangeDistribution()->childStageToExechangePartitions[stageId];   //father receiver is already set
                     dest.distributeKeys = father->getExechangeDistribution()->distributeKeys;
                     task->setDest(dest);
                 }else {
@@ -100,7 +116,7 @@ namespace DB {
 
                 ScanTaskDataSource source1;
                 source1.distributeKeys  = getScanDistribution()->distributeKeys;
-                source1.partition = scanPartitions[source.partition.partitionId]; // same partitionId;
+                source1.partition = scanPartitions[i]; // same partitionId;
 
                 task->setScanSource(source1);
 

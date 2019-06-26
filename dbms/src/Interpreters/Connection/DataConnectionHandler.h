@@ -23,7 +23,7 @@ private:
     std::string senderId ; // senderId is set in receive hello;
 
 public:
-    DataConnectionHandler( Poco::Net::StreamSocket & socket_,DataServer * server_)
+    DataConnectionHandler(const Poco::Net::StreamSocket & socket_,DataServer * server_)
     :Poco::Net::TCPServerConnection(socket_),
     server(server_) {
 

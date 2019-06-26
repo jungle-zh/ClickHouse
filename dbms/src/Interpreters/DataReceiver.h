@@ -16,12 +16,15 @@ class DataReceiver {
 
 public:
     DataReceiver(ExechangeTaskDataSource source, Blocks & inputHeader_){
-        taskId = source.partition.taskId;
+        inputTaskId = source.partition.inputTaskId;
         port = source.partition.dataReceiverInfo.dataPort;
         ip = source.partition.dataReceiverInfo.ip;
         inputHeader = inputHeader_;
     }
-    void startToReceive(); // receive and deserialize data
+
+    bool getStartToReceive();
+    void setStartToReceive(bool startToReceive);
+    void startToAccept(); // receive and deserialize data
     Block read();             // call by logic thread
     Block read(std::string senderId);
     void fill(Block & block,std::string senderId); // call by io thread
@@ -30,11 +33,12 @@ public:
     std::shared_ptr<DataBuffer>  buffer; // read and fill in different thread ,buffer need to be thread safe
     // std::map<std::string,std::shared_ptr<DataBuffer>>  resultBuffer; // result senderId -> dataBuffer
 
-    std::string taskId;
+    std::string inputTaskId;
     UInt32  port;
     std::string ip;
     Blocks inputHeader ;
     bool  isResultReceiver;
+    bool   startToReceive = false;
 
 };
 

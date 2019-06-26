@@ -65,6 +65,19 @@ namespace DB {
 
         sendHello();
 
+        while(1){
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            if(server->getStartToReceive()){
+                //out send start signal to data connection client
+                // receiveStart();
+                break;
+            }
+        }
+
+
+
+
         while (1) {
             /// We are waiting for a packet from the client. Thus, every `POLL_INTERVAL` seconds check whether we need to shut down.
             while (!static_cast<ReadBufferFromPocoSocket &>(*in).poll(

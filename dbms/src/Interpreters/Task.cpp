@@ -14,15 +14,39 @@ namespace DB {
     void Task::init(){
 
         inputHeader = execNodes.back()->getHeader();
-        if(dataSource.type == DataSourceType::exechange) {
-            receiver = std::make_unique<DataReceiver>(dataSource,inputHeader);
-            receiver->startToReceive();
+        for(auto  e : exechangeTaskDataSources) {
+            auto receiver = std::make_shared<DataReceiver>(*(e.second),inputHeader);
+            receiver->startToAccept();
+            receivers.insert({e.first,receiver});
         }
-        sender = std::make_unique<DataSender>(dataDest);
-    }
-    void Task::prepareHashTable(){
+        sender = std::make_shared<DataSender>(dataDest);
 
-        if(exechangeTaskDataSource && scanTaskDataSource){
+
+        if(exechangeType == DataExechangeType::tone2onejoin ||
+           exechangeType == DataExechangeType::toneshufflejoin){
+            assert(childStageIds.size() == 1);
+            prepareHashTable(receivers[childStageIds[0]]);
+        }else if(exechangeType == DataExechangeType::ttwoshufflejoin){
+            assert(childStageIds.size() == 2);
+            std::shared_ptr<DataReceiver> hash_receiver = findHashTableReceiver();
+            prepareHashTable(hash_receiver);
+        }
+
+        for(auto e : receivers){
+            e.second->setStartToReceive(true);
+        }
+
+
+
+    }
+
+
+    std::shared_ptr<DataReceiver> findHashTableReceiver(){
+        return  std::shared_ptr<DataReceiver>();
+    }
+    void Task::prepareHashTable(std::shared_ptr<DataReceiver> receiver){
+
+        receiver->setStartToReceive(true);
         JoinExecNode * node = getJoinExecNode();
 
         while(1){
@@ -33,9 +57,8 @@ namespace DB {
             node->getJoin()->insertFromBlock(block);
         }
 
-        }
-
     }
+
     void Task::execute(){
 
         while(Block res = root->read()){ // read until Databuffer  , read all until child send empty block

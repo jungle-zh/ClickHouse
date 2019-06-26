@@ -12,4 +12,8 @@ namespace DB {
         receiver_->fill(block,senderId);
     }
 
+    bool DataServer::getStartToReceive() {
+        return receiver_->getStartToReceive();
+    }
+
 }

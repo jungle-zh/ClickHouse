@@ -7,19 +7,21 @@
 #include <string>
 #include <memory>
 #include <Core/Types.h>
+#include <map>
 
 namespace DB {
 
 
 enum DataExechangeType {
 
-    tone2onejoin,
-    toneshufflejoin,
-    ttwoshufflejoin,
-    taggmerge,
-    tunion,
-    tresult
+   tone2onejoin,
+   toneshufflejoin,
+   ttwoshufflejoin,
+   taggmerge,
+   tunion,
+   tresult
 };
+
 
 struct ServerNode {
     std::string ip;
@@ -44,7 +46,7 @@ struct DataReceiverInfo {
 struct ExechangePartition{
     UInt32 partitionId;
     DataReceiverInfo dataReceiverInfo;
-    std::string taskId;
+    //std::string inputTaskId;
 };
 
 struct scanTableInfo {
@@ -65,7 +67,8 @@ struct ScanTaskDataSource {
 };
 
 struct ExechangeTaskDataSource {
-    DataExechangeType type;
+    //DataExechangeType type;
+    int childStageId;
     std::vector<std::string> distributeKeys;
     ExechangePartition partition;
     std::vector<std::string> inputTaskIds;
@@ -73,7 +76,7 @@ struct ExechangeTaskDataSource {
 };
 struct ExechangeTaskDataDest {
     std::vector<std::string> distributeKeys;
-    std::vector<ExechangePartition> partitions;
+    std::map<int,ExechangePartition>  partitions; // partitionId -> partition
 };
 
 
@@ -105,11 +108,11 @@ public:
 
 
 
-    std::vector<ScanPartition> scanPartitions;
+    std::map<int,ScanPartition> scanPartitions;
 
     bool isPartitionTaskAssigned = false;
 
-    void setScanPartitions(std::vector<ScanPartition> part){ scanPartitions = part;isPartitionTaskAssigned = true;}
+    void setScanPartitions(std::map<int,ScanPartition> part){ scanPartitions = part;isPartitionTaskAssigned = true;}
 
 
 };
@@ -125,11 +128,11 @@ public:
     ExechangeDistribution(){};
 
 
-    std::vector<ExechangePartition> exechangePartitions;
+   std::map<int,std::map<int,ExechangePartition>> childStageToExechangePartitions; // child stageId -> (partitionId,datareceiver)
 
-    bool isPartitionTaskAssigned = false;
+   bool isPartitionTaskAssigned = false;
 
-    void setExechangePartitions(std::vector<ExechangePartition> part){ exechangePartitions = part;isPartitionTaskAssigned = true;}
+   //void setExechangePartitions( std::map<int,std::vector<ExechangePartition>> part){ childStageToExechangePartitions = part;isPartitionTaskAssigned = true;}
 
 
 

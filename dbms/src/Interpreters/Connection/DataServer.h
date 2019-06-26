@@ -27,6 +27,8 @@ public:
     }
     void fill(Block & block,std::string senderId);
 
+    bool getStartToReceive();
+
     bool  isCancelled() const override;
 
     DataReceiver * receiver() { return receiver_; }

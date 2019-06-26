@@ -60,9 +60,8 @@ namespace DB {
     std::vector<std::shared_ptr<TaskConnectionClient>>
     TaskScheduler::applyTaskReceiverForStageScanPart(std::shared_ptr<Stage> root) {
 
-        std::vector<ScanPartition> parts = root->getScanDistribution()->scanPartitions;
         std::vector<std::shared_ptr<TaskConnectionClient>> ret;
-        for (size_t i = 0; i < parts.size(); ++i) {
+        for (int i = 0; i < root->getScanDistribution()->partitionNum; ++i) {
             TaskReceiverInfo rec = receivers[++receiverIndex % totalReceiverNum];
             std::shared_ptr<TaskConnectionClient> conn = createConnection(rec);
             ret.push_back(conn);
@@ -74,9 +73,8 @@ namespace DB {
     std::vector<std::shared_ptr<TaskConnectionClient>>
     TaskScheduler::applyTaskReceiverForStageExechangePart(std::shared_ptr<Stage> root) {
 
-        std::vector<ExechangePartition> parts = root->getExechangeDistribution()->exechangePartitions;
         std::vector<std::shared_ptr<TaskConnectionClient>> ret;
-        for (size_t i = 0; i < parts.size(); ++i) {
+        for (int i = 0; i < root->getExechangeDistribution()->partitionNum; ++i) {
             TaskReceiverInfo rec = receivers[++receiverIndex % totalReceiverNum];
             std::shared_ptr<TaskConnectionClient> conn = createConnection(rec);
             ret.push_back(conn);
@@ -89,18 +87,22 @@ namespace DB {
     std::vector<ExechangePartition> TaskScheduler::applyDataReceiverForStageExechangePart(
             std::vector<std::shared_ptr<TaskConnectionClient>> taskReceiver, std::shared_ptr<Stage> root) {
 
-        std::vector<ExechangePartition> parts = root->getExechangeDistribution()->exechangePartitions;
+        std::map<int,std::map<int,ExechangePartition>> & parts = root->getExechangeDistribution()->childStageToExechangePartitions;
 
-        for (size_t i = 0; i < parts.size(); ++i) {
-            std::shared_ptr<TaskConnectionClient> conn = taskReceiver[i];
-            DataReceiverInfo receiverInfo = conn->applyResource(
-                    root->getTaskId(i)); // start data server thread and return their port
-            parts[i].dataReceiverInfo = receiverInfo;
-            parts[i].taskId = root->getTaskId(i);
-            parts[i].partitionId = i;
-            taskToConnection[ parts[i].taskId ] = conn;
+
+        for (int i = 0; i < root->getExechangeDistribution()->partitionNum; ++i) {
+            for(auto child : root->getChildStages()){
+
+                std::shared_ptr<TaskConnectionClient> conn = taskReceiver[i];
+                DataReceiverInfo receiverInfo = conn->applyResource(); // start data server thread and return their port
+                parts[child->stageId][i].dataReceiverInfo = receiverInfo;
+                parts[child->stageId][i].partitionId = i;
+                taskToConnection[root->getTaskId(i)] = conn;
+            }
+
         }
-        root->getExechangeDistribution()->setExechangePartitions(parts);
+        //root->getExechangeDistribution()->setExechangePartitions(parts);
+
 
     }
 

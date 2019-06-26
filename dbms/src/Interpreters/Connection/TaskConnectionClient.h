@@ -23,7 +23,7 @@ namespace DB {
 
         std::shared_ptr<TaskOutputStream> block_out;
 
-        Executor applyResource(std::string TaskId);
+        DataReceiverInfo applyResource();
         void sendTask(Task & task);
         void sendDone(std::string taskId);
         void checkStatus(std::string taskId);

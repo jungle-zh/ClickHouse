@@ -28,7 +28,7 @@ namespace DB {
 
         Poco::Net::TCPServerConnection * createConnection(const Poco::Net::StreamSocket & socket) override
         {
-            LOG_TRACE(log,"TCP Request." << " Address:" << socket.peerAddress().toString());
+            //LOG_TRACE(log,"TCP Request." << " Address:" << socket.peerAddress().toString());
 
             //return new TCPHandler(server, socket);
             //return  new ExchangeNodeTcpHandler(node,socket);

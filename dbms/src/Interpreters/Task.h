@@ -19,10 +19,10 @@ class ExecNode;
     class Task {
     public:
         void init();  // start receiver
-        void prepareHashTable();
+        void prepareHashTable(std::shared_ptr<DataReceiver> receiver);
         void execute();
         void finish();
-        std::shared_ptr<ExechangeTaskDataSource>  getExecSource() { return  exechangeTaskDataSource;}
+        std::vector<std::shared_ptr<ExechangeTaskDataSource>>   getExecSources() { return  exechangeTaskDataSources;}
         std::shared_ptr<ExechangeTaskDataDest> getExecDest() { return exechangeTaskDataDest; }
         std::shared_ptr<ScanTaskDataSource> getScanSource() { return scanTaskDataSource;}
         Task(ExechangeTaskDataSource source, ExechangeTaskDataDest dest, std::vector<std::shared_ptr<ExecNode>> nodes);
@@ -32,13 +32,17 @@ class ExecNode;
         DataBuffer &  buffer; //use when is result task , from server
         std::vector<std::shared_ptr<ExecNode>> execNodes;
         std::shared_ptr<ExecNode> root;
-        std::unique_ptr<DataReceiver> receiver;
-        std::unique_ptr<DataSender> sender;
+
+        std::shared_ptr<DataSender> sender;
 
         Block inputHeader;
-        std::shared_ptr<ExechangeTaskDataSource> exechangeTaskDataSource;
+        std::map<int,std::shared_ptr<ExechangeTaskDataSource>> exechangeTaskDataSources;
+        std::map<int,std::shared_ptr<DataReceiver>> receivers; // one table one receiver
+
+        std::vector<int> childStageIds;
         std::shared_ptr<ExechangeTaskDataDest> exechangeTaskDataDest;
         std::shared_ptr<ScanTaskDataSource> scanTaskDataSource;
+        DataExechangeType exechangeType;
 
     };
 

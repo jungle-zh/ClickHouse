@@ -7,7 +7,13 @@
 
 namespace DB {
 
- void DataReceiver::startToReceive() {
+ bool DataReceiver::getStartToReceive() {
+     return  startToReceive;
+ }
+ void DataReceiver::setStartToReceive(bool startToReceive_) {
+     startToReceive = startToReceive_;
+ }
+ void DataReceiver::startToAccept() {
      server = std::make_unique<DataServer>(port,buffer);
      server->start(); // start receive data connection and create handler
  }
