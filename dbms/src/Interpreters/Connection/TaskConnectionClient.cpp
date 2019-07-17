@@ -3,3 +3,15 @@
 //
 
 #include "TaskConnectionClient.h"
+#include <Interpreters/Task.h>
+namespace DB {
+
+
+    void TaskConnectionClient::sendTask(Task & task){
+
+
+
+
+
+    }
+}

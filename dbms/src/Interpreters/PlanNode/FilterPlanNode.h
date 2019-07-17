@@ -9,10 +9,10 @@
 
 namespace DB {
 
-class FilterNode : public PlanNode {
+class FilterPlanNode : public PlanNode {
 
 public:
-    FilterNode(Block inputHeade_,std::shared_ptr<ExpressionActions> actions_,std::string filterColumn_){
+    FilterPlanNode(Block inputHeade_,std::shared_ptr<ExpressionActions> actions_,std::string filterColumn_){
         inputHeader = inputHeade_;
         actions = actions_;
         filterColumn = filterColumn_;

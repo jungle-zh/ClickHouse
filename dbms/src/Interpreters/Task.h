@@ -14,35 +14,56 @@ namespace DB {
 class DataSender;
 class DataReceiver;
 class ExecNode;
+class Stage ;
+class JoinExecNode;
 
 
     class Task {
     public:
         void init();  // start receiver
-        void prepareHashTable(std::shared_ptr<DataReceiver> receiver);
         void execute();
         void finish();
-        std::vector<std::shared_ptr<ExechangeTaskDataSource>>   getExecSources() { return  exechangeTaskDataSources;}
-        std::shared_ptr<ExechangeTaskDataDest> getExecDest() { return exechangeTaskDataDest; }
-        std::shared_ptr<ScanTaskDataSource> getScanSource() { return scanTaskDataSource;}
+        void setExechangeSource(ExechangeTaskDataSource & source);
+        void setExechangeDest(ExechangeTaskDataDest & dest);
+        void setScanSource(ScanTaskDataSource & source);
+        bool isResultTask(); // only has receiver;
+        JoinExecNode * getJoinExecNode();
+        ExechangeTaskDataSource   getExecSources() { return  exechangeTaskDataSource;}
+        ExechangeTaskDataDest  getExecDest() { return exechangeTaskDataDest; }
+        ScanTaskDataSource getScanSource() { return scanTaskDataSource;}
+        std::vector<std::shared_ptr<ExecNode>> getExecNodes() { return  execNodes ;}
+        std::string getTaskId() { return taskId;}
         Task(ExechangeTaskDataSource source, ExechangeTaskDataDest dest, std::vector<std::shared_ptr<ExecNode>> nodes);
+        DataExechangeType exechangeType;
+
+        void receiveHashTable(Block &block);
+
+        void receiveBlock(Block &block);
+
+        bool highWaterMark();
+
+        void createBottomExecNodeByBuffer();
+
 
 
     private:
-        DataBuffer &  buffer; //use when is result task , from server
+        //DataBuffer &  buffer; //use when is result task , from server
+        std::unique_ptr<DataBuffer> buffer;
         std::vector<std::shared_ptr<ExecNode>> execNodes;
         std::shared_ptr<ExecNode> root;
 
         std::shared_ptr<DataSender> sender;
+        std::shared_ptr<DataReceiver> receiver ;
 
-        Block inputHeader;
-        std::map<int,std::shared_ptr<ExechangeTaskDataSource>> exechangeTaskDataSources;
-        std::map<int,std::shared_ptr<DataReceiver>> receivers; // one table one receiver
+        ExechangeTaskDataSource exechangeTaskDataSource;
+        ExechangeTaskDataDest exechangeTaskDataDest;
+        ScanTaskDataSource scanTaskDataSource;
 
-        std::vector<int> childStageIds;
-        std::shared_ptr<ExechangeTaskDataDest> exechangeTaskDataDest;
-        std::shared_ptr<ScanTaskDataSource> scanTaskDataSource;
-        DataExechangeType exechangeType;
+
+        int partionId;
+        std::string taskId ;
+        bool  isScanTask ;
+
 
     };
 

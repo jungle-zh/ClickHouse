@@ -6,11 +6,12 @@
 
 #include <Poco/Net/TCPServerConnectionFactory.h>
 #include <Poco/Logger.h>
-#include "DataConnectionHandler.h"
+//#include "DataConnectionHandler.h"
 
 namespace DB {
 
 
+    class DataServer;
 
     class DataConnectionHandlerFactory : public Poco::Net::TCPServerConnectionFactory {
 
@@ -20,24 +21,15 @@ namespace DB {
         //DataServer & server;
         DataServer * server;
     public:
-        void setServer(DataServer * server_) { server  = server_;}
-        explicit DataConnectionHandlerFactory(bool secure_ = false):
-                 log(&Poco::Logger::get(std::string("TCP") + (secure_ ? "S" : "") + "HandlerFactory"))
+        //void setServer(DataServer * server_) { server  = server_;}
+        explicit DataConnectionHandlerFactory(DataServer * server_,bool secure_ = false):
+                 log(&Poco::Logger::get(std::string("TCP") + (secure_ ? "S" : "") + "DataHandlerFactory"))
         {
+            server = server_;
         }
 
-        Poco::Net::TCPServerConnection * createConnection(const Poco::Net::StreamSocket & socket) override
-        {
-            //LOG_TRACE(log,"TCP Request." << " Address:" << socket.peerAddress().toString());
+        Poco::Net::TCPServerConnection * createConnection(const Poco::Net::StreamSocket & socket) override ;
 
-            //return new TCPHandler(server, socket);
-            //return  new ExchangeNodeTcpHandler(node,socket);
-            DataConnectionHandler * handler = new DataConnectionHandler(socket,server);
-
-            //node.addHandler(std::shared_ptr<ExchangeNodeTcpHandler>(handler));
-
-            return  handler;
-        }
 
 
     };

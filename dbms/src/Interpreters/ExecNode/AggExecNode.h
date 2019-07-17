@@ -9,6 +9,7 @@
 #include <Interpreters/Context.h>
 #include <IO/ReadBufferFromFile.h>
 #include <IO/CompressedReadBuffer.h>
+#include <Interpreters/PlanNode/AggPlanNode.h>
 
 namespace DB {
 
@@ -36,6 +37,7 @@ namespace DB {
         void  readSuffix() override;
         Block readImpl() override ;
         Block getHeader () const override;
+        Block getInputHeader() override;
 
         AggExecNode();
 
@@ -49,6 +51,7 @@ namespace DB {
                     context(context_){
 
         }
+        AggExecNode(AggPlanNode * planNode);
 
 
     private:

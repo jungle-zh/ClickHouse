@@ -10,6 +10,7 @@ namespace DB {
 
     class ScanExecNode : public ExecNode{
 
+    public:
 
         void serialize(WriteBuffer & buffer);
         static  std::shared_ptr<ScanExecNode> deseralize(ReadBuffer & buffer);

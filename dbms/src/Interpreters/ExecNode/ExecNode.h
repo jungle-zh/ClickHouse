@@ -27,6 +27,8 @@ public:
         TFilter,
         TScan
     };
+
+    virtual Block getInputHeader();
     static void serializeExpressActions( ExpressionActions & actions,WriteBuffer & buffer );
 
     static ExpressionActions deSerializeExpressActions( ReadBuffer & buffer);

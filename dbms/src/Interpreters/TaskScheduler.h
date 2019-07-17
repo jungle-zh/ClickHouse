@@ -22,7 +22,7 @@ public:
     std::vector<std::shared_ptr<TaskConnectionClient>> applyTaskReceiverForStageScanPart(std::shared_ptr<Stage> root);
     std::vector<std::shared_ptr<TaskConnectionClient>> applyTaskReceiverForStageExechangePart(std::shared_ptr<Stage> root);
 
-    std::vector<ExechangePartition> applyDataReceiverForStageExechangePart(
+    void applyDataReceiverForStageExechangePart(
             std::vector<std::shared_ptr<TaskConnectionClient>> taskReceiver, std::shared_ptr<Stage> root);
 private:
 
@@ -34,7 +34,10 @@ private:
 
 
     std::shared_ptr<TaskConnectionClient> createConnection(TaskReceiverInfo receiver );
-    std::vector<TaskReceiverInfo> receivers;
+    //std::vector<TaskReceiverInfo> receivers;
+
+    std::vector<TaskReceiverInfo> createTaskExecutorByScanDistribution(ScanDistribution * s);
+    std::vector<TaskReceiverInfo> createTaskExecutorByExechangeDistribution(ExechangeDistribution * e);
     void sendTaskDone(std::string taskId);    // if task status is finished ,send task done package and close connection;
 
     std::map<std::string , std::shared_ptr<TaskConnectionClient>> taskToConnection;

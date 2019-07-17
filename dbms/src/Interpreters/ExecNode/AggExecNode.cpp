@@ -18,7 +18,7 @@ namespace DB {
     void AggExecNode::serialize(WriteBuffer & buffer) {
 
         ExecNode::serializeHeader(inputHeader,buffer);
-        ExecNode::serializeExpressActions(actions,buffer);
+        ExecNode::serializeExpressActions(*actions,buffer);
         aggregationKeys.writeText(buffer);
         aggregateColumns.writeText(buffer);
         serializeAggDesc(buffer);

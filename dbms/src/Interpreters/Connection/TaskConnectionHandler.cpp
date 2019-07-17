@@ -49,10 +49,11 @@ namespace DB {
         //first receive apply resource req , then task  req;
 
     }
+
     void TaskConnectionHandler::receiveApplyRequest() {
 
-        //server.applyResource() // need to be thread safe
-        //send Executor info to client
+        server.applyResource() // need to be thread safe ,apply ip and host  for task dataReceiver
+        //send resource  info to client
 
     }
 
@@ -62,7 +63,8 @@ namespace DB {
         task = in->read(); // read and deserialize , include execNode info and task source and dest info
         if (task) {
 
-            // create new thread to run task
+            // create logic thread to run task
+            // receive data from downstream and send to upstream
 
         }
 

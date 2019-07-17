@@ -6,20 +6,21 @@
 
 #include <Poco/Net/TCPServer.h>
 #include <Server/IServer.h>
-#include "DataConnectionHandlerFactory.h"
+//#include "DataConnectionHandlerFactory.h"
 
 namespace DB {
 
+class DataConnectionHandlerFactory;
 class DataReceiver;
 class DataServer : public IServer {
 
 public:
     DataServer(int port,DataReceiver * receiver1):
     portNum(port),receiver_(receiver1){
-        connectionFactory = std::make_unique<DataConnectionHandlerFactory>();
+        connectionFactory = std::make_unique<DataConnectionHandlerFactory>(this);
         server = std::make_unique<Poco::Net::TCPServer>(connectionFactory,portNum);
 
-        connectionFactory->setServer(this);
+        //connectionFactory->setServer(this);
 
     }
     void start() {
@@ -31,11 +32,12 @@ public:
 
     bool  isCancelled() const override;
 
-    DataReceiver * receiver() { return receiver_; }
-
-private:
+    //DataReceiver * receiver() { return receiver_; }
     int portNum ;
     DataReceiver * receiver_;
+private:
+
+
     std::unique_ptr<Poco::Net::TCPServer> server;
     std::unique_ptr<DataConnectionHandlerFactory > connectionFactory;
 

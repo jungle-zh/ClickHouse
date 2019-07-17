@@ -13,7 +13,7 @@
 #include <Interpreters/PlanNode/JoinPlanNode.h>
 #include <Interpreters/PlanNode/UnionPlanNode.h>
 #include <Interpreters/PlanNode/FromClauseNode.h>
-#include <Interpreters/PlanNode/FilterNode.h>
+#include <Interpreters/PlanNode/FilterPlanNode.h>
 #include <Interpreters/PlanNode/AggPlanNode.h>
 #include <Interpreters/AggregateDescription.h>
 #include <AggregateFunctions/parseAggregateFunctionParameters.h>
@@ -335,7 +335,7 @@ namespace DB {
         auto actions = std::make_shared<ExpressionActions>(header.getColumnsWithTypeAndName(), settings);
         getRootActions(query->where_expression, true, false, actions);
 
-        std::shared_ptr<PlanNode> filterNode = std::make_shared<FilterNode>(header,actions,query->where_expression->getColumnName());
+        std::shared_ptr<PlanNode> filterNode = std::make_shared<FilterPlanNode>(header,actions,query->where_expression->getColumnName());
 
         filterNode->addChild(child);
         return filterNode;
@@ -455,7 +455,7 @@ namespace DB {
         auto actions = std::make_shared<ExpressionActions>(header.getColumnsWithTypeAndName(), settings);
         getRootActions(query->having_expression, true, false, actions);
 
-        std::shared_ptr<PlanNode> filterNode = std::make_shared<FilterNode>(header,actions,query->having_expression->getColumnName());
+        std::shared_ptr<PlanNode> filterNode = std::make_shared<FilterPlanNode>(header,actions,query->having_expression->getColumnName());
 
         filterNode->addChild(child);
         return filterNode;

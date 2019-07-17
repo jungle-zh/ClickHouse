@@ -18,6 +18,8 @@ enum DataExechangeType {
    toneshufflejoin,
    ttwoshufflejoin,
    taggmerge,
+   tsortmerge,
+   tdistincemerge,
    tunion,
    tresult
 };
@@ -40,12 +42,19 @@ struct TaskReceiverInfo {
 
 };
 struct DataReceiverInfo {
+    bool equals(DataReceiverInfo & other){
+        return  ip == other.ip && dataPort == other.dataPort;
+    }
+
     std::string ip;  //dynamic allocate 
     UInt32 dataPort;
 };
 struct ExechangePartition{
     UInt32 partitionId;
-    DataReceiverInfo dataReceiverInfo;
+    std::vector<int> childStageIds;
+    DataExechangeType  exechangeType;
+    int rightTableStageId ;
+    //DataReceiverInfo dataReceiverInfo;
     //std::string inputTaskId;
 };
 
@@ -68,15 +77,18 @@ struct ScanTaskDataSource {
 
 struct ExechangeTaskDataSource {
     //DataExechangeType type;
-    int childStageId;
+    //int childStageId;
+   // bool isRightTable;
     std::vector<std::string> distributeKeys;
     ExechangePartition partition;
     std::vector<std::string> inputTaskIds;
+    DataReceiverInfo receiver;
 
 };
 struct ExechangeTaskDataDest {
     std::vector<std::string> distributeKeys;
-    std::map<int,ExechangePartition>  partitions; // partitionId -> partition
+    std::map<int,ExechangePartition>  partitionInfo; // partitionId -> partition
+    std::map<int,DataReceiverInfo> receiverInfo;     // partitionId -> reciever
 };
 
 
@@ -128,8 +140,9 @@ public:
     ExechangeDistribution(){};
 
 
-   std::map<int,std::map<int,ExechangePartition>> childStageToExechangePartitions; // child stageId -> (partitionId,datareceiver)
-
+   //std::map<int,std::map<int,ExechangePartition>> childStageToExechangePartitions; //  child stageId-> (my partitionId,datareceiver)
+   std::map<int,ExechangePartition> partitionInfo ; // partitionId -> exechange
+   std::map<int,DataReceiverInfo>   receiverInfo ;  // partitionId -> receiver
    bool isPartitionTaskAssigned = false;
 
    //void setExechangePartitions( std::map<int,std::vector<ExechangePartition>> part){ childStageToExechangePartitions = part;isPartitionTaskAssigned = true;}

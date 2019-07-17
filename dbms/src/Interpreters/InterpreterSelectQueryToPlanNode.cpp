@@ -12,7 +12,7 @@
 #include <Interpreters/PlanNode/HavingNode.h>
 #include <Interpreters/PlanNode/DistinctNode.h>
 #include <Interpreters/PlanNode/ScanPlanNode.h>
-#include <Interpreters/PlanNode/FilterNode.h>
+#include <Interpreters/PlanNode/FilterPlanNode.h>
 #include <Interpreters/PlanNode/ExechangeNode.h>
 #include <Interpreters/PlanNode/JoinPlanNode.h>
 #include <Parsers/ASTSelectQuery.h>
@@ -449,7 +449,7 @@ PlanNode::PlanNodePtr InterpreterSelectQueryToPlanNode::WhereClause(ASTPtr curre
     auto  whereExpressionActions = std::make_shared<ExpressionActions> ( header.getNamesAndTypesList(),settings);
     query_analyzer->getRootActions(query.where_expression, true, false,whereExpressionActions);
 
-    return  std::make_shared<FilterNode>( whereExpressionActions);
+    return  std::make_shared<FilterPlanNode>( whereExpressionActions);
 
 }
 
@@ -530,7 +530,7 @@ PlanNode::PlanNodePtr InterpreterSelectQueryToPlanNode::HavingClause(ASTPtr curr
     auto  havingExpressionActions = std::make_shared<ExpressionActions> (header.getNamesAndTypesList(),settings);
     query_analyzer->getRootActions(query.having_expression, true, false,havingExpressionActions);
 
-    return  std::make_shared<FilterNode>( havingExpressionActions);
+    return  std::make_shared<FilterPlanNode>( havingExpressionActions);
 
 }
 SortDescription InterpreterSelectQueryToPlanNode::getSortDescription( ASTSelectQuery & query){

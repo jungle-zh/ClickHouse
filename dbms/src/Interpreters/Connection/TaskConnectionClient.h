@@ -18,10 +18,8 @@ namespace DB {
 
     public:
         std::unique_ptr<Poco::Net::StreamSocket> socket;
-        std::shared_ptr<ReadBuffer> in;
-        std::shared_ptr<TaskOutputStream> out;
-
-        std::shared_ptr<TaskOutputStream> block_out;
+        std::shared_ptr<ReadBuffer> in ;
+        TaskOutputStream out_stream ;
 
         DataReceiverInfo applyResource();
         void sendTask(Task & task);

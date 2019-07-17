@@ -7,6 +7,7 @@
 #include <Interpreters/PlanNode/PlanNode.h>
 #include <Client/Connection.h>
 #include <Interpreters/Task.h>
+#include <Interpreters/Connection/DataConnectionClient.h>
 
 
 namespace DB {
@@ -18,20 +19,29 @@ class DataSender {
 
 public:
 
-    DataSender(DataDest &  dest_ );
+    DataSender(ExechangeTaskDataDest &  dest_ ){
+         dest  = dest_;
+    }
 
-    DataDest dest;
+    ExechangeTaskDataDest dest;
 
 
     std::map<UInt32 , partitionInfo> partitions; // partitionid -> info
-    std::map<UInt32 , Connection> connections;   // partitionid -> connnections
+    std::map<UInt32 , std::shared_ptr<DataConnectionClient>> connections;   // partitionid -> connnections
 
 
 
     void send(Block & block);
+    void tryConnect();
 
     std::map<UInt32,Block> repartitionByKey(Block & block);
     void addConnection();
+
+    int  stageId ;
+
+    Task * task ;
+
+    //Poco::Logger * log;
 
 
 };

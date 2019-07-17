@@ -5,6 +5,7 @@
 #include "DataServer.h"
 #include <Interpreters/DataReceiver.h>
 
+
 namespace DB {
 
 
@@ -12,8 +13,5 @@ namespace DB {
         receiver_->fill(block,senderId);
     }
 
-    bool DataServer::getStartToReceive() {
-        return receiver_->getStartToReceive();
-    }
 
 }

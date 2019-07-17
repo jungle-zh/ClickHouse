@@ -7,9 +7,28 @@
 #include <IO/ReadBufferFromPocoSocket.h>
 #include <DataStreams/NativeBlockOutputStream.h>
 #include <IO/WriteBufferFromPocoSocket.h>
+#include <Interpreters/DataReceiver.h>
+#include <common/logger_useful.h>
+#include <IO/VarInt.h>
+#include <Core/Protocol.h>
+#include <Common/NetException.h>
+#include <IO/CompressedReadBuffer.h>
 #include "DataConnectionHandler.h"
 
 namespace DB {
+
+    namespace ErrorCodes
+    {
+        extern const int DATA_CLIENT_HAS_CONNECTED_TO_WRONG_PORT;
+        extern const int DATA_UNKNOWN_DATABASE;
+        extern const int DATA_UNKNOWN_EXCEPTION;
+        extern const int DATA_UNKNOWN_PACKET_FROM_CLIENT;
+        extern const int DATA_POCO_EXCEPTION;
+        extern const int DATA_STD_EXCEPTION;
+        extern const int DATA_SOCKET_TIMEOUT;
+        extern const int DATA_UNEXPECTED_PACKET_FROM_CLIENT;
+    }
+
 
     void DataConnectionHandler::runImpl() {
 
@@ -36,11 +55,11 @@ namespace DB {
 
         try
         {
-            receiveHello();
+            receiveHello(); // get task id
         }
         catch (const Exception & e) /// Typical for an incorrect username, password, or address.
         {
-            if (e.code() == ErrorCodes::CLIENT_HAS_CONNECTED_TO_WRONG_PORT)
+            if (e.code() == ErrorCodes::DATA_CLIENT_HAS_CONNECTED_TO_WRONG_PORT)
             {
                 LOG_DEBUG(log, "Client has connected to wrong port.");
                 return;
@@ -55,7 +74,7 @@ namespace DB {
             try
             {
                 /// We try to send error information to the client.
-                sendException(e);
+               sendException(e);
             }
             catch (...) {}
 
@@ -63,14 +82,17 @@ namespace DB {
         }
 
 
-        sendHello();
+        //sendHello();
+
 
         while(1){
 
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            if(server->getStartToReceive()){
+            if(startToReceive){
+
                 //out send start signal to data connection client
                 // receiveStart();
+                tellClientToSend();
                 break;
             }
         }
@@ -88,23 +110,109 @@ namespace DB {
                 break;
 
 
-            if(!receiveData())  // return false  at end of data
+
+            if(highWaterMarkCall()){
+                tellClientToStopSend();
+            } else {
+                tellClientToSend();
+            }
+
+            if(!receiveBlock())  // return false  at end of data
                 break;
 
 
+
         }
+        setEndOfReceive(true);
 
     }
 
-    bool DataConnectionHandler::receiveData() {
 
-        Block block = in->read(); //NativeBlockInputStream read and deserialize
+    void DataConnectionHandler::initBlockInput()
+    {
+        if (!block_in)
+        {
+            if (compression == Protocol::Compression::Enable)
+                maybe_compressed_in = std::make_shared<CompressedReadBuffer>(*in);
+            else
+                maybe_compressed_in = in;
+
+            block_in = std::make_shared<NativeBlockInputStream>(
+                    *maybe_compressed_in,
+                    client_revision);
+        }
+    }
+    bool DataConnectionHandler::receiveBlock() {
+
+        initBlockInput();
+
+        UInt64 packet_type = 0;
+        readVarUInt(packet_type, *in);
+        assert(packet_type == Protocol::Client::Data );
+
+        String external_table_name;
+        readStringBinary(external_table_name, *in);
+
+        /// Read one block from the network and write it down
+        Block block = block_in->read();
+
 
         if (block){
-            server->fill(block,senderId);
+            //server->fill(block,senderId);
+            receiveBlockCall(block);
             return true;
         } else {
             return false;
         }
     }
+
+    bool DataConnectionHandler::getEndOfReceive() {
+        return endOfReceive;
+    }
+
+
+    void DataConnectionHandler::receiveHello()
+    {
+        /// Receive `hello` packet.
+        UInt64 packet_type = 0;
+
+
+        readVarUInt(packet_type, *in);
+
+        if (packet_type != Protocol::Client::Hello)
+        {
+            /** If you accidentally accessed the HTTP protocol for a port destined for an internal TCP protocol,
+              * Then instead of the packet type, there will be G (GET) or P (POST), in most cases.
+              */
+            if (packet_type == 'G' || packet_type == 'P')
+            {
+                writeString("HTTP/1.0 400 Bad Request\r\n\r\n"
+                            "Port " + server.config().getString("tcp_port") + " is for clickhouse-client program.\r\n"
+                                                                              "You must use port " + server.config().getString("http_port") + " for HTTP.\r\n",
+                            *out);
+
+                throw Exception("Client has connected to wrong port", ErrorCodes::DATA_CLIENT_HAS_CONNECTED_TO_WRONG_PORT);
+            }
+            else
+                throw NetException("Unexpected packet from client", ErrorCodes::DATA_UNEXPECTED_PACKET_FROM_CLIENT);
+        }
+
+        readStringBinary(client_name, *in);
+        readVarUInt(client_version_major, *in);
+        readVarUInt(client_version_minor, *in);
+        readVarUInt(client_revision, *in);
+        readStringBinary(upstream_task_id,*in);
+        readVarUInt(upstream_task_partition,*in);
+
+
+        LOG_DEBUG(&Logger::get("DataConnectionHandler"), "Connected " << client_name
+                                    << " version " << client_version_major
+                                    << "." << client_version_minor
+                                    << "." << client_revision
+                                    << " task id " << upstream_task_id
+                                    << " partition " << upstream_task_partition
+                                    << ".");
+
+    }
+
 }
