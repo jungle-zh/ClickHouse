@@ -9,14 +9,14 @@
 #include <Interpreters/Connection/TaskConnectionClient.h>
 namespace DB {
 
-
+class TCPHandler ;
 class TaskScheduler {
 
 
 public:
 
-    void applyResourceAndSubmitStage(std::shared_ptr<Stage> root,DataReceiverInfo & resultReceiver);
-    void assignDataReciver(std::shared_ptr<Stage> root,DataReceiverInfo & resultReceiver);
+    void applyResourceAndSubmitStage(std::shared_ptr<Stage> root);
+    void assignDataReciver(std::shared_ptr<Stage> root);
     std::vector<ExechangePartition> applyResourceForStage(std::shared_ptr<Stage> stage);
 
     std::vector<std::shared_ptr<TaskConnectionClient>> applyTaskReceiverForStageScanPart(std::shared_ptr<Stage> root);
@@ -45,6 +45,8 @@ private:
     int receiverIndex;
     int totalReceiverNum;
     int resultReceiverPort;
+
+    TCPHandler * handler;
 
 
 

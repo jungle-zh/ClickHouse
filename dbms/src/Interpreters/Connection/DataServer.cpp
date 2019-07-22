@@ -9,9 +9,7 @@
 namespace DB {
 
 
-    void DataServer::fill(Block & block,std::string senderId) {
-        receiver_->fill(block,senderId);
-    }
+
 
 
 }

@@ -47,15 +47,13 @@ namespace DB {
                  }
              }
          }
-
      }
-
 
 
      for(auto p : connections){
 
          p.second->highWaterMarkCall = highWaterMark;
-         if(beloneTo(p.first,mainTableStageId)){   // start to receive main table
+         if(beloneTo(p.first,mainTableStageIds)){   // start to receive main table
              p.second->setStartToReceive(true);
              p.second->receiveBlockCall  = receiveMainTable;
          }
@@ -66,8 +64,16 @@ namespace DB {
  }
 
  void DataReceiver::startToAccept() {
-     server = std::make_unique<DataServer>(port,buffer);
+     server = std::make_shared<DataServer>(port);
      server->start(); // start receive data connection and create handler
+ }
+
+ bool DataReceiver::beloneTo(const std::string taskId, std::string stageId) {
+
+ }
+
+ bool DataReceiver::beloneTo(const std::string taskId, std::vector<std::string> stageIds) {
+
  }
 
 

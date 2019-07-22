@@ -14,9 +14,7 @@ namespace DB {
 
     void  InterpreterSelectQueryNew::execute(std::string destIp , int destPort) {
 
-        ExechangePartition p;
-        p.dataReceiverInfo.ip = destIp;
-        p.dataReceiverInfo.dataPort = destPort;
+        //DataReceiverInfo receiverInfo(destIp,destPort);
 
         std::shared_ptr<Stage> resultStage = std::make_shared<Stage>();//set desc ip ,address ,query id
         std::shared_ptr<PlanNode> plan =  queryAnalyzer->analyse(&query);
@@ -29,7 +27,7 @@ namespace DB {
 
         queryAnalyzer->splitStageByExechangeNode(result,resultStage);
 
-        taskScheduler->applyResourceAndSubmitStage(resultStage,p.dataReceiverInfo);
+        taskScheduler->applyResourceAndSubmitStage(resultStage);
 
 
     }

@@ -21,7 +21,7 @@ public:
                   NamesAndTypesList & aggregatedColumns_, AggregateDescriptions  & aggregateDescriptions_ ,Context & context_):
                   inputHeader(inputHeader_),
                   aggregationKeys(aggregationKeys_),
-                  aggregatedColumns(aggregatedColumns_),
+                  aggregateColumns(aggregatedColumns_),
                   aggregateDescriptions(aggregateDescriptions_),
                   context(context_){
 
@@ -29,8 +29,13 @@ public:
 
     void  readPrefix() override;
     void  readSuffix() override;
-    Block readImpl() override ;
-    Block getHeader () const override;
+    Block read() override ;
+    Block getHeader ()  override;
+
+    void   serialize(WriteBuffer & buffer) ;
+    static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer) ;
+    void  serializeAggDesc(WriteBuffer & buffer);
+    static AggregateDescriptions deserializeAggDesc (ReadBuffer & buffer);
 
 private:
 
@@ -38,7 +43,7 @@ private:
 
     Block inputHeader ;
     NamesAndTypesList aggregationKeys;
-    NamesAndTypesList aggregatedColumns;
+    NamesAndTypesList aggregateColumns;
     AggregateDescriptions  aggregateDescriptions ;
 
     std::unique_ptr<Aggregator> aggregator;

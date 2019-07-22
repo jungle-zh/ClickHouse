@@ -90,11 +90,11 @@ public:
     }
 
     void run();
-
+    void startResultTask(Task & task);
 private:
     IServer * server;
     Poco::Logger * log;
-    std::unique_ptr<DataReceiver> receiver ;
+    std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer ;
 
     String client_name;
     UInt64 client_version_major = 0;

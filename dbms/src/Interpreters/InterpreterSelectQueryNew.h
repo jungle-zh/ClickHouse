@@ -27,7 +27,7 @@ private:
 
 public:
     void  execute(std::string destIp ,int destPort) override;
-    std::shared_ptr<PlanNode> addResultPlanNode(std::shared_ptr<PlanNode> plan);
+
 
 };
 

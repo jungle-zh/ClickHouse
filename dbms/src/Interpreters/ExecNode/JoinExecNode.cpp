@@ -6,7 +6,7 @@
 
 namespace DB {
 
-    Block JoinExecNode::getHeader() const {
+    Block JoinExecNode::getHeader()  {
 
         Block joinHeader ;
         for(ColumnWithTypeAndName e : inputLeftHeader.getColumnsWithTypeAndName()){
@@ -34,16 +34,11 @@ namespace DB {
 
          join->setSampleBlock(inputRightHeader);
 
-         assert(children.size() == 2);
-         while(Block block = children[1]->read()){
-             join->insertFromBlock(block);
-         }
-
     }
 
-    Block JoinExecNode::readImpl() {
+    Block JoinExecNode::read() {
 
-        Block res = children[0]->read();
+        Block res = children->read();
         if (!res)
             return res;
         join->joinBlock(res);
@@ -51,5 +46,35 @@ namespace DB {
 
     }
 
+    void JoinExecNode::serialize(DB::WriteBuffer &buffer) {
+
+        writeVarUInt(joinKey.size(), buffer);
+        for(size_t i=0 ;i < joinKey.size(); ++i){
+            writeStringBinary(joinKey[i],buffer);
+        }
+        ExecNode::serializeHeader(inputLeftHeader,buffer);
+        ExecNode::serializeHeader(inputRightHeader,buffer);
+        writeStringBinary(joinKind, buffer);
+        writeStringBinary(strictness, buffer);
+    }
+    std::shared_ptr<ExecNode> JoinExecNode::deserialize(DB::ReadBuffer &buffer) {
+        size_t joinKeySize ;
+        readVarUInt(joinKeySize,buffer);
+        Names keys;
+        for(size_t i=0 ; i< joinKeySize;++i){
+            std::string key;
+            readStringBinary(key,buffer);
+            keys.push_back(key);
+        }
+
+        Block inputLeftHeader = ExecNode::deSerializeHeader(buffer);
+        Block inputRightHeader = ExecNode::deSerializeHeader(buffer);
+        std::string joinKind ;
+        std::string strictness ;
+        readStringBinary(joinKind,buffer);
+        readStringBinary(strictness, buffer);
+        return  std::make_shared<JoinExecNode>(keys,inputLeftHeader,inputRightHeader,joinKind,strictness);
+
+    }
 
 }

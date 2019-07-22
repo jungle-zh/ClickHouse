@@ -95,14 +95,14 @@ namespace DB {
 
 
 
-    ExpressionActions ExecNode::deSerializeExpressActions( ReadBuffer &buffer) {
+    std::shared_ptr<ExpressionActions> ExecNode::deSerializeExpressActions( ReadBuffer &buffer) {
 
 
         NamesAndTypesList inputColumn;
         inputColumn.readText(buffer);
 
 
-        ExpressionActions actions =  ExpressionActions(inputColumn,settings);
+        auto actions =  std::make_shared<ExpressionActions>(inputColumn,settings);
 
         Int64  actionNum ;
         readVarInt(actionNum,buffer);
@@ -147,6 +147,8 @@ namespace DB {
 
                     action.function_builder = FunctionFactory::instance().get(action.function_name, context);
 
+                    //action.function will be create in ExpressionActions::addImpl
+
                     /*
                     ColumnsWithTypeAndName arguments(action.argument_names.size());
                     for (size_t i = 0; i < action.argument_names.size(); ++i)
@@ -183,7 +185,7 @@ namespace DB {
                 }
             }
 
-            actions.add(action); // will build funtion and convert sample_block
+            actions->add(action); // will build funtion and convert sample_block
 
         }
 

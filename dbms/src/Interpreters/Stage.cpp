@@ -16,10 +16,22 @@
 #include <Interpreters/ExecNode/ProjectExecNode.h>
 #include <Interpreters/ExecNode/ScanExecNode.h>
 #include <Interpreters/PlanNode/UnionPlanNode.h>
+#include <Interpreters/ExecNode/UnionExecNode.h>
 #include "Stage.h"
 
 namespace DB {
 
+
+    std::vector<std::string > Stage::getTaskIds(){
+
+        auto dis = exechangeDistribution == NULL ?  scanDistribution : exechangeDistribution;
+        std::vector<std::string > ret ;
+        for(int i=0;i< dis->partitionNum ;++i){
+            ret.push_back( getTaskId(i));
+        }
+        return  ret ;
+
+    }
     int  Stage::getPartitionNum() {
 
         if(scanDistribution){
@@ -113,7 +125,8 @@ namespace DB {
                     task->setExechangeDest(dest);
                 }else {
                     // no dest ,fill buffer and wait to be consumed
-
+                    ExechangeTaskDataDest dest ;
+                    dest.isResult = true;
                 }
 
                 tasks.insert({i,task});
@@ -182,6 +195,8 @@ namespace DB {
                 }else {
                     // no dest ,fill buffer and wait to be consumed
 
+                    ExechangeTaskDataDest dest ;
+                    dest.isResult = true;
                 }
 
                 tasks.insert({i,task});

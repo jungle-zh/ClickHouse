@@ -92,7 +92,7 @@ namespace DB {
 
                 //out send start signal to data connection client
                 // receiveStart();
-                tellClientToSend();
+                sendCommandToClient(Protocol::DataControl::START);
                 break;
             }
         }
@@ -112,9 +112,9 @@ namespace DB {
 
 
             if(highWaterMarkCall()){
-                tellClientToStopSend();
+                sendCommandToClient(Protocol::DataControl::STOP);
             } else {
-                tellClientToSend();
+                sendCommandToClient(Protocol::DataControl::START);
             }
 
             if(!receiveBlock())  // return false  at end of data
@@ -127,6 +127,15 @@ namespace DB {
 
     }
 
+
+    void DataConnectionHandler::sendCommandToClient(Protocol::DataControl::Enum  type){
+
+
+        UInt32  rep = 0 ;
+        writeVarUInt(type, *out);
+        readVarUInt(rep,*in);
+
+    }
 
     void DataConnectionHandler::initBlockInput()
     {

@@ -69,6 +69,8 @@ public:
     std::function<void(Block & ) >  receiveBlockCall;
     std::function<bool ()> highWaterMarkCall;
 
+    void sendCommandToClient(Protocol::DataControl::Enum  type);
+
 
     bool getEndOfReceive();
 };

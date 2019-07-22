@@ -51,10 +51,11 @@ private:
     Poco::FastMutex mutex;
     Poco::Semaphore fill_count;
     Poco::Semaphore empty_count;
+    size_t max_size;
 
 public:
     ConcurrentBoundedQueue(size_t max_fill)
-        : fill_count(0, max_fill), empty_count(max_fill, max_fill) {}
+        : fill_count(0, max_fill), empty_count(max_fill, max_fill),max_size(max_fill) {}
 
     void push(const T & x)
     {
@@ -76,7 +77,9 @@ public:
         }
         fill_count.set();
     }
-
+    T    front() {
+        return  queue.front();
+    }
     void pop(T & x)
     {
         fill_count.wait();
@@ -136,6 +139,9 @@ public:
     {
         Poco::ScopedLock<Poco::FastMutex> lock(mutex);
         return queue.size();
+    }
+    size_t max(){
+        return   max_size;
     }
 
     void clear()

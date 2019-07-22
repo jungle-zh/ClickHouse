@@ -15,8 +15,8 @@ class DataReceiver;
 class DataServer : public IServer {
 
 public:
-    DataServer(int port,DataReceiver * receiver1):
-    portNum(port),receiver_(receiver1){
+    DataServer(int port):
+    portNum(port){
         connectionFactory = std::make_unique<DataConnectionHandlerFactory>(this);
         server = std::make_unique<Poco::Net::TCPServer>(connectionFactory,portNum);
 
@@ -26,7 +26,6 @@ public:
     void start() {
         server->start();
     }
-    void fill(Block & block,std::string senderId);
 
     bool getStartToReceive();
 
@@ -34,7 +33,7 @@ public:
 
     //DataReceiver * receiver() { return receiver_; }
     int portNum ;
-    DataReceiver * receiver_;
+
 private:
 
 

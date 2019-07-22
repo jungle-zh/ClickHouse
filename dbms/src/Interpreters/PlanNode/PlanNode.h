@@ -53,7 +53,7 @@ public:
 
     void setChild(PlanNodePtr child ,int index) { childs[index] = child;}
     PlanNodePtr getChild(int index) { return childs[index];}
-    virtual int  exechangeCost();
+    virtual int  exechangeCost() { return  0 ;}
     virtual void initDistribution();
     virtual void initDistribution(std::shared_ptr<Distribution>  distribution);
     std::shared_ptr<Distribution> getDistribution()  { return distribution;} // data flow  after the planNode ,what data's distribution

@@ -38,7 +38,8 @@ namespace DB {
         bool isScanStage() { return  isScanStage_;}
         bool isResultStage()  { return isResultStage_ ;}
         bool noChildStage();
-        std::string getTaskId(int partitionNum) { return  std::to_string(stageId) + "_" + std::to_string(partitionNum); }
+        std::string getTaskId(int partitionNum) { return  stageId + "_" + std::to_string(partitionNum); }
+        std::vector<std::string> getTaskIds() ;
 
         void buildTaskSourceAndDest();
         void buildTaskExecNode();
@@ -47,13 +48,14 @@ namespace DB {
         std::vector<std::shared_ptr<Task>> getTasks() { return  tasks; }
         std::vector<std::shared_ptr<Stage>> getChildStages();
 
-        void setSourceExechangeType(DataExechangeType type);
+        void setSourceExechangeType(DataExechangeType type_)  { sourceExechangeType = type_;}
+        void setDestExechangeType(DataExechangeType type_)  { destExechangeType = type_;}
         void setFather(std::shared_ptr<Stage> father_){ father = father_; }
 
         ScanPlanNode *  getScanNode();
         bool isScanStage_;
         bool isResultStage_;
-        int stageId;
+        std::string stageId;
 
         std::shared_ptr<Distribution> exechangeDistribution;
         std::shared_ptr<Distribution> scanDistribution;
@@ -64,6 +66,12 @@ namespace DB {
         int  getPartitionNum ();
         DataExechangeType  sourceExechangeType;
         DataExechangeType  destExechangeType;
+
+        std::string rightTableChildStageId ;
+        void addMainTableChildStageId(std::string childStageId){
+            mainintTableChildStageId.push_back(childStageId);
+        }
+        std::vector<std::string> mainintTableChildStageId ;
 
 
 

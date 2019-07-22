@@ -163,7 +163,7 @@ void TCPHandler::runImpl()
             /// Processing Query
             startReceiver();
             //state.io = executeQuery(state.query, query_context, false, state.stage);
-            executeQuery(query_context,state.query,receiver->ip,receiver->port);
+            executeQuery(query_context,state.query,receiver->ip,receiver->port);// will start result task and submit child task
 
             if (state.io.out)
                 state.need_receive_data_for_insert = true;
@@ -327,21 +327,23 @@ void TCPHandler::processInsertQuery(const Settings & global_settings)
     state.io.onFinish();
 }
 
-void TCPHandler::startReceiver(){
-    receiver = std::make_unique<DataReceiver>();
-    receiver->startToReceive();
-}
+
 void TCPHandler::pullQueryResultAndSend(){
 
-
+   buffer = std::make_shared<ConcurrentBoundedQueue<Block>>();
    while(1){
-       Block block  = receiver->read();
+       Block block;
+       buffer->pop(block);
        sendData(block);
        if (!block)
            break;
    }
 
+}
 
+void TCPHandler::startResultTask(Task & task ){
+
+    task.execute(buffer);
 
 }
 

@@ -141,8 +141,11 @@ namespace DB {
 
             if(receiveStopCommand()){  // command from upstream
                 stopSend = true;
+                writeVarUInt(Protocol::DataControl::CLIENT_ACK, *out);
+
             } else {
                 stopSend = false;
+                writeVarUInt(Protocol::DataControl::CLIENT_ACK, *out);
             }
 
         }

@@ -4,6 +4,7 @@
 
 #include <IO/ReadBufferFromPocoSocket.h>
 #include <IO/WriteBufferFromPocoSocket.h>
+#include <Core/Protocol.h>
 #include "TaskConnectionHandler.h"
 
 
@@ -21,7 +22,8 @@ namespace DB {
         socket().setSendTimeout(global_settings.send_timeout);
         socket().setNoDelay(true);
 
-        in = std::make_shared<TaskInputStream>(std::make_shared<ReadBufferFromPocoSocket>(socket()),version);
+        in = std::make_shared<ReadBufferFromPocoSocket>(socket());
+        in_stream = std::make_shared<TaskInputStream>(in,version);
         out = std::make_shared<WriteBufferFromPocoSocket>(socket());
 
 
@@ -48,27 +50,59 @@ namespace DB {
 
         //first receive apply resource req , then task  req;
 
+        UInt64 packet_type = 0;
+        readVarUInt(packet_type, *in);
+
+        switch (packet_type) {
+
+            case Protocol::TaskClient::AppalyResource:
+                receiveApplyRequest();
+                break;
+
+            case Protocol::TaskClient::TaskReq:
+                receiveTask();
+                break;
+
+            default:
+                throw Exception("Unknown packet " + toString(packet_type));
+        }
+
+
     }
 
     void TaskConnectionHandler::receiveApplyRequest() {
 
-        server.applyResource() // need to be thread safe ,apply ip and host  for task dataReceiver
-        //send resource  info to client
+
+        DataReceiverInfo resource =  server.applyResource() // need to be thread safe ,apply ip and host  for task dataReceiver
+
+        writeVarUInt(resource.dataPort, *out);
+        writeStringBinary(resource.ip, *out);
 
     }
 
-    bool TaskConnectionHandler::receiveTask() {
+    void TaskConnectionHandler::receiveTask() {
 
 
-        task = in->read(); // read and deserialize , include execNode info and task source and dest info
+        task = in_stream->read(); // read and deserialize , include execNode info and task source and dest info
         if (task) {
-
-            // create logic thread to run task
-            // receive data from downstream and send to upstream
-
+            pool.schedule(std::bind(&TaskConnectionHandler::runTask, this));
         }
 
     }
+
+    void TaskConnectionHandler::runTask(){
+
+        try {
+
+            task->init();
+            task->execute();
+
+        }catch (...){
+            exception = std::current_exception();
+        }
+
+    }
+
 
     void TaskConnectionHandler::receiveTaskDone(){ // taskSceduler send task done and finish the handler
 

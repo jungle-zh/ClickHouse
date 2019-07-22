@@ -15,7 +15,7 @@ namespace DB {
         void serialize(WriteBuffer & buffer);
         static  std::shared_ptr<ScanExecNode> deseralize(ReadBuffer & buffer);
 
-        Block readImpl() override;
+        Block read() override;
 
 
     };

@@ -28,18 +28,20 @@ namespace DB {
 
     public:
 
-
+        virtual ~AggExecNode() {}
         void   serialize(WriteBuffer & buffer) ;
         static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer) ;
         void  serializeAggDesc(WriteBuffer & buffer);
         static AggregateDescriptions deserializeAggDesc (ReadBuffer & buffer);
         void  readPrefix() override;
         void  readSuffix() override;
-        Block readImpl() override ;
-        Block getHeader () const override;
+        Block read() override ;
+        Block getHeader ()  override;
         Block getInputHeader() override;
 
         AggExecNode();
+
+
 
         AggExecNode(Block & inputHeader_ , NamesAndTypesList & aggkeys_ ,  NamesAndTypesList & aggColumn_,
                     AggregateDescriptions & desc_ ,ExpressionActionsPtr & actions_ ,Context & context_):

@@ -5,6 +5,7 @@
 #pragma once
 
 //#include <Interpreters/ExecNode/ExecNode.h>
+#include <Common/ConcurrentBoundedQueue.h>
 #include <Interpreters/Partition.h>
 
 
@@ -16,12 +17,16 @@ class DataReceiver;
 class ExecNode;
 class Stage ;
 class JoinExecNode;
+class IBlockInputStream;
+
 
 
     class Task {
     public:
+
         void init();  // start receiver
         void execute();
+        void execute(std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer);
         void finish();
         void setExechangeSource(ExechangeTaskDataSource & source);
         void setExechangeDest(ExechangeTaskDataDest & dest);
@@ -48,9 +53,11 @@ class JoinExecNode;
 
     private:
         //DataBuffer &  buffer; //use when is result task , from server
-        std::unique_ptr<DataBuffer> buffer;
+        std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer;
+
         std::vector<std::shared_ptr<ExecNode>> execNodes;
         std::shared_ptr<ExecNode> root;
+
 
         std::shared_ptr<DataSender> sender;
         std::shared_ptr<DataReceiver> receiver ;

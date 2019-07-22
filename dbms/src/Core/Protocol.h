@@ -84,6 +84,7 @@ namespace Protocol
                 ? data[packet]
                 : "Unknown packet";
         }
+
     }
 
     /// Packet types that client transmits.
@@ -108,6 +109,23 @@ namespace Protocol
                 ? data[packet]
                 : "Unknown packet";
         }
+    }
+    namespace TaskClient {
+        enum Enum
+        {
+            AppalyResource = 100,
+            TaskReq = 101 ,
+        };
+    }
+
+    namespace DataControl {
+
+        enum Enum
+        {
+            STOP = 200,
+            START = 201,
+            CLIENT_ACK = 301,
+         };
     }
 
     /// Whether the compression must be used.

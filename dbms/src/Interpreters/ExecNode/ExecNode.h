@@ -11,7 +11,7 @@ namespace DB {
 
 
 
-class ExecNode : public IProfilingBlockInputStream {
+class ExecNode  {
 
 
 
@@ -28,10 +28,16 @@ public:
         TScan
     };
 
+    virtual  ~ExecNode(){};
+
+    virtual Block read() = 0;
+    virtual void  readPrefix() = 0 ;
+    virtual void  readSuffix() = 0;
+    virtual Block getHeader () = 0;
     virtual Block getInputHeader();
     static void serializeExpressActions( ExpressionActions & actions,WriteBuffer & buffer );
 
-    static ExpressionActions deSerializeExpressActions( ReadBuffer & buffer);
+    static std::shared_ptr<ExpressionActions> deSerializeExpressActions( ReadBuffer & buffer);
 
     static void serializeHeader(Block & header ,WriteBuffer & buffer);
 
@@ -39,6 +45,19 @@ public:
 
 
     static DataTypePtr createDataTypeFromString(std::string type);
+
+
+
+    std::shared_ptr<ExecNode> children;
+
+    std::shared_ptr<ExecNode> getChild() {
+        return  children;
+    }
+    void setChild(std::shared_ptr<ExecNode>  c){
+        children = c;
+    }
+
+
 
 };
 

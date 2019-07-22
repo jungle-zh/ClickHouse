@@ -10,6 +10,8 @@ namespace DB
 
 struct AggregateDescription
 {
+    std::string function_name;
+    std::vector<std::string> argument_types ;
     AggregateFunctionPtr function;
     Array parameters;        /// Parameters of the (parametric) aggregate function.
     ColumnNumbers arguments;

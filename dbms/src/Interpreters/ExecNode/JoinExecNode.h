@@ -18,19 +18,23 @@ public:
 
     void  readPrefix() override;
     void  readSuffix() override;
-    Block readImpl() override ;
-    Block getHeader () const override;
+    Block read() override ;
+    Block getHeader () override;
 
-
+    virtual ~JoinExecNode() {}
     JoinExecNode(Names  & joinKey_ , Block & inputLeftHeader_ , Block & inputRightHeader_,
-                 ASTTableJoin::Kind kind_,ASTTableJoin::Strictness strictness_):
+                 std::string joinKind_,std::string strictness_):
                  joinKey(joinKey_),
                  inputLeftHeader(inputLeftHeader_),
                  inputRightHeader(inputRightHeader_),
-                 kind(kind_),
+                 joinKind(joinKind_),
                  strictness(strictness_){
 
     }
+
+    void   serialize(WriteBuffer & buffer) ;
+    static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer) ;
+
 
 public:
 
@@ -39,8 +43,8 @@ private:
     Names joinKey;
     Block inputLeftHeader;
     Block inputRightHeader;
-    ASTTableJoin::Kind kind;
-    ASTTableJoin::Strictness  strictness;
+    std::string joinKind;
+    std::string  strictness;
 
     std::unique_ptr<Join>  join;
 

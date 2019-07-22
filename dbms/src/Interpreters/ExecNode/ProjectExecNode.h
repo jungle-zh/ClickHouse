@@ -19,9 +19,10 @@ public:
     void serialize(WriteBuffer & buffer);
     static  std::shared_ptr<ProjectExecNode> deseralize(ReadBuffer & buffer);
 
-    Block readImpl() override;
+    Block read() override;
 
-    NamesWithAliases projection;
+    //NamesWithAliases projection;
+    std::shared_ptr<ExpressionActions> actions ;
 };
 
 
