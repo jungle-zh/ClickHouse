@@ -44,7 +44,10 @@ namespace DB {
         std::string ip ;
         readVarUInt(port, *in);
         readStringBinary(ip,*in);
-        return DataReceiverInfo(ip,port);
+        DataReceiverInfo info ;
+        info.ip = ip;
+        info.dataPort = port;
+        return info;
 
 
     }

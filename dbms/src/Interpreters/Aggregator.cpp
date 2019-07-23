@@ -17,7 +17,7 @@
 #include <DataStreams/materializeBlock.h>
 #include <IO/WriteBufferFromFile.h>
 #include <IO/CompressedWriteBuffer.h>
-
+#include <Interpreters/ExecNode/ExecNode.h>
 #include <Interpreters/Aggregator.h>
 #include <Common/ClickHouseRevision.h>
 #include <Common/MemoryTracker.h>
@@ -1037,6 +1037,54 @@ void Aggregator::execute(const BlockInputStreamPtr & stream, AggregatedDataVaria
         << " (" << src_rows / elapsed_seconds << " rows/sec., " << src_bytes / elapsed_seconds / 1048576.0 << " MiB/sec.)");
 }
 
+void Aggregator::execute(std::shared_ptr<ExecNode>  child, AggregatedDataVariants & result)
+{
+        if (isCancelled())
+            return;
+
+        StringRefs key(params.keys_size);
+        ColumnRawPtrs key_columns(params.keys_size);
+        AggregateColumns aggregate_columns(params.aggregates_size);
+
+        /** Used if there is a limit on the maximum number of rows in the aggregation,
+          *  and if group_by_overflow_mode == ANY.
+          * In this case, new keys are not added to the set, but aggregation is performed only by
+          *  keys that have already managed to get into the set.
+          */
+        bool no_more_keys = false;
+
+        LOG_TRACE(log, "Aggregating");
+
+        Stopwatch watch;
+
+        size_t src_rows = 0;
+        size_t src_bytes = 0;
+
+        /// Read all the data
+        while (Block block = child->read())
+        {
+            if (isCancelled())
+                return;
+
+            src_rows += block.rows();
+            src_bytes += block.bytes();
+
+            if (!executeOnBlock(block, result, key_columns, aggregate_columns, key, no_more_keys))
+                break;
+        }
+
+        /// If there was no data, and we aggregate without keys, and we must return single row with the result of empty aggregation.
+        /// To do this, we pass a block with zero rows to aggregate.
+        if (result.empty() && params.keys_size == 0 && !params.empty_result_for_aggregation_by_empty_set)
+            executeOnBlock(child->getHeader(), result, key_columns, aggregate_columns, key, no_more_keys);
+
+        double elapsed_seconds = watch.elapsedSeconds();
+        size_t rows = result.sizeWithoutOverflowRow();
+        LOG_TRACE(log, std::fixed << std::setprecision(3)
+                                  << "Aggregated. " << src_rows << " to " << rows << " rows (from " << src_bytes / 1048576.0 << " MiB)"
+                                  << " in " << elapsed_seconds << " sec."
+                                  << " (" << src_rows / elapsed_seconds << " rows/sec., " << src_bytes / elapsed_seconds / 1048576.0 << " MiB/sec.)");
+    }
 
 template <typename Method, typename Table>
 void Aggregator::convertToBlockImpl(

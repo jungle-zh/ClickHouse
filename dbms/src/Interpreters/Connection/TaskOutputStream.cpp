@@ -16,7 +16,7 @@ namespace DB {
 
     void TaskOutputStream::init() {
 
-        out = std::make_shared<WriteBufferFromPocoSocket>(*socket);
+       // out = std::make_shared<WriteBufferFromPocoSocket>(*socket);
 
     }
 

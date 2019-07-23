@@ -20,7 +20,7 @@ private:
     std::shared_ptr <TaskInputStream> in_stream;
     std::shared_ptr<ReadBuffer> in ;
     std::shared_ptr <WriteBuffer> out;
-    TaskServer &server;
+    TaskServer * server;
     std::shared_ptr <Task> task;
     std::map<std::string , UInt32> taskIdToPort;
 
@@ -28,7 +28,10 @@ private:
     ThreadPool pool{1};
 
     std::exception_ptr exception;
+
+    Context * connection_context;
 public:
+    void run();
     void runImpl();
     void runTask();
 
@@ -38,7 +41,10 @@ public:
     void receiveTask();
 
 
+    TaskConnectionHandler(const Poco::Net::StreamSocket & socket ):
+    Poco::Net::TCPServerConnection(socket){
 
+    }
 };
 }
 

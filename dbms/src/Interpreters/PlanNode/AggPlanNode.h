@@ -8,10 +8,10 @@
 #include <Interpreters/Aggregator.h>
 #include <Interpreters/ExpressionActions.h>
 
+
 namespace DB {
 
-
-
+class ExecNode ;
 class AggPlanNode : public PlanNode {
 
 private:
@@ -35,11 +35,10 @@ public:
 
     }
 
+    //Block getHeader() override ;
 
-    void initDistribution() override ;
-
-
-
+    std::shared_ptr<ExecNode> createExecNode() override;
+    //void initDistribution() override ;
 
 
 

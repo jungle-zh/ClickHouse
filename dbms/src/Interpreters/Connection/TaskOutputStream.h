@@ -20,12 +20,11 @@ private:
     void  writeTaskSource(DataSource source);
     void  writeTaskDest(DataDest dest);
     void  writeExecNode(std::shared_ptr<ExecNode> ndoe);
-
-
-    std::shared_ptr<Poco::Net::StreamSocket> socket;
-    std::shared_ptr<WriteBuffer> out;
-
-
+    TaskOutputStream(std::shared_ptr<WriteBuffer> out_ ,int version_ ){
+        out = out_;
+        version = version_;
+    }
+    
 public:
     void init();
     void write(Task &  task);
@@ -35,8 +34,9 @@ public:
     static void write(std::vector<std::shared_ptr<ExecNode>> execnodes);
 
 private:
-    std::shared_ptr<Poco::Net::StreamSocket> socket;
+    //std::shared_ptr<Poco::Net::StreamSocket> socket;
     std::shared_ptr<WriteBuffer> out;
+    int version;
 
 };
 

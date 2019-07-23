@@ -20,6 +20,7 @@ public:
     void  readSuffix() override;
     Block read() override ;
     Block getHeader () override;
+    Block getInputHeader() override { return  getHeader();};
 
     virtual ~JoinExecNode() {}
     JoinExecNode(Names  & joinKey_ , Block & inputLeftHeader_ , Block & inputRightHeader_,

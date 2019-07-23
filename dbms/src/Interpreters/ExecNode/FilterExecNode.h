@@ -14,9 +14,10 @@ class FilterExecNode  : public  ExecNode{
 
 public:
 
-    FilterExecNode(std::string filter_column_name_   , ExpressionActionsPtr expression_ ){
+    FilterExecNode(std::string filter_column_name_   , ExpressionActionsPtr expression_  , Block inputHeader_){
         filter_column_name = filter_column_name_;
         expression = expression_;
+        inputHeader = inputHeader_;
     }
     std::string filter_column_name;
     ExpressionActionsPtr expression;
@@ -33,12 +34,14 @@ public:
     Block read() override ;
     Block getHeader() override {
 
-        Block header = children->getHeader();
+        Block header = inputHeader;
         expression->execute(header);
         return header ;
     }
+    Block getInputHeader() override {
+        return  inputHeader;
+    }
 
-    Block getInputHeader() override { return  children->getHeader();}
 
 
     void   serialize(WriteBuffer & buffer) ;

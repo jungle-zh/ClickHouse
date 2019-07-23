@@ -25,14 +25,14 @@ namespace DB {
 
         std::vector<std::shared_ptr<Stage>>   childs;
         std::shared_ptr<Stage> father;
-        std::map<int,std::shared_ptr<Task>> tasks;
+        std::map<int,std::shared_ptr<Task>> tasks; // partitionId -> task
 
     public:
 
         Stage();
         void addPlanNode(std::shared_ptr<PlanNode>  node) { planNodes.push_back(node);}
         void addChild(std::shared_ptr<Stage>  child);
-        void convetPlanToExec();
+        //void convetPlanToExec();
 
         void init();
         bool isScanStage() { return  isScanStage_;}
@@ -45,8 +45,9 @@ namespace DB {
         void buildTaskExecNode();
         void buildTask();// convert planNode to execNode
 
-        std::vector<std::shared_ptr<Task>> getTasks() { return  tasks; }
-        std::vector<std::shared_ptr<Stage>> getChildStages();
+        std::map<int,std::shared_ptr<Task>> getTasks() { return  tasks; }
+
+        std::vector<std::shared_ptr<Stage>> getChildStages() {return  childs;}
 
         void setSourceExechangeType(DataExechangeType type_)  { sourceExechangeType = type_;}
         void setDestExechangeType(DataExechangeType type_)  { destExechangeType = type_;}

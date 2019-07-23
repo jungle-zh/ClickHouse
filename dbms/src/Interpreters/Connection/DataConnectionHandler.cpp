@@ -32,16 +32,16 @@ namespace DB {
 
     void DataConnectionHandler::runImpl() {
 
-        connection_context = server->context();
-        connection_context.setSessionContext(connection_context);
+        connection_context = &server->context();
+        connection_context->setSessionContext(*connection_context);
 
-        Settings global_settings = connection_context.getSettings();
+        Settings global_settings = connection_context->getSettings();
 
         socket().setReceiveTimeout(global_settings.receive_timeout);
         socket().setSendTimeout(global_settings.send_timeout);
         socket().setNoDelay(true);
 
-        connection_context.setProgressCallback([this](const Progress &value) { return this->updateProgress(value); });
+        connection_context->setProgressCallback([this](const Progress &value) { return this->updateProgress(value); });
 
 
         in = std::make_shared<ReadBufferFromPocoSocket>(socket());

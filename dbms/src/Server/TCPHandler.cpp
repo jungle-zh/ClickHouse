@@ -163,7 +163,7 @@ void TCPHandler::runImpl()
             /// Processing Query
             startReceiver();
             //state.io = executeQuery(state.query, query_context, false, state.stage);
-            executeQuery(query_context,state.query,receiver->ip,receiver->port);// will start result task and submit child task
+            executeQuery(query_context,state.query);// will start result task and submit child task
 
             if (state.io.out)
                 state.need_receive_data_for_insert = true;

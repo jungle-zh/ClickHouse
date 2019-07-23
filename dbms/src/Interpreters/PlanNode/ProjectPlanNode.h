@@ -21,6 +21,9 @@ private:
     std::shared_ptr<ExpressionActions> actions;
 public:
 
+    std::shared_ptr<ExecNode> createExecNode() override;
+
+
 
 
 

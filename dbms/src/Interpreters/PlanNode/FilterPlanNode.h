@@ -22,6 +22,7 @@ private:
     std::shared_ptr<ExpressionActions> actions;
     std::string filterColumn;
 
+    std::shared_ptr<ExecNode> createExecNode() override;
 
 
 };

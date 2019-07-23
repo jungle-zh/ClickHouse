@@ -47,8 +47,10 @@ namespace DB {
 
             parts[0].exechangeType = DataExechangeType::tresult;
 
+
             for(auto child : root->getChildStages()){
-                parts[0].childStageIds.push_back(child->stageId);
+                std::vector<std::string > childTasks =  child->getTaskIds() ;
+                parts[0].childTaskIds.insert(parts[0].childTaskIds.end(),childTasks.begin(),childTasks.end());
             }
             parts[0].partitionId = 0 ;
 
@@ -65,8 +67,8 @@ namespace DB {
         }
 
 
-        for (auto child : root->getChildStage()) {
-            assignDataReciver(child, resultReceiver);
+        for (auto child : root->getChildStages()) {
+            assignDataReciver(child);
         }
 
     }
@@ -157,10 +159,10 @@ namespace DB {
         root->buildTask(); //set executor in partition
 
         for (auto task : root->getTasks()) {
-            submitTask(*task);
+            submitTask(*task.second);
         }
 
-        for (auto child : root->getChildStage()) {
+        for (auto child : root->getChildStages()) {
 
             submitStage(child);
         }

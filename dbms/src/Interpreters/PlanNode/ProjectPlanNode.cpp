@@ -3,9 +3,16 @@
 //
 
 #include <Interpreters/PlanNode/ProjectPlanNode.h>
+#include <Interpreters/ExecNode/ProjectExecNode.h>
 
 namespace DB {
 
+
+    std::shared_ptr<ExecNode> ProjectPlanNode::createExecNode() {
+
+        return std::make_shared<ProjectExecNode>(actions);
+
+    }
 
 
 }

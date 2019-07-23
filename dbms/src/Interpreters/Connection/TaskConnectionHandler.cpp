@@ -13,10 +13,10 @@ namespace DB {
 
     void TaskConnectionHandler::runImpl() {
 
-        connection_context = server.context();
-        connection_context.setSessionContext(connection_context);
+        connection_context = &server->context();
+        connection_context->setSessionContext(*connection_context);
 
-        Settings global_settings = connection_context.getSettings();
+        Settings global_settings = connection_context->getSettings();
 
         socket().setReceiveTimeout(global_settings.receive_timeout);
         socket().setSendTimeout(global_settings.send_timeout);
@@ -27,7 +27,7 @@ namespace DB {
         out = std::make_shared<WriteBufferFromPocoSocket>(socket());
 
 
-        connection_context.setProgressCallback([this](const Progress &value) { return this->updateProgress(value); });
+        connection_context->setProgressCallback([this](const Progress &value) { return this->updateProgress(value); });
 
 
         while (1) {
@@ -36,7 +36,7 @@ namespace DB {
                     global_settings.poll_interval * 1000000) && !server.isCancelled());
 
             /// If we need to shut down, or client disconnects.
-            if (server.isCancelled() || in->eof())
+            if (server->isCancelled() || in->eof())
                 break;
 
 
@@ -73,7 +73,7 @@ namespace DB {
     void TaskConnectionHandler::receiveApplyRequest() {
 
 
-        DataReceiverInfo resource =  server.applyResource() // need to be thread safe ,apply ip and host  for task dataReceiver
+        DataReceiverInfo resource =  server->applyResource() // need to be thread safe ,apply ip and host  for task dataReceiver
 
         writeVarUInt(resource.dataPort, *out);
         writeStringBinary(resource.ip, *out);

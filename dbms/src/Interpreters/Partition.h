@@ -45,11 +45,7 @@ struct DataReceiverInfo {
     bool equals(DataReceiverInfo & other){
         return  ip == other.ip && dataPort == other.dataPort;
     }
-    DataReceiverInfo(std::string _ip , UInt32 _port)
-    {
-        ip = _ip;
-        dataPort = _port;
-    }
+
     std::string ip;  //dynamic allocate 
     UInt32 dataPort;
 };

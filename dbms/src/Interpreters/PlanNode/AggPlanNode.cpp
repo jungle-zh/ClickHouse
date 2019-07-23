@@ -5,17 +5,26 @@
 #include <Interpreters/PlanNode/AggPlanNode.h>
 #include <DataStreams/MergingAggregatedMemoryEfficientBlockInputStream.h>
 #include <Interpreters/PlanNode/ExpressionActionsNode.h>
+#include <Interpreters/ExecNode/AggExecNode.h>
+
 namespace DB {
 
 
-    void AggPlanNode::initDistribution() { // same with child
 
-        distribution.distributionHash = getUnaryChild()->getDistribution().distributionHash;
+    std::shared_ptr<ExecNode> AggPlanNode::createExecNode() {
+        auto aggExecNode  = std::make_shared<AggExecNode>(
+                inputHeader,
+                aggregationKeys,
+                aggregateColumns,
+                aggregateDescriptions,
+                actions,
+                settings,
+                context
+                );
 
-        distribution.executorId = getUnaryChild()->getDistribution().executorId;
-
-
+        return   aggExecNode ;
     }
+
 
 
 }

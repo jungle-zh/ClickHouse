@@ -6,6 +6,8 @@
 
 #include <Interpreters/Aggregator.h>
 #include <Core/Block.h>
+#include <Interpreters/Settings.h>
+#include <Interpreters/Context.h>
 
 namespace DB {
 
@@ -22,16 +24,18 @@ private:
     AggregateDescriptions  aggregateDescriptions ;
 
 public:
-    MergePlanNode(Block & inputHeader_ ,NamesAndTypesList & aggKeys_ , NamesAndTypesList & aggColumns_, AggregateDescriptions & desc_ )
+    MergePlanNode( Block & inputHeader_ ,NamesAndTypesList & aggKeys_ , NamesAndTypesList & aggColumns_,
+       AggregateDescriptions & desc_  )
     :inputHeader(inputHeader_),
     aggregationKeys(aggKeys_),
     aggregateColumns(aggColumns_),
-    aggregateDescriptions(desc_){
-
+    aggregateDescriptions(desc_)
+    {
 
     }
 
-    void initDistribution(Distribution & distribution_) override;
+    std::shared_ptr<ExecNode>  createExecNode() override;
+    //void initDistribution(Distribution & distribution_) override;
 
 };
 

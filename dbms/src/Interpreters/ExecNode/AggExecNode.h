@@ -38,21 +38,24 @@ namespace DB {
         Block read() override ;
         Block getHeader ()  override;
         Block getInputHeader() override;
+        bool isCancelledOrThrowIfKilled() { return false;}
+        bool isCancelled(){ return false;}
 
         AggExecNode();
 
 
 
         AggExecNode(Block & inputHeader_ , NamesAndTypesList & aggkeys_ ,  NamesAndTypesList & aggColumn_,
-                    AggregateDescriptions & desc_ ,ExpressionActionsPtr & actions_ ,Context & context_):
+                    AggregateDescriptions & desc_ ,ExpressionActionsPtr & actions_ ,Settings & settings_,Context * context_ ):
                     inputHeader(inputHeader_),
                     aggregationKeys(aggkeys_),
                     aggregateColumns(aggColumn_),
                     aggregateDescriptions(desc_),
                     actions(actions_),
-                    context(context_){
-
-        }
+                    settings(settings_),
+                    context(context_)
+                    {
+                    }
         AggExecNode(AggPlanNode * planNode);
 
 
@@ -80,7 +83,7 @@ namespace DB {
         Settings  settings  ;
 
 
-        Context & context;
+        Context * context;
         std::vector<std::unique_ptr<TemporaryFileStream>> temporary_inputs;
         Logger * log = &Logger::get("AggExecNode");
 

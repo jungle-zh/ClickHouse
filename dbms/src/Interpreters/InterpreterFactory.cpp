@@ -27,6 +27,7 @@
 #include <Interpreters/InterpreterRenameQuery.h>
 #include <Interpreters/InterpreterSelectQuery.h>
 #include <Interpreters/InterpreterSelectWithUnionQuery.h>
+#include <Interpreters/InterpreterSelectQueryNew.h>
 #include <Interpreters/InterpreterSetQuery.h>
 #include <Interpreters/InterpreterShowCreateQuery.h>
 #include <Interpreters/InterpreterShowProcesslistQuery.h>
@@ -69,7 +70,8 @@ std::unique_ptr<IInterpreter> InterpreterFactory::get(ASTPtr & query, Context & 
     }
     else if (typeid_cast<ASTSelectWithUnionQuery *>(query.get()))
     {
-        return std::make_unique<InterpreterSelectWithUnionQuery>(query, context, Names{}, stage);
+        //return std::make_unique<InterpreterSelectWithUnionQuery>(query, context, Names{}, stage);
+        return  std::make_unique<InterpreterSelectQueryNew>(query,&context);
     }
     else if (typeid_cast<ASTInsertQuery *>(query.get()))
     {

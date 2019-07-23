@@ -30,7 +30,7 @@ public:
                 << "Address: "
                 << socket.peerAddress().toString());
 
-        return new TCPHandler(server, socket);
+        return new TCPHandler(&server, socket);
     }
 };
 

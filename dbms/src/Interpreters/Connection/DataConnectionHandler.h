@@ -5,17 +5,15 @@
 #pragma once
 
 #include <Poco/Net/TCPServerConnection.h>
-#include <Interpreters/Connection/DataServer.h>
+//#include <Interpreters/Connection/DataServer.h>
 
 namespace DB {
 
-class DataServer;
-class DataConnectionHandler : public  Poco::Net::TCPServerConnection {
+
+class DataConnectionHandler : public Poco::Net::TCPServerConnection {
 
 
 private:
-
-
 
     std::shared_ptr<ReadBuffer> in;
     std::shared_ptr<WriteBuffer> out;
@@ -27,7 +25,7 @@ private:
     std::shared_ptr<ReadBuffer> maybe_compressed_in;
     BlockInputStreamPtr block_in;
 
-    DataServer * server;
+    IServer * server;
     std::string senderId ; // senderId is set in receive hello;
 
 
@@ -39,12 +37,14 @@ private:
     int upstream_task_partition;
 
     Poco::Logger * log;
-    Context connection_context;
+    Context * connection_context;
+
+    std::exception_ptr exception;
 
 public:
-    DataConnectionHandler(const Poco::Net::StreamSocket & socket_,DataServer * server_)
+    DataConnectionHandler(const Poco::Net::StreamSocket & socket_,IServer * server_)
     :Poco::Net::TCPServerConnection(socket_),
-    server(server_), connection_context(server_->context()) {
+    server(server_), connection_context(&server_->context()) {
 
         log = &Poco::Logger::get("DataConnectionHandler");
 
@@ -52,6 +52,12 @@ public:
         //block_out = std::make_shared<NativeBlockOutputStream>(std::make_shared<WriteBufferFromPocoSocket>(socket()),1);
 
     };
+
+    DataConnectionHandler(const Poco::Net::StreamSocket & socket_)
+            :Poco::Net::TCPServerConnection(socket_){
+
+    };
+    void run();
     void initBlockInput();
     void runImpl(); // receive data and fill
 

@@ -3,20 +3,19 @@
 //
 
 #include "DataConnectionHandlerFactory.h"
+#include <Interpreters/Connection/DataConnectionHandler.h>
 
 namespace DB {
 
-    Poco::Net::TCPServerConnection * DataConnectionHandlerFactory::createConnection(const Poco::Net::StreamSocket & socket) override
+    Poco::Net::TCPServerConnection * DataConnectionHandlerFactory::createConnection(const Poco::Net::StreamSocket & socket)
 {
     //LOG_TRACE(log,"TCP Request." << " Address:" << socket.peerAddress().toString());
 
     //return new TCPHandler(server, socket);
     //return  new ExchangeNodeTcpHandler(node,socket);
-    DataConnectionHandler * handler = new DataConnectionHandler(socket,server);
+    return(Poco::Net::TCPServerConnection *) new DataConnectionHandler(socket);
 
-    //node.addHandler(std::shared_ptr<ExchangeNodeTcpHandler>(handler));
-
-    return  handler;
+   // return handler;
 }
 
 

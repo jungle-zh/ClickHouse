@@ -394,7 +394,7 @@ BlockIO executeQuery(
     std::tie(std::ignore, streams) = executeQueryImpl(query.data(), query.data() + query.size(), context, internal, stage);
     return streams;
 }
-void executeQuery(Context & context, std::string & query , std::string receiverIp ,int receiverPort){
+void executeQuery(Context & context, std::string & query , bool internal){
 
     char * begin = query.data();
     char * end = query.data() + query.size();
@@ -437,8 +437,8 @@ void executeQuery(Context & context, std::string & query , std::string receiverI
         throw;
     }
 
-    auto interpreter = InterpreterFactory::get(ast, context, stage);
-    interpreter->execute(receiverIp,receiverPort);
+    auto interpreter = InterpreterFactory::get(ast, context);
+    interpreter->execute();
 }
 
 void executeQuery(

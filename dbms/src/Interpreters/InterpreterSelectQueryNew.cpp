@@ -12,7 +12,7 @@
 namespace DB {
 
 
-    void  InterpreterSelectQueryNew::execute(std::string destIp , int destPort) {
+    BlockIO  InterpreterSelectQueryNew::execute() {
 
         //DataReceiverInfo receiverInfo(destIp,destPort);
 

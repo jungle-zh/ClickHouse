@@ -13,6 +13,7 @@
 namespace DB {
 
 using  executorId =  int;
+class  ExecNode ;
 class  PlanNode {
 
 public:
@@ -23,6 +24,12 @@ public:
     using PlanNodePtr = std::shared_ptr<PlanNode>;
 public:
 
+    PlanNode(Settings &  settings_ , Context * context_  ):settings(settings_),context(context_){
+
+    };
+    PlanNode(Settings &  settings_  ):settings(settings_){
+
+    };
     PlanNode();
     virtual ~PlanNode();
 
@@ -40,10 +47,16 @@ public:
     void setLeftChild();
     void setRightChild();
 
-    std::string virtual type();
-    virtual  Block getHeader();
+    virtual  std::string  type();
+    //virtual  Block getHeader();
+    virtual std::shared_ptr<ExecNode>  createExecNode() ;
     std::string getName() ;
 
+    Block getHeader() {
+        auto execNode =  createExecNode();
+        execNode->readPrefix();
+        return  execNode->getHeader();
+    }
 
 
 
@@ -54,12 +67,14 @@ public:
     void setChild(PlanNodePtr child ,int index) { childs[index] = child;}
     PlanNodePtr getChild(int index) { return childs[index];}
     virtual int  exechangeCost() { return  0 ;}
-    virtual void initDistribution();
-    virtual void initDistribution(std::shared_ptr<Distribution>  distribution);
+    //virtual void initDistribution();
+    //virtual void initDistribution(std::shared_ptr<Distribution>  distribution);
     std::shared_ptr<Distribution> getDistribution()  { return distribution;} // data flow  after the planNode ,what data's distribution
 
     void setDistribution(std::shared_ptr<Distribution>  distribution_) { distribution = distribution_ ;}
 protected:
+    Settings settings  ;
+    Context * context ;
     std::shared_ptr<Distribution> distribution;
 private:
 

@@ -3,6 +3,8 @@
 //
 #pragma once
 
+#include "PlanNode.h"
+
 namespace  DB {
 
 

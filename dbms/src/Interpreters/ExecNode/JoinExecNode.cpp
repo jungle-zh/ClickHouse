@@ -30,7 +30,7 @@ namespace DB {
          join = std::make_unique<Join>(
                 inputLeftHeader.getNamesAndTypesList().getNames(), inputRightHeader.getNamesAndTypesList().getNames(),
                 settings.join_use_nulls, SizeLimits(settings.max_rows_in_join, settings.max_bytes_in_join, settings.join_overflow_mode),
-                kind, strictness);
+                kind, strict);
 
          join->setSampleBlock(inputRightHeader);
 

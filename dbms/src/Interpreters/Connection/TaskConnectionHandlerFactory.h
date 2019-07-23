@@ -5,7 +5,7 @@
 #pragma  once
 
 #include "TaskConnectionHandler.h"
-
+#include <common/logger_useful.h>
 namespace DB {
 
 
@@ -20,20 +20,10 @@ namespace DB {
                 :  log(&Logger::get(std::string("TCP") + (secure_ ? "S" : "") + "HandlerFactory")) {
         }
 
-        Poco::Net::TCPServerConnection *createConnection(const Poco::Net::StreamSocket &socket) override {
-            LOG_TRACE(log,
-                      "TCP Request. "
-                              << "Address: "
-                              << socket.peerAddress().toString());
 
-            //return new TCPHandler(server, socket);
-            //return  new ExchangeNodeTcpHandler(node,socket);
-            TaskConnectionHandler *handler = new TaskConnectionHandler(socket);
+        Poco::Net::TCPServerConnection * createConnection(const Poco::Net::StreamSocket & socket) override ;
 
-            //node.addHandler(std::shared_ptr<ExchangeNodeTcpHandler>(handler));
 
-            return handler;
-        }
 
 
     };

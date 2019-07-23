@@ -17,7 +17,7 @@ public:
       */
     virtual BlockIO execute() = 0;
 
-    virtual void execute(std::string destIP , int destPort);
+    //virtual void execute();
 
     virtual ~IInterpreter() {}
 };

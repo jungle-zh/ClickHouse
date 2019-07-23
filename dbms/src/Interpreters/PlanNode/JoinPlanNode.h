@@ -15,12 +15,15 @@ class  JoinPlanNode : public PlanNode {
 private:
 
 public:
-
-
-    JoinPlanNode();
-
     Names joinKeys;
-    bool prepared;
+    Block inputLeftHeader;
+    Block inputRightHeader;
+    std::string joinKind;
+    std::string  strictness;
+
+    JoinPlanNode(Names joinKey_, Block inputLeftHeader_ , Block inputRightHeader, std::string joinKind, std::string strictness);
+
+    std::shared_ptr<ExecNode> createExecNode() override;
 
 
 };

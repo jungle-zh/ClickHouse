@@ -43,35 +43,14 @@ namespace DB {
     }
 
 
-    void Stage::convetPlanToExec(){
+
+    void Stage::buildTaskExecNode(){
 
         for(auto p : planNodes){
 
-            std::shared_ptr<ExecNode> execnode;
-            if(AggPlanNode * aggPlanNode = typeid_cast<AggPlanNode *>(p.get())){
-                execnode = std::make_shared<AggExecNode>(aggPlanNode);
-            }else if(FilterPlanNode * filterPlanNode = typeid_cast<FilterPlanNode *>(p.get())){
-                execnode = std::make_shared<FilterExecNode>(filterPlanNode);
-            }else if(JoinPlanNode * joinPlanNode = typeid_cast<JoinPlanNode *>(p.get())){
-                execnode = std::make_shared<JoinExecNode>(joinPlanNode);
-            }else if(MergePlanNode * mergePlanNode = typeid_cast<MergePlanNode *>(p.get())){
-                execnode = std::make_shared<MergeExecNode>(mergePlanNode);
-            }else if(ProjectPlanNode * projectPlanNode = typeid_cast<ProjectPlanNode *>(p.get())){
-                execnode = std::make_shared<ProjectExecNode>(projectPlanNode);
-            }else if(ScanPlanNode * scanPlanNode = typeid_cast<ScanPlanNode *>(p.get())){
-                execnode = std::make_shared<ScanExecNode>(scanPlanNode);
-            }else if(UnionPlanNode * unionPlanNode = typeid_cast<UnionPlanNode *>(p.get())){
-                execnode = std::make_shared<UnionExecNode>(unionPlanNode);
-            }
-
-            execNodes.push_back(execnode);
-
+            auto execNode = p->createExecNode();
+            execNodes.push_back(execNode);
         }
-    }
-    void Stage::buildTaskExecNode(){
-
-        convetPlanToExec();
-
 
     }
     void Stage::buildTask() {
@@ -89,7 +68,7 @@ namespace DB {
         if(exechangeDistribution && ! scanDistribution) {
 
 
-            std::map<int,std::vector<std::string>>  childStageToTask; // child stage -> child tasks
+            std::map<std::string,std::vector<std::string>>  childStageToTask; // child stage -> child tasks
             for (size_t i = 0; i < childs.size(); ++i) {
 
                 std::vector<std::string> inputTaskIds;
@@ -148,7 +127,7 @@ namespace DB {
         } else { // have scan and exechange
 
 
-            std::map<int,std::vector<std::string>>  childStageToTask;
+            std::map<std::string,std::vector<std::string>>  childStageToTask;
             for (size_t i = 0; i < childs.size(); ++i) {
 
                 std::vector<std::string> inputTaskIds;
@@ -158,7 +137,7 @@ namespace DB {
                 childStageToTask[childs[i]->stageId] = inputTaskIds;
             }
 
-            assert(getScanDistribution()->equals(getExechangeDistribution()));
+            assert(getScanDistribution()->equals(*getExechangeDistribution()));
 
             std::map<int,ScanPartition> scanPartitions ;
             for (int i = 0; i < getScanDistribution()->partitionNum; ++i) {

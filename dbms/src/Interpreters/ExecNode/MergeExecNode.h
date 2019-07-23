@@ -18,7 +18,7 @@ class MergeExecNode  : public ExecNode {
 
 public:
     MergeExecNode(Block & inputHeader_,NamesAndTypesList &  aggregationKeys_ ,
-                  NamesAndTypesList & aggregatedColumns_, AggregateDescriptions  & aggregateDescriptions_ ,Context & context_):
+                  NamesAndTypesList & aggregatedColumns_, AggregateDescriptions  & aggregateDescriptions_ ,Context * context_):
                   inputHeader(inputHeader_),
                   aggregationKeys(aggregationKeys_),
                   aggregateColumns(aggregatedColumns_),
@@ -31,6 +31,7 @@ public:
     void  readSuffix() override;
     Block read() override ;
     Block getHeader ()  override;
+    Block getInputHeader() override  { return inputHeader ;}
 
     void   serialize(WriteBuffer & buffer) ;
     static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer) ;
@@ -55,7 +56,7 @@ private:
     bool allow_to_use_two_level_group_by;
     bool overflow_row;
 
-    Context & context ;
+    Context * context ;
 
     bool  final = true;
     size_t max_threads;

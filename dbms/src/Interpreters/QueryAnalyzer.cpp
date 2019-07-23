@@ -286,13 +286,13 @@ namespace DB {
 
         std::shared_ptr<PlanNode> afterAgg = analyseAggregate(afterPreWhere,query);
 
-        std::shared_ptr<PlanNode> afterPostAggWhere = analyseHavingClause(afterAgg,query);
+        //std::shared_ptr<PlanNode> afterPostAggWhere = analyseHavingClause(afterAgg,query);
 
-        std::shared_ptr<PlanNode> afterOrder = analyseOrderClause(afterPostAggWhere,query);
+        //std::shared_ptr<PlanNode> afterOrder = analyseOrderClause(afterPostAggWhere,query);
 
-        std::shared_ptr<PlanNode> afterLimit = analyseLimitClause(afterOrder,query);
+        //std::shared_ptr<PlanNode> afterLimit = analyseLimitClause(afterOrder,query);
 
-        std::shared_ptr<PlanNode> aferSelectExp = analyseSelectExp(afterLimit,query);
+        std::shared_ptr<PlanNode> aferSelectExp = analyseSelectExp(afterAgg,query);
 
         return  aferSelectExp;
 
@@ -316,7 +316,7 @@ namespace DB {
             join_key.push_back(key->getColumnName());
 
         }
-        std::shared_ptr<PlanNode> joinNode = std::make_shared<JoinPlanNode>(leftHeader,rightHeader,join_key);
+        std::shared_ptr<PlanNode> joinNode = std::make_shared<JoinPlanNode>(leftHeader,rightHeader,join_key,joininfo->kind,joininfo->strictness);
 
         joinNode->addChild(left);
         joinNode->addChild(right);
@@ -344,7 +344,7 @@ namespace DB {
     std::shared_ptr<PlanNode> QueryAnalyzer::analyseAggregate(std::shared_ptr<PlanNode> child, ASTSelectQuery *query) {
 
         std::shared_ptr<PlanNode> ret  ;
-        Block header = child->getHeader();
+        Block header = child->getHeader(); // child input header
         NamesAndTypesList aggregation_keys;
         NamesAndTypesList aggregated_columns;
         AggregateDescriptions  aggregate_descriptions ;
@@ -439,6 +439,7 @@ namespace DB {
                 aggregated_columns.emplace_back(desc.column_name, desc.function->getReturnType());
             }
 
+            //actions->execute()
             ret = std::make_shared<MergePlanNode>(header,aggregation_keys,aggregated_columns,aggregate_descriptions);
             auto aggNode = std::make_shared<AggPlanNode>(header, actions,aggregation_keys,aggregated_columns,aggregate_descriptions);
 
@@ -452,6 +453,7 @@ namespace DB {
         return ret ;
     }
 
+    /*
     std::shared_ptr<PlanNode>
     QueryAnalyzer::analyseHavingClause(std::shared_ptr<PlanNode> child, ASTSelectQuery *query) {
 
@@ -476,6 +478,7 @@ namespace DB {
     QueryAnalyzer::analyseLimitClause(std::shared_ptr<PlanNode> child, ASTSelectQuery *query) {
         return std::shared_ptr<PlanNode>();
     }
+     */
 
     std::shared_ptr<PlanNode> QueryAnalyzer::analyseSelectExp(std::shared_ptr<PlanNode> child, ASTSelectQuery *query) {
 
@@ -497,10 +500,7 @@ namespace DB {
 
             }
         }
-
         actions->add(ExpressionAction::project(result_columns));
-
-
         return std::make_shared<ProjectPlanNode>(header, actions);
     }
 
@@ -654,13 +654,9 @@ namespace DB {
 
     std::shared_ptr<PlanNode> QueryAnalyzer::addResultPlanNode(std::shared_ptr<PlanNode> plan){
 
-        //assert(plan->getChilds().size() == 1);
         std::shared_ptr<PlanNode> resultPlanNode = std::make_shared<ResultPlanNode>();
-
         resultPlanNode->addChild(plan);
-
         return resultPlanNode;
-
     }
 
     
@@ -679,10 +675,8 @@ namespace DB {
                        root->setChild(root->getChild(i)->getChild(0),i);
                    }
                }
-
            }
            for(size_t i =0;i< root->getChilds().size();++i){
-
                normilizePlanTree(root->getChild(i));
            }
 
@@ -960,10 +954,8 @@ namespace DB {
             //no exechange receiver  , look  resultPlanNode as the receiver
         }  else if(ResultPlanNode* resultPlanNode = typeid_cast<ResultPlanNode*>(root.get())){ // top
 
-
             currentStage->addPlanNode(root);
             splitStageByExechangeNode(root->getChild(0),currentStage);
-
         } else if(!typeid_cast<ExechangeNode*>(root.get())){
             assert(root->getChilds().size() == 1);
             currentStage->addPlanNode(root);
@@ -971,8 +963,6 @@ namespace DB {
         } else {
             throw Exception("unexpected node path");
         }
-
-
     }
 
     /*
