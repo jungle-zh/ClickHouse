@@ -7,19 +7,6 @@
 namespace DB {
 
 
-Block ExpressionActionsNode::read() {
-
-    Block  block = getUnaryChild()->read();
-
-    actions.execute(block);
-
-
-    return block;
-
-
-}
-
-
 
 
 }

@@ -26,7 +26,7 @@ public:
     ExechangeTaskDataDest dest;
 
 
-    std::map<UInt32 , partitionInfo> partitions; // partitionid -> info
+    std::map<UInt32 , ExechangePartition> partitions; // partitionid -> info
     std::map<UInt32 , std::shared_ptr<DataConnectionClient>> connections;   // partitionid -> connnections
 
 

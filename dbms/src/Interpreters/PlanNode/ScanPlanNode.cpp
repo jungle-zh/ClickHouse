@@ -6,14 +6,6 @@
 
 namespace DB {
 
-Block ScanPlanNode::read(){
-
-
-//MergeTreeBaseBlockInputStream read()
-return table->read();
-
-
-}
 
 
 

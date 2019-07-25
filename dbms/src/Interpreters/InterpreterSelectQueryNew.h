@@ -16,7 +16,7 @@ namespace DB {
 
 class InterpreterSelectQueryNew  : public IInterpreter {
 
-private:
+public:
         /// Note: the query is cloned because it will be modified during analysis.
 
 

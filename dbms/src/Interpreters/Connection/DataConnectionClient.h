@@ -24,11 +24,14 @@ namespace DB {
 
     public:
 
-        DataConnectionClient(Settings & settings_){
 
+        DataConnectionClient(std::string ip_, UInt32  port_){
+
+            ip = ip_;
+            port = port_;
             log = &Poco::Logger::get("DataConnectionClient");
-            settings = settings_;
-            compression_settings = settings ? CompressionSettings(*settings) : CompressionSettings(CompressionMethod::LZ4);
+            //settings = settings_;
+            //compression_settings =  CompressionSettings(settings) ;
         }
 
         bool connected = false;
@@ -47,6 +50,8 @@ namespace DB {
         Poco::Net::SocketAddress resolved_address;
         ConnectionTimeouts timeouts;
 
+        std::string ip;
+        UInt32 port ;
         Settings settings;
         CompressionSettings  compression_settings ;
 

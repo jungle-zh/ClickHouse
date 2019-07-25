@@ -106,11 +106,11 @@ namespace DB {
     }
 
     std::vector<TaskReceiverInfo> TaskScheduler::createTaskExecutorByScanDistribution(DB::ScanDistribution *s) {
-
+        return   std::vector<TaskReceiverInfo>();
     }
 
     std::vector<TaskReceiverInfo> TaskScheduler::createTaskExecutorByExechangeDistribution(DB::ExechangeDistribution *e) {
-
+        return   std::vector<TaskReceiverInfo>();
     }
 
 

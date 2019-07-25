@@ -70,10 +70,16 @@ namespace DB {
 
  bool DataReceiver::beloneTo(const std::string taskId, std::string stageId) {
 
+     (void)taskId;
+     (void)stageId;
+     return false;
  }
 
  bool DataReceiver::beloneTo(const std::string taskId, std::vector<std::string> stageIds) {
 
+     (void)taskId;
+     (void)stageIds;
+     return false;
  }
 
 

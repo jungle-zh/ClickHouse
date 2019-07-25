@@ -758,7 +758,7 @@ namespace DB {
 
         } else if(MergePlanNode* mergePlanNode = typeid_cast<MergePlanNode*>(root.get())){
 
-
+            (void)mergePlanNode;
             std::shared_ptr<Distribution> distribution = std::make_shared<ExechangeDistribution>();
             assert(root->getChilds().size() ==1 ); // agg node
 
@@ -782,6 +782,7 @@ namespace DB {
 
         } else if(UnionPlanNode* unionPlanNode = typeid_cast<UnionPlanNode*>(root.get())){
 
+            (void )unionPlanNode;
             std::shared_ptr<Distribution> distribution = std::make_shared<ExechangeDistribution>();
             std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(DataExechangeType::tunion,distribution); // submit stage will set executor info in distribution
 
@@ -953,7 +954,7 @@ namespace DB {
 
             //no exechange receiver  , look  resultPlanNode as the receiver
         }  else if(ResultPlanNode* resultPlanNode = typeid_cast<ResultPlanNode*>(root.get())){ // top
-
+            (void)resultPlanNode;
             currentStage->addPlanNode(root);
             splitStageByExechangeNode(root->getChild(0),currentStage);
         } else if(!typeid_cast<ExechangeNode*>(root.get())){

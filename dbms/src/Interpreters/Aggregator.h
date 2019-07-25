@@ -974,6 +974,7 @@ using ManyAggregatedDataVariants = std::vector<AggregatedDataVariantsPtr>;
 
 /** Aggregates the source of the blocks.
   */
+class ExecNode ;
 class Aggregator
 {
 public:

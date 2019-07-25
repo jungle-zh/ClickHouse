@@ -24,7 +24,7 @@ public:
     }
     void buildFullDistribution(){
 
-        std::vector<ScanPartition> scanPartitions;
+        std::map<int,ScanPartition> scanPartitions;
 
         for(int i=0;i< partitionNum ;++i){
 
@@ -35,7 +35,7 @@ public:
             scanPartition.info.tableName = tableName;
             scanPartition.info.host = hosts[i];
 
-            scanPartitions.push_back(scanPartition);
+            scanPartitions.insert({i,scanPartition});
         }
 
         static_cast<ScanDistribution *>(distribution.get())->setScanPartitions(scanPartitions);

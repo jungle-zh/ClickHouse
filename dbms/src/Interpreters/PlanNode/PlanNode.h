@@ -8,6 +8,7 @@
 #include <IO/ReadBuffer.h>
 #include <Core/Block.h>
 #include <Interpreters/Partition.h>
+#include <Interpreters/Settings.h>
 
 
 namespace DB {
@@ -24,10 +25,10 @@ public:
     using PlanNodePtr = std::shared_ptr<PlanNode>;
 public:
 
-    PlanNode(Settings &  settings_ , Context * context_  ):settings(settings_),context(context_){
+    PlanNode(Settings  settings_ , Context * context_  ):settings(settings_),context(context_){
 
     };
-    PlanNode(Settings &  settings_  ):settings(settings_){
+    PlanNode(Settings   settings_  ):settings(settings_){
 
     };
     PlanNode();
@@ -52,11 +53,7 @@ public:
     virtual std::shared_ptr<ExecNode>  createExecNode() ;
     std::string getName() ;
 
-    Block getHeader() {
-        auto execNode =  createExecNode();
-        execNode->readPrefix();
-        return  execNode->getHeader();
-    }
+    Block getHeader() ;
 
 
 

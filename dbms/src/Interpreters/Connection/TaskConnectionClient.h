@@ -20,7 +20,7 @@ namespace DB {
         std::unique_ptr<Poco::Net::StreamSocket> socket;
         std::shared_ptr<ReadBuffer> in ;
         std::shared_ptr<WriteBuffer> out ;
-        TaskOutputStream out_stream ;
+        std::shared_ptr<TaskOutputStream> out_stream ;
 
         void init();
 

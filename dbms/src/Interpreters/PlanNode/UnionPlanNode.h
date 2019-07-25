@@ -13,8 +13,6 @@ public:
 
     UnionPlanNode();
 
-    Block getHeader() override;
-
 
 
 };

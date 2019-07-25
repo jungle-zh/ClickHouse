@@ -41,8 +41,8 @@ public:
     void receiveTask();
 
 
-    TaskConnectionHandler(const Poco::Net::StreamSocket & socket ):
-    Poco::Net::TCPServerConnection(socket){
+    TaskConnectionHandler(const Poco::Net::StreamSocket & socket ,TaskServer * server_ ):
+    Poco::Net::TCPServerConnection(socket),server(server_){
 
     }
 };

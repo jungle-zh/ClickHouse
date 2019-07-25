@@ -31,9 +31,6 @@ public:
         return  type;
     }
 
-  //  std::shared_ptr<Distribution> getSenderDistribution();
-  //  void addSenderDistribution(std::shared_ptr<Distribution>  sender){ senderDistributions.push_back(sender);}
-
 
 
 

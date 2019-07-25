@@ -32,9 +32,10 @@ namespace DB {
 
     std::map<UInt32,Block> DataSender::repartitionByKey(Block & block){
 
+        (void)block;
         std::map<UInt32,Block> blocks ; // partition id - > block
 
-
+        return blocks;
 
     }
 }

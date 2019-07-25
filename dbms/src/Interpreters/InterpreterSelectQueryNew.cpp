@@ -29,6 +29,8 @@ namespace DB {
 
         taskScheduler->applyResourceAndSubmitStage(resultStage);
 
+            BlockIO io;
+            return  io;
 
     }
 

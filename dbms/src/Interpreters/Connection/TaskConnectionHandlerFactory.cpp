@@ -14,7 +14,7 @@ namespace DB {
                   << "Address: "
                   << socket.peerAddress().toString());
 
-        TaskConnectionHandler * handler = new TaskConnectionHandler(socket);
+        TaskConnectionHandler * handler = new TaskConnectionHandler(socket,server);
 
         return handler;
     }

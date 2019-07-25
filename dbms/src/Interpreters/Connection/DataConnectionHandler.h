@@ -5,11 +5,17 @@
 #pragma once
 
 #include <Poco/Net/TCPServerConnection.h>
+#include <Core/Protocol.h>
+#include <DataStreams/NativeBlockInputStream.h>
 //#include <Interpreters/Connection/DataServer.h>
 
 namespace DB {
 
-
+class ReadBuffer;
+class WriteBuffer ;
+class IBlockInputStream;
+class IServer;
+class Context;
 class DataConnectionHandler : public Poco::Net::TCPServerConnection {
 
 
@@ -23,7 +29,7 @@ private:
     Protocol::Compression compression = Protocol::Compression::Disable;
     /// From where to read data for INSERT.
     std::shared_ptr<ReadBuffer> maybe_compressed_in;
-    BlockInputStreamPtr block_in;
+    std::shared_ptr<IBlockInputStream> block_in;
 
     IServer * server;
     std::string senderId ; // senderId is set in receive hello;
@@ -42,16 +48,7 @@ private:
     std::exception_ptr exception;
 
 public:
-    DataConnectionHandler(const Poco::Net::StreamSocket & socket_,IServer * server_)
-    :Poco::Net::TCPServerConnection(socket_),
-    server(server_), connection_context(&server_->context()) {
-
-        log = &Poco::Logger::get("DataConnectionHandler");
-
-        block_in = std::make_shared<NativeBlockInputStream>(std::make_shared<ReadBufferFromPocoSocket>(socket()),1);
-        //block_out = std::make_shared<NativeBlockOutputStream>(std::make_shared<WriteBufferFromPocoSocket>(socket()),1);
-
-    };
+    DataConnectionHandler(const Poco::Net::StreamSocket & socket_,IServer * server_);
 
     DataConnectionHandler(const Poco::Net::StreamSocket & socket_)
             :Poco::Net::TCPServerConnection(socket_){

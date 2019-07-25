@@ -13,6 +13,7 @@
 #include <Core/Protocol.h>
 #include <Common/NetException.h>
 #include <IO/CompressedReadBuffer.h>
+#include <Server/IServer.h>
 #include "DataConnectionHandler.h"
 
 namespace DB {
@@ -28,6 +29,18 @@ namespace DB {
         extern const int DATA_SOCKET_TIMEOUT;
         extern const int DATA_UNEXPECTED_PACKET_FROM_CLIENT;
     }
+
+
+    DataConnectionHandler::DataConnectionHandler(const Poco::Net::StreamSocket & socket_,IServer * server_)
+            :Poco::Net::TCPServerConnection(socket_),
+             server(server_), connection_context(&server_->context()) {
+
+        log = &Poco::Logger::get("DataConnectionHandler");
+
+        block_in = std::make_shared<NativeBlockInputStream>(std::make_shared<ReadBufferFromPocoSocket>(socket(),1));
+        //block_out = std::make_shared<NativeBlockOutputStream>(std::make_shared<WriteBufferFromPocoSocket>(socket()),1);
+
+    };
 
 
     void DataConnectionHandler::runImpl() {
