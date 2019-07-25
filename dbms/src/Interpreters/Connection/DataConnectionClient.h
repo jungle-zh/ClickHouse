@@ -10,6 +10,7 @@
 #include <Core/Block.h>
 #include <DataStreams/IBlockOutputStream.h>
 #include <IO/ConnectionTimeouts.h>
+#include <IO/CompressionSettings.h>
 
 namespace DB {
 
@@ -23,9 +24,11 @@ namespace DB {
 
     public:
 
-        DataConnectionClient(){
+        DataConnectionClient(Settings & settings_){
 
             log = &Poco::Logger::get("DataConnectionClient");
+            settings = settings_;
+            compression_settings = settings ? CompressionSettings(*settings) : CompressionSettings(CompressionMethod::LZ4);
         }
 
         bool connected = false;
@@ -43,6 +46,9 @@ namespace DB {
         UInt64 server_revision = 0;
         Poco::Net::SocketAddress resolved_address;
         ConnectionTimeouts timeouts;
+
+        Settings settings;
+        CompressionSettings  compression_settings ;
 
         bool connect();
         void disconnect();

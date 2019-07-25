@@ -12,6 +12,8 @@
 namespace DB {
 
  // receive task and fork process to deal(DataServer will be created in new process)
+    class ConcurrentBoundedQueue ;
+    class  DataReceiverInfo ;
     class TaskServer  : public IServer{
 
     public:
@@ -23,13 +25,15 @@ namespace DB {
             server->start();
         }
         bool  isCancelled() const override;
-
+        DataReceiverInfo  applyResource();
 
     private:
         int portNum ;
         std::unique_ptr<Poco::Net::TCPServer> server;
         Poco::Net::TCPServerConnectionFactory * connectionFactory;
-        std::map<std::string,std::shared_ptr<DataBuffer>> resultTaskBuffer;
+        std::map<std::string,std::shared_ptr<ConcurrentBoundedQueue<Block>> resultTaskBuffer;
+
+
 
     };
 

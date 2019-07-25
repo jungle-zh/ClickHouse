@@ -33,7 +33,7 @@ namespace DB {
         while (1) {
             /// We are waiting for a packet from the client. Thus, every `POLL_INTERVAL` seconds check whether we need to shut down.
             while (!static_cast<ReadBufferFromPocoSocket &>(*in).poll(
-                    global_settings.poll_interval * 1000000) && !server.isCancelled());
+                    global_settings.poll_interval * 1000000) && !server->isCancelled());
 
             /// If we need to shut down, or client disconnects.
             if (server->isCancelled() || in->eof())
@@ -73,7 +73,7 @@ namespace DB {
     void TaskConnectionHandler::receiveApplyRequest() {
 
 
-        DataReceiverInfo resource =  server->applyResource() // need to be thread safe ,apply ip and host  for task dataReceiver
+        DataReceiverInfo resource =  server->applyResource() ; // need to be thread safe ,apply ip and host  for task dataReceiver
 
         writeVarUInt(resource.dataPort, *out);
         writeStringBinary(resource.ip, *out);

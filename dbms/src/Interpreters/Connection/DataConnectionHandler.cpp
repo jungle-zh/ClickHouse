@@ -196,8 +196,8 @@ namespace DB {
             if (packet_type == 'G' || packet_type == 'P')
             {
                 writeString("HTTP/1.0 400 Bad Request\r\n\r\n"
-                            "Port " + server.config().getString("tcp_port") + " is for clickhouse-client program.\r\n"
-                                                                              "You must use port " + server.config().getString("http_port") + " for HTTP.\r\n",
+                            "Port " + server->config().getString("tcp_port") + " is for clickhouse-client program.\r\n"
+                                                                              "You must use port " + server->config().getString("http_port") + " for HTTP.\r\n",
                             *out);
 
                 throw Exception("Client has connected to wrong port", ErrorCodes::DATA_CLIENT_HAS_CONNECTED_TO_WRONG_PORT);
@@ -223,5 +223,22 @@ namespace DB {
                                     << ".");
 
     }
+
+
+    void DataConnectionHandler::sendException(const Exception & e)
+    {
+        writeVarUInt(Protocol::Server::Exception, *out);
+        writeException(e, *out);
+        out->next();
+    }
+
+
+    void DataConnectionHandler::sendEndOfStream()
+    {
+        state.sent_all_data = true;
+        writeVarUInt(Protocol::Server::EndOfStream, *out);
+        out->next();
+    }
+
 
 }

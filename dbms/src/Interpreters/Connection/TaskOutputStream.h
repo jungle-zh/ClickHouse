@@ -17,8 +17,8 @@ class TaskOutputStream {  //
 
 
 private:
-    void  writeTaskSource(DataSource source);
-    void  writeTaskDest(DataDest dest);
+    void  writeTaskSource(ExechangeTaskDataSource source);
+    void  writeTaskDest(ExechangeTaskDataDest dest);
     void  writeExecNode(std::shared_ptr<ExecNode> ndoe);
     TaskOutputStream(std::shared_ptr<WriteBuffer> out_ ,int version_ ){
         out = out_;
@@ -28,10 +28,11 @@ private:
 public:
     void init();
     void write(Task &  task);
-    static void write(ExechangeTaskDataSource & source);
-    static void write(ExechangeTaskDataDest & desc );
-    static void write(ScanTaskDataSource & source);
-    static void write(std::vector<std::shared_ptr<ExecNode>> execnodes);
+    void write(ExechangeTaskDataSource & source);
+    void write(ExechangeTaskDataDest & desc );
+    void write(ScanTaskDataSource & source);
+    void write(std::vector<std::shared_ptr<ExecNode>> execnodes);
+    void write(std::shared_ptr<ExecNode> execNode);
 
 private:
     //std::shared_ptr<Poco::Net::StreamSocket> socket;

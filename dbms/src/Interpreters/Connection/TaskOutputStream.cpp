@@ -6,6 +6,7 @@
 #include <Interpreters/ExecNode/AggExecNode.h>
 #include <Common/typeid_cast.h>
 #include <Interpreters/ExecNode/FilterExecNode.h>
+#include <Interpreters/ExecNode/JoinExecNode.h>
 #include <Interpreters/ExecNode/MergeExecNode.h>
 #include <Interpreters/ExecNode/ProjectExecNode.h>
 #include <Interpreters/ExecNode/ScanExecNode.h>

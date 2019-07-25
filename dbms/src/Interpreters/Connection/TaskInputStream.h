@@ -18,8 +18,8 @@ namespace DB {
 
 
     private:
-        DataSource readTaskSource();
-        DataDest readTaskDest();
+        ExechangeTaskDataSource readTaskSource();
+        ExechangeTaskDataDest readTaskDest();
         std::shared_ptr<ExecNode> readExecNode();
 
         std::shared_ptr<Poco::Net::StreamSocket> socket;

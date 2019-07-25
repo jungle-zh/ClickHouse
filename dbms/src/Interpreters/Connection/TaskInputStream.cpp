@@ -22,7 +22,7 @@ namespace  DB {
         readVarInt(nodeType, *in);
         switch (nodeType) {
 
-            case ExecNode::Agg :{
+            case ExecNode::NodeType::TAgg : {
 
                 return AggExecNode::deserialize(*in);
 
@@ -33,12 +33,12 @@ namespace  DB {
 
     }
 
-    DataDest TaskInputStream::readTaskDest() {
+    ExechangeTaskDataDest TaskInputStream::readTaskDest() {
 
 
     }
 
-    DataSource TaskInputStream::readTaskSource() {
+    ExechangeTaskDataSource TaskInputStream::readTaskSource() {
 
     }
 

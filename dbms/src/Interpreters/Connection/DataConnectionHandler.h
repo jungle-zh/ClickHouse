@@ -68,7 +68,7 @@ public:
     //bool getStartToReceive() { return  startToReceive;}
 
     void setEndOfReceive(bool end)  { endOfReceive = end;}
-    //bool getEndOfReceive() { return endOfReceive;}
+
 
     bool startToReceive = false;
     bool endOfReceive = false;
@@ -79,6 +79,9 @@ public:
 
 
     bool getEndOfReceive();
+
+    void  sendException(const Exception & e) ;
+    void  sendEndOfStream();
 };
 
 
