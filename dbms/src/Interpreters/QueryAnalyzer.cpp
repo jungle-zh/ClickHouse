@@ -176,6 +176,8 @@ namespace DB {
 
                     dbName = typeid_cast<const ASTIdentifier &>(*identifier.children[0]).name;
                     tableName = typeid_cast<const ASTIdentifier &>(*identifier.children[1]).name;
+                } else {
+                    tableName = identifier.name;
                 }
 
                 childNode = std::make_shared<ScanPlanNode>(dbName,tableName);
@@ -316,7 +318,45 @@ namespace DB {
             join_key.push_back(key->getColumnName());
 
         }
-        std::shared_ptr<PlanNode> joinNode = std::make_shared<JoinPlanNode>(leftHeader,rightHeader,join_key,joininfo->kind,joininfo->strictness);
+        std::string kind;
+        std::string strictness;
+        switch (joininfo->kind) {
+            case ASTTableJoin::Kind::Comma:
+                kind = "Comma";
+                break;
+            case ASTTableJoin::Kind::Cross:
+                kind = "Cross";
+                break;
+            case ASTTableJoin::Kind::Full:
+                kind = "Full";
+                break;
+            case ASTTableJoin::Kind::Inner:
+                kind = "Inner";
+                break;
+            case ASTTableJoin::Kind::Left:
+                kind = "Left";
+                break;
+            case ASTTableJoin::Kind::Right:
+                kind = "Right";
+                break;
+            default:
+                break;
+
+        }
+        switch (joininfo->strictness) {
+            case ASTTableJoin::Strictness::All:
+                strictness = "All";
+                break;
+            case ASTTableJoin::Strictness::Any:
+                strictness = "Any";
+                break;
+            case ASTTableJoin::Strictness::Unspecified:
+                strictness = "Unspecified";
+                break;
+            default:
+                break;
+        }
+        std::shared_ptr<PlanNode> joinNode = std::make_shared<JoinPlanNode>(join_key,leftHeader,rightHeader,kind,strictness);
 
         joinNode->addChild(left);
         joinNode->addChild(right);
@@ -364,6 +404,7 @@ namespace DB {
                 const ASTs &arguments = node->arguments->children;
                 aggregate.argument_names.resize(arguments.size());
                 DataTypes types(arguments.size());
+                aggregate.argument_types.resize(arguments.size());
 
                 for (size_t i = 0; i < arguments.size(); ++i) {
                     /// There can not be other aggregate functions within the aggregate functions.
@@ -440,8 +481,8 @@ namespace DB {
             }
 
             //actions->execute()
-            ret = std::make_shared<MergePlanNode>(header,aggregation_keys,aggregated_columns,aggregate_descriptions);
-            auto aggNode = std::make_shared<AggPlanNode>(header, actions,aggregation_keys,aggregated_columns,aggregate_descriptions);
+            ret = std::make_shared<MergePlanNode>(header,aggregation_keys,aggregated_columns,aggregate_descriptions,context);
+            auto aggNode = std::make_shared<AggPlanNode>(header, actions,aggregation_keys,aggregated_columns,aggregate_descriptions,context);
 
             aggNode->addChild(child);
             ret->addChild(aggNode);
@@ -501,7 +542,9 @@ namespace DB {
             }
         }
         actions->add(ExpressionAction::project(result_columns));
-        return std::make_shared<ProjectPlanNode>(header, actions);
+        auto projectPlanNode =  std::make_shared<ProjectPlanNode>(header, actions);
+        projectPlanNode->addChild(child);
+        return projectPlanNode;
     }
 
 
@@ -551,7 +594,7 @@ namespace DB {
                     actions_stack.addAction(ExpressionAction::copyColumn(arg->getColumnName(), result_name));
                     NameSet joined_columns;
                     joined_columns.insert(result_name);
-                    actions_stack.addAction(ExpressionAction::arrayJoin(joined_columns, false, context));
+                    actions_stack.addAction(ExpressionAction::arrayJoin(joined_columns, false, *context));
                 }
 
                 return;
@@ -570,14 +613,14 @@ namespace DB {
             if (AggregateFunctionFactory::instance().isAggregateFunctionName(node->name))
                 return;
 
-            const FunctionBuilderPtr &function_builder = FunctionFactory::instance().get(node->name, context);
+            const FunctionBuilderPtr &function_builder = FunctionFactory::instance().get(node->name, *context);
 
             Names argument_names;
             DataTypes argument_types;
             bool arguments_present = true;
 
             /// If the function has an argument-lambda expression, you need to determine its type before the recursive call.
-            bool has_lambda_arguments = false;
+            //bool has_lambda_arguments = false;
 
             for (auto &child : node->arguments->children) {
                 ASTFunction *lambda = typeid_cast<ASTFunction *>(child.get());
@@ -592,7 +635,7 @@ namespace DB {
                     if (!lambda_args_tuple || lambda_args_tuple->name != "tuple")
                         throw Exception("First argument of lambda must be a tuple", ErrorCodes::TYPE_MISMATCH);
 
-                    has_lambda_arguments = true;
+                    //has_lambda_arguments = true;
                     argument_types.emplace_back(std::make_shared<DataTypeFunction>(
                             DataTypes(lambda_args_tuple->arguments->children.size())));
                     /// Select the name in the next cycle.
@@ -668,11 +711,16 @@ namespace DB {
                auto child = root->getChild(i);
                if(typeid_cast<FromClauseNode*> (child.get())){
                    assert(child->getChilds().size() == 1);
-                   root->setChild(root->getChild(i)->getChild(0),i);
+                   auto fromClauseChild =  root->getChild(i)->getChild(0);
+                   //fromClauseChild.use_count();
+                   //root->getChild(i).use_count();
+                   root->setChild(fromClauseChild,i);
+                   //root->getChild(i).use_count();
                }
                if(typeid_cast<UnionPlanNode*> (child.get())){
                    if(child->getChilds().size() ==1 ){  // union node has only one child
-                       root->setChild(root->getChild(i)->getChild(0),i);
+                       auto UnionNodeChild = root->getChild(i)->getChild(0);
+                       root->setChild(UnionNodeChild,i);
                    }
                }
            }
@@ -697,10 +745,7 @@ namespace DB {
 
             scanPlanNode->buildBaseDistribution(); //only partitionKey and num basc info
 
-        }
-
-
-        if( JoinPlanNode* joinPlanNode = typeid_cast<JoinPlanNode*>(root.get())){
+        } else if( JoinPlanNode* joinPlanNode = typeid_cast<JoinPlanNode*>(root.get())){
 
            assert(root->getChilds().size() ==2 );
 
@@ -776,6 +821,7 @@ namespace DB {
             } else {
 
                 //need to delete the mergePlanNode;
+                root->setDistribution(root->getChild(0)->getDistribution());
             }
 
 
@@ -798,16 +844,18 @@ namespace DB {
 
             root->setDistribution(distribution);
 
-        } else if(ResultPlanNode * resultPlanNode = typeid_cast<ResultPlanNode *>(root.get())){ // as the exechange node
+        }
+        /*else if(ResultPlanNode * resultPlanNode = typeid_cast<ResultPlanNode *>(root.get())){ // as the exechange node
 
-            std::shared_ptr<Distribution> distribution = std::make_shared<ExechangeDistribution>();
+               std::shared_ptr<Distribution> distribution = std::make_shared<ExechangeDistribution>();
 
-            distribution->partitionNum = 1;
-            distribution->distributeKeys = std::vector<std::string>();
-            resultPlanNode->setDistribution(distribution);
+               distribution->partitionNum = 1;
+               distribution->distributeKeys = std::vector<std::string>();
+               resultPlanNode->setDistribution(distribution);
 
 
-        } else {
+        } */
+        else {
 
             assert(root->getChilds().size() ==1 );
             root->setDistribution(root->getChild(0)->getDistribution());
@@ -820,9 +868,12 @@ namespace DB {
 
         for(size_t i=0;i < root->getChilds().size() ;++i){
 
-            if(MergePlanNode* mergePlanNode = typeid_cast<MergePlanNode*>(root->getChilds()[i].get())){
-                if(mergePlanNode->getChild(0)->getName() != "ExechangeNode"){
-                    root->setChild(mergePlanNode->getChild(0),i); //  child 0 is agg node
+            MergePlanNode * mergePlanNode = typeid_cast<MergePlanNode*>(root->getChild(i).get());
+            if(mergePlanNode){
+                ExechangeNode * exechangeNode = typeid_cast<ExechangeNode*>(mergePlanNode->getChild(0).get());
+                if(!exechangeNode){
+                    auto aggPlanNode = mergePlanNode->getChild(0);
+                    root->setChild(aggPlanNode,i); //  child 0 is agg node
                 }
             }
         }
@@ -846,7 +897,7 @@ namespace DB {
 
                 assert(enode->getChilds().size() == 2 ) ; // 0 is left ,1 is right
 
-                auto lstage = std::make_shared<Stage>();
+                auto lstage = std::make_shared<Stage>(jobId,stageid++);
                 splitStageByExechangeNode(enode->getChild(0),lstage);
                 currentStage->addChild(lstage);
                 currentStage->addMainTableChildStageId(lstage->stageId);
@@ -854,7 +905,7 @@ namespace DB {
                 lstage->setDestExechangeType(etype);
 
 
-                auto rstage = std::make_shared<Stage>();
+                auto rstage = std::make_shared<Stage>(jobId,stageid++);
                 splitStageByExechangeNode(enode->getChild(1),rstage);
                 currentStage->addChild(rstage);
                 currentStage->rightTableChildStageId = rstage->stageId;
@@ -873,7 +924,7 @@ namespace DB {
                     currentStage->setExechangeDistribution(left->getDistribution());
 
                     assert(left->getChilds().size() == 1);
-                    auto childStage = std::make_shared<Stage>();
+                    auto childStage = std::make_shared<Stage>(jobId,stageid++);
                     splitStageByExechangeNode(left->getChild(0),childStage);
                     currentStage->addChild(childStage);
                     currentStage->rightTableChildStageId = childStage->stageId;
@@ -890,7 +941,7 @@ namespace DB {
                     currentStage->setExechangeDistribution(right->getDistribution());
 
                     assert(left->getChilds().size() == 1);
-                    auto childStage = std::make_shared<Stage>();
+                    auto childStage = std::make_shared<Stage>(jobId,stageid++);
                     splitStageByExechangeNode(right->getChild(0),childStage);
                     currentStage->addChild(childStage);
                     currentStage->rightTableChildStageId = childStage->stageId;
@@ -914,7 +965,7 @@ namespace DB {
             currentStage->addPlanNode(root);
             currentStage->setSourceExechangeType(enode->getDateExechangeType());
             currentStage->setExechangeDistribution(enode->getDistribution());
-            auto childStage =  std::make_shared<Stage>()  ;
+            auto childStage =  std::make_shared<Stage>(jobId,stageid++);
 
             assert(enode->getChilds().size() == 1); // aggPlanNode
             splitStageByExechangeNode(enode->getChild(0),childStage);
@@ -938,7 +989,7 @@ namespace DB {
             assert(childs.size() > 1);
             for(size_t i=0;i< childs.size() ;++i){
 
-                auto childStage =  std::make_shared<Stage>()  ;
+                auto childStage =  std::make_shared<Stage>(jobId,stageid++);
                 splitStageByExechangeNode(childs[i],childStage);
                 currentStage->addChild(childStage);
                 currentStage->addMainTableChildStageId(childStage->stageId);

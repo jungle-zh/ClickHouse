@@ -24,36 +24,39 @@ namespace DB {
             BlockInputStreamPtr block_in;
 
             TemporaryFileStream(const std::string & path);
+
+
         };
 
     public:
 
-        virtual ~AggExecNode() {}
+         ~AggExecNode() {};
         void   serialize(WriteBuffer & buffer) ;
-        static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer) ;
+        static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer,Context * context) ;
         void  serializeAggDesc(WriteBuffer & buffer);
         static AggregateDescriptions deserializeAggDesc (ReadBuffer & buffer);
-        void  readPrefix() override;
-        void  readSuffix() override;
+        void  readPrefix() override ;
+        void  readSuffix() override {};
         Block read() override ;
-        Block getHeader ()  override;
-        Block getInputHeader() override;
+        Block getHeader (bool isAnalyze)  override;
+        Block getInputHeader() override { return Block();};
         bool isCancelledOrThrowIfKilled() { return false;}
         bool isCancelled(){ return false;}
 
-        AggExecNode();
+        AggExecNode(){};
 
 
 
         AggExecNode(Block & inputHeader_ , NamesAndTypesList & aggkeys_ ,  NamesAndTypesList & aggColumn_,
-                    AggregateDescriptions & desc_ ,ExpressionActionsPtr & actions_ ,Settings & settings_,Context * context_ ):
+                    AggregateDescriptions & desc_ ,ExpressionActionsPtr & actions_ ,Context * context_ ):
                     inputHeader(inputHeader_),
                     aggregationKeys(aggkeys_),
                     aggregateColumns(aggColumn_),
                     aggregateDescriptions(desc_),
                     actions(actions_),
-                    settings(settings_),
-                    context(context_)
+                    context(context_),
+                    settings(context_->getSettingsRef())
+
                     {
                     }
         AggExecNode(AggPlanNode * planNode);
@@ -80,10 +83,11 @@ namespace DB {
         std::unique_ptr<Aggregator> aggregator;
         std::unique_ptr<IBlockInputStream> impl;
 
+        Context * context;
         Settings  settings  ;
 
 
-        Context * context;
+
         std::vector<std::unique_ptr<TemporaryFileStream>> temporary_inputs;
         Logger * log = &Logger::get("AggExecNode");
 

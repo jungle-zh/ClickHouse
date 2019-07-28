@@ -7,6 +7,8 @@
 #include <AggregateFunctions/AggregateFunctionFactory.h>
 
 #include <DataTypes/DataTypeFactory.h>
+#include <IO/ReadHelpers.h>
+#include <Core/Field.h>
 
 namespace DB {
 
@@ -31,7 +33,8 @@ namespace DB {
         aggregateColumns_.readText(buffer);
         AggregateDescriptions desc_ = deserializeAggDesc(buffer);
 
-        return std::make_shared<MergeExecNode>(header,aggregationKeys_,aggregateColumns_,desc_, NULL);
+        Context * context = NULL;
+        return std::make_shared<MergeExecNode>(header,aggregationKeys_,aggregateColumns_,desc_, context);
 
     }
 
@@ -81,7 +84,7 @@ namespace DB {
                 readStringBinary(argument_types,buffer);
                 desc.argument_types.push_back(argument_types);
             }
-            readBinary(desc.parameters,buffer);
+            DB::readBinary(desc.parameters,buffer);
 
             DataTypes types ;
             for(size_t j =0 ; j < argument_types_size; ++j){
@@ -116,8 +119,8 @@ namespace DB {
     }
 
 
-    Block  MergeExecNode::getHeader()  {
-        return aggregator->getHeader(final);
+    Block  MergeExecNode::getHeader(bool isAnalyze)  {
+        return aggregator->getHeader(final,isAnalyze );
     }
 
 
@@ -129,14 +132,14 @@ namespace DB {
 
         params  = std::make_unique<Aggregator::Params>(inputHeader, keys, aggregateDescriptions,
                                                        overflow_row, settings.max_rows_to_group_by, settings.group_by_overflow_mode,
-                                                       settings.compile ? &context.getCompiler() : nullptr, settings.min_count_to_compile,
+                                                       settings.compile ? &context->getCompiler() : nullptr, settings.min_count_to_compile,
                                                        allow_to_use_two_level_group_by ? settings.group_by_two_level_threshold : SettingUInt64(0),
                                                        allow_to_use_two_level_group_by ? settings.group_by_two_level_threshold_bytes : SettingUInt64(0),
                                                        settings.max_bytes_before_external_group_by, settings.empty_result_for_aggregation_by_empty_set,
-                                                       context.getTemporaryPath());
+                                                       context->getTemporaryPath());
 
         //Aggregator(std::move(params));
-        aggregator =  std::make_unique<Aggregator>(params);
+        aggregator =  std::make_unique<Aggregator>(*params);
 
 
     }
@@ -163,6 +166,14 @@ namespace DB {
         ++it;
 
         return res;
+    }
+
+    bool MergeExecNode::isCancelled() {
+        return false;
+
+    }
+    bool MergeExecNode::isCancelledOrThrowIfKilled(){
+        return false;
     }
 
 }

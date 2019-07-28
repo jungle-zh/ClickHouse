@@ -54,7 +54,7 @@ private:
     size_t max_size;
 
 public:
-    ConcurrentBoundedQueue(size_t max_fill)
+    ConcurrentBoundedQueue(size_t max_fill = 10000)
         : fill_count(0, max_fill), empty_count(max_fill, max_fill),max_size(max_fill) {}
 
     void push(const T & x)

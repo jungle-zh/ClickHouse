@@ -5,6 +5,7 @@
 #include <Common/getFQDNOrHostName.h>
 #include <Common/CurrentMetrics.h>
 #include <Common/Stopwatch.h>
+#include <Common/ConcurrentBoundedQueue.h>
 #include <IO/Progress.h>
 #include <Core/Protocol.h>
 #include <Core/QueryProcessingStage.h>
@@ -76,6 +77,7 @@ struct QueryState
 };
 
 
+class Task;
 class TCPHandler : public Poco::Net::TCPServerConnection
 {
 public:

@@ -6,8 +6,8 @@
 
 namespace DB {
 
-    Block JoinExecNode::getHeader()  {
-
+    Block JoinExecNode::getHeader(bool isAnalyze)  {
+        (void) isAnalyze;
         Block joinHeader ;
         for(ColumnWithTypeAndName e : inputLeftHeader.getColumnsWithTypeAndName()){
             joinHeader.insert(e);

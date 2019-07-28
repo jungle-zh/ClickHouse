@@ -11,9 +11,9 @@ namespace DB {
     std::shared_ptr<ExecNode> FilterPlanNode::createExecNode() {
 
         return  std::make_shared<FilterExecNode>(
-                inputHeader,
+                filterColumn,
                 actions,
-                filterColumn
+                inputHeader
                 );
 
 

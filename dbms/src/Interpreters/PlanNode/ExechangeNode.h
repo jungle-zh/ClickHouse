@@ -18,7 +18,7 @@ class ExechangeNode  : public PlanNode {
 private:
 
     DataExechangeType  type  ;
-    std::shared_ptr<Distribution> distribution;
+    //std::shared_ptr<Distribution> distribution;
 
     // std::vector<std::shared_ptr<Distribution>> senderDistributions;
 public:

@@ -15,7 +15,7 @@ class  DataConnectionHandler;
 class DataReceiver {
 
 public:
-    DataReceiver(ExechangeTaskDataSource source, Blocks & inputHeader_){
+    DataReceiver(ExechangeTaskDataSource source){
 
         childTaskIds = source.partition.childTaskIds;
         exechangeType = source.partition.exechangeType;
@@ -23,7 +23,7 @@ public:
         mainTableStageIds = source.partition.mainTableChildStageId;
         port = source.receiver.dataPort;
         ip = source.receiver.ip;
-        inputHeader = inputHeader_;
+        //inputHeader = inputHeader_;
         startToAccept();
     }
 
@@ -38,7 +38,7 @@ public:
 
     UInt32  port;
     std::string ip;
-    Blocks inputHeader ;
+    //Blocks inputHeader ;
     bool  isResultReceiver;
 
 

@@ -10,11 +10,12 @@ namespace DB {
         return  children->read(); // children is taskReceiverExecNode
     }
 
-    Block UnionExecNode::getHeader() {
-        return  children->getHeader();
+    Block UnionExecNode::getHeader(bool isAnalyze) {
+
+        return  children->getHeader(isAnalyze);
     }
     Block UnionExecNode::getInputHeader() {
-        return  children->getHeader();
+        return  children->getHeader(true);
     }
 
 

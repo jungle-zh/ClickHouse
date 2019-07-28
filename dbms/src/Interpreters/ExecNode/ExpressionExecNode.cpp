@@ -15,24 +15,24 @@ namespace DB {
         return res;
     }
 
-    Block ExpressionExecNode::getHeader()
+    Block ExpressionExecNode::getHeader(bool isAnalyze)
     {
-        Block res = children->getHeader();
+        Block res = children->getHeader( isAnalyze);
         expression->execute(res);
         return res;
     }
 
     Block ExpressionExecNode::getInputHeader() {
-        Block res = children->getHeader();
+        Block res = children->getHeader(true);
         return  res;
     }
     void ExpressionExecNode::serialize(DB::WriteBuffer &buffer) {
         ExecNode::serializeExpressActions(*expression,buffer);
     }
 
-    std::shared_ptr<ExecNode> ExpressionExecNode::deserialize(DB::ReadBuffer &buffer) {
+    std::shared_ptr<ExecNode> ExpressionExecNode::deserialize(DB::ReadBuffer &buffer ,Context * context ) {
 
-        return std::make_shared<ExpressionExecNode>(ExecNode::deSerializeExpressActions(buffer));
+        return std::make_shared<ExpressionExecNode>(ExecNode::deSerializeExpressActions(buffer,context));
 
     }
 

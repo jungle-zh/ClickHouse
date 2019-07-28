@@ -13,7 +13,7 @@ namespace DB {
 
     //return new TCPHandler(server, socket);
     //return  new ExchangeNodeTcpHandler(node,socket);
-    return(Poco::Net::TCPServerConnection *) new DataConnectionHandler(socket);
+    return(Poco::Net::TCPServerConnection *) new DataConnectionHandler(socket,server);
 
    // return handler;
 }

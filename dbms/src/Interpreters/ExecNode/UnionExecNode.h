@@ -16,10 +16,10 @@ class UnionExecNode  : public ExecNode {
     //static  std::shared_ptr<ExecNode> deseralize(ReadBuffer & buffer);
 public:
     Block read() override;
-    Block getHeader() override;
+    Block getHeader(bool isAnalyze) override;
     Block getInputHeader() override ;
 
-    void serialize(WriteBuffer & buffer);
+    void serialize(WriteBuffer & buffer){ (void)buffer;}
     static  std::shared_ptr<ExecNode> deseralize(ReadBuffer & buffer);
 };
 

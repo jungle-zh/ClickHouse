@@ -31,7 +31,7 @@ private:
     std::shared_ptr<ReadBuffer> maybe_compressed_in;
     std::shared_ptr<IBlockInputStream> block_in;
 
-    IServer * server;
+    DataServer * server;
     std::string senderId ; // senderId is set in receive hello;
 
 
@@ -48,13 +48,10 @@ private:
     std::exception_ptr exception;
 
 public:
-    DataConnectionHandler(const Poco::Net::StreamSocket & socket_,IServer * server_);
+    DataConnectionHandler(const Poco::Net::StreamSocket & socket_,DataServer * server_);
 
-    DataConnectionHandler(const Poco::Net::StreamSocket & socket_)
-            :Poco::Net::TCPServerConnection(socket_){
 
-    };
-    void run();
+    void run(){};
     void initBlockInput();
     void runImpl(); // receive data and fill
 

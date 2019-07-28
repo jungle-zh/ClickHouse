@@ -110,7 +110,11 @@ public:
         }
         return true;
     }
-    Distribution();
+    Distribution( std::vector<std::string> distributeKeys_ , int partitionNum_){
+        distributeKeys = distributeKeys_;
+        partitionNum = partitionNum_;
+    }
+    Distribution(){}
 
 
 
@@ -125,9 +129,8 @@ class ScanDistribution : public Distribution {
 
 public:
 
-    ScanDistribution(std::vector<std::string> keys_,int partitionNum_){
-        distributeKeys = keys_;
-        partitionNum = partitionNum_;
+    ScanDistribution(std::vector<std::string> keys_,int partitionNum_):Distribution(keys_,partitionNum_){
+
     }
 
     ScanDistribution(){};
@@ -147,9 +150,8 @@ public:
 class ExechangeDistribution  : public Distribution{
 
 public:
-    ExechangeDistribution(std::vector<std::string> keys_,int partitionNum_){
-        distributeKeys = keys_;
-        partitionNum = partitionNum_;
+    ExechangeDistribution(std::vector<std::string> keys_,int partitionNum_):Distribution(keys_,partitionNum_){
+
     }
     ExechangeDistribution(){};
 

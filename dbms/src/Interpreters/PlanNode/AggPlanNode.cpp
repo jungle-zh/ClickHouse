@@ -18,7 +18,6 @@ namespace DB {
                 aggregateColumns,
                 aggregateDescriptions,
                 actions,
-                settings,
                 context
                 );
 

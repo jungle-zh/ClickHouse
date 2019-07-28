@@ -378,6 +378,16 @@ namespace ErrorCodes
     extern const int POCO_EXCEPTION = 1000;
     extern const int STD_EXCEPTION = 1001;
     extern const int UNKNOWN_EXCEPTION = 1002;
+
+
+    extern const int DATA_CLIENT_HAS_CONNECTED_TO_WRONG_PORT = 2000;
+    extern const int DATA_UNKNOWN_DATABASE = 2001;
+    extern const int DATA_UNKNOWN_EXCEPTION = 2002;
+    extern const int DATA_UNKNOWN_PACKET_FROM_CLIENT = 2003;
+    extern const int DATA_POCO_EXCEPTION = 2004;
+    extern const int DATA_STD_EXCEPTION = 2004;
+    extern const int DATA_SOCKET_TIMEOUT = 2006;
+    extern const int DATA_UNEXPECTED_PACKET_FROM_CLIENT = 2007;
 }
 
 }

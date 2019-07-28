@@ -25,14 +25,19 @@ private:
 
 public:
     MergePlanNode( Block & inputHeader_ ,NamesAndTypesList & aggKeys_ , NamesAndTypesList & aggColumns_,
-       AggregateDescriptions & desc_  )
+       AggregateDescriptions & desc_  ,Context * context_)
     :inputHeader(inputHeader_),
     aggregationKeys(aggKeys_),
     aggregateColumns(aggColumns_),
-    aggregateDescriptions(desc_)
+    aggregateDescriptions(desc_),
+    context(context_)
     {
 
     }
+    ~MergePlanNode(){
+
+    }
+    Context * context;
 
     std::shared_ptr<ExecNode>  createExecNode() override;
     //void initDistribution(Distribution & distribution_) override;

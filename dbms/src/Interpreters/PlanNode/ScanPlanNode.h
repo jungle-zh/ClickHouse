@@ -12,6 +12,7 @@ namespace DB {
 
 class ScanPlanNode : public PlanNode {
 
+public:
     ScanPlanNode(std::string dbName_ ,std::string tableName_){
         dbName = dbName_;
         tableName = tableName_;
@@ -19,8 +20,20 @@ class ScanPlanNode : public PlanNode {
 
 public:
     void init();
+    Block getHeader() override;
     void buildBaseDistribution(){
-        distribution = std::make_shared<ScanDistribution>(std::vector<std::string>() ,partitionNum);
+        std::vector<std::string> keys;
+        if(tableName == "stu"){
+            partitionNum = 2;
+            keys.push_back("name");
+        } else if(tableName == "score"){
+            partitionNum = 3;
+            keys.push_back("name");
+        } else{
+            partitionNum = 1 ;
+
+        }
+        distribution = std::make_shared<ScanDistribution>(keys ,partitionNum);
     }
     void buildFullDistribution(){
 
@@ -33,7 +46,7 @@ public:
             scanPartition.partitionId = i;
             scanPartition.info.dbName = dbName;
             scanPartition.info.tableName = tableName;
-            scanPartition.info.host = hosts[i];
+            //scanPartition.info.host = hosts[i];
 
             scanPartitions.insert({i,scanPartition});
         }

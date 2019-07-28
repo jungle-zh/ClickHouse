@@ -31,9 +31,10 @@ public:
 
 
     void  readPrefix() override;
+    void  readSuffix() override{};
     Block read() override ;
-    Block getHeader() override {
-
+    Block getHeader(bool isAnalyze) override {
+        (void) isAnalyze;
         Block header = inputHeader;
         expression->execute(header);
         return header ;
@@ -45,7 +46,7 @@ public:
 
 
     void   serialize(WriteBuffer & buffer) ;
-    static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer) ;
+    static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer ,Context * context) ;
 
 
 

@@ -28,16 +28,17 @@ public:
         TScan
     };
 
+    ExecNode(){};
     virtual  ~ExecNode(){};
 
     virtual Block read() = 0;
     virtual void  readPrefix() = 0 ;
     virtual void  readSuffix() = 0;
-    virtual Block getHeader () = 0;
-    virtual Block getInputHeader();
+    virtual Block getHeader (bool isAnalyze) = 0;
+    virtual Block getInputHeader() = 0;
     static void serializeExpressActions( ExpressionActions & actions,WriteBuffer & buffer );
 
-    static std::shared_ptr<ExpressionActions> deSerializeExpressActions( ReadBuffer & buffer);
+    static std::shared_ptr<ExpressionActions> deSerializeExpressActions( ReadBuffer & buffer,Context * context);
 
     static void serializeHeader(Block & header ,WriteBuffer & buffer);
 
@@ -57,7 +58,8 @@ public:
         children = c;
     }
 
-
+   // Settings settings;
+   // Context  * context;
 
 };
 

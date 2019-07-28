@@ -7,6 +7,7 @@
 #include <Interpreters/IInterpreter.h>
 #include <Parsers/ASTSelectQuery.h>
 #include <Common/typeid_cast.h>
+#include <Parsers/ASTSelectWithUnionQuery.h>
 #include "QueryAnalyzer.h"
 #include "TaskScheduler.h"
 
@@ -22,10 +23,14 @@ public:
 
     InterpreterSelectQueryNew(ASTPtr query_ptr_ , Context * context_):
             query_ptr(query_ptr_->clone()),
-            query(typeid_cast<ASTSelectQuery &>(*query_ptr)),
+            unionQuery(typeid_cast<ASTSelectWithUnionQuery &>(*query_ptr)),
+            query(typeid_cast<ASTSelectQuery &>(*(unionQuery.list_of_selects->children[0]))),
             context(context_){
+        queryAnalyzer = std::make_unique<QueryAnalyzer>(context_,"jobid");
     }
     ASTPtr query_ptr;
+
+    ASTSelectWithUnionQuery & unionQuery;
     ASTSelectQuery & query;
     Context * context;
 

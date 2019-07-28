@@ -35,7 +35,7 @@ namespace DB {
             sender = std::make_shared<DataSender>(exechangeTaskDataDest);
             sender->tryConnect();  //block until success
         }
-        receiver = std::make_shared<DataReceiver>(exechangeTaskDataSource,this); // will create tcp server and accept connection
+        receiver = std::make_shared<DataReceiver>(exechangeTaskDataSource); // will create tcp server and accept connection
 
         receiver->init();  // if has join then call receiveHashTable until read all  to HashTable
 

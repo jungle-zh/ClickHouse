@@ -16,11 +16,13 @@ public:
     ExpressionExecNode(std::shared_ptr<ExpressionActions> expression_){
         expression = expression_;
     }
+    void  readPrefix() override {};
+    void  readSuffix() override {};
     Block read() override ;
-    Block getHeader() override ;
+    Block getHeader(bool  isAnalyze) override ;
     Block getInputHeader() override ;
     void   serialize(WriteBuffer & buffer) ;
-    static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer) ;
+    static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer,Context * context) ;
 
     std::shared_ptr<ExpressionActions> expression ;
 

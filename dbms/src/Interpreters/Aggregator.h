@@ -1081,6 +1081,7 @@ public:
       * (Pre-aggregate several blocks that represent the result of independent aggregations from remote servers.)
       */
     void mergeStream(const BlockInputStreamPtr & stream, AggregatedDataVariants & result, size_t max_threads);
+    void mergeStream(std::shared_ptr<ExecNode> children, AggregatedDataVariants & result, size_t max_threads);
 
     /// Merge several partially aggregated blocks into one.
     /// Precondition: for all blocks block.info.is_overflows flag must be the same.
@@ -1121,7 +1122,7 @@ public:
     const TemporaryFiles & getTemporaryFiles() const { return temporary_files; }
 
     /// Get data structure of the result.
-    Block getHeader(bool final) const;
+    Block getHeader(bool final, bool isAnalyse = false) const;
 
 protected:
     friend struct AggregatedDataVariants;

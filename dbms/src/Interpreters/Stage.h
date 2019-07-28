@@ -29,14 +29,19 @@ namespace DB {
 
     public:
 
-        Stage();
+        //static  int g_id;
+        Stage(std::string jobId,int  stageid ){
+            stageId = jobId + "_"  + std::to_string(stageid);
+        };
         void addPlanNode(std::shared_ptr<PlanNode>  node) { planNodes.push_back(node);}
-        void addChild(std::shared_ptr<Stage>  child);
+        void addChild(std::shared_ptr<Stage>  child){ childs.push_back(child);}
         //void convetPlanToExec();
 
         void init();
         bool isScanStage() { return  isScanStage_;}
         bool isResultStage()  { return isResultStage_ ;}
+        void setReslutStage()  {isResultStage_ = true;}
+        void setScanStage()  {isScanStage_ = true;}
         bool noChildStage();
         std::string getTaskId(int partitionNum) { return  stageId + "_" + std::to_string(partitionNum); }
         std::vector<std::string> getTaskIds() ;

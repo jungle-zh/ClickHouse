@@ -40,7 +40,8 @@ public:
     void receiveApplyRequest(); // start task exec and data receive thread , need to be thread safe
     void receiveTask();
 
-
+    void receiveTaskDone();
+    void receiveCheckTask();
     TaskConnectionHandler(const Poco::Net::StreamSocket & socket ,TaskServer * server_ ):
     Poco::Net::TCPServerConnection(socket),server(server_){
 

@@ -11,7 +11,7 @@ namespace DB {
 
     std::shared_ptr<ExecNode> JoinPlanNode::createExecNode() {
         return  std::make_shared<JoinExecNode>(
-                    joinKey,
+                    joinKeys,
                     inputLeftHeader,
                     inputRightHeader,
                     joinKind,

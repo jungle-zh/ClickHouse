@@ -13,7 +13,7 @@ namespace DB {
 
     void TaskConnectionHandler::runImpl() {
 
-        connection_context = &server->context();
+        connection_context = server->context();
         connection_context->setSessionContext(*connection_context);
 
         Settings global_settings = connection_context->getSettings();
@@ -23,11 +23,11 @@ namespace DB {
         socket().setNoDelay(true);
 
         in = std::make_shared<ReadBufferFromPocoSocket>(socket());
-        in_stream = std::make_shared<TaskInputStream>(in,version);
+        in_stream = std::make_shared<TaskInputStream>(in,1);
         out = std::make_shared<WriteBufferFromPocoSocket>(socket());
 
 
-        connection_context->setProgressCallback([this](const Progress &value) { return this->updateProgress(value); });
+        //connection_context->setProgressCallback([this](const Progress &value) { return this->updateProgress(value); });
 
 
         while (1) {

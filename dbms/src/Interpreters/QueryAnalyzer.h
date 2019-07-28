@@ -25,9 +25,11 @@ namespace DB {
 
 
     public:
-        QueryAnalyzer(const Context & context_): context(context_){
+        QueryAnalyzer(Context * context_ ,std::string jobId_): context(context_){
 
-            settings = context_.getSettings();
+            settings = context_->getSettings();
+            jobId = jobId_;
+            stageid = 0;
         }
 
 
@@ -62,11 +64,13 @@ namespace DB {
         void splitStageByExechangeNode(std::shared_ptr<PlanNode> root, std::shared_ptr<Stage>  currentStage);
 
 
-    private:
+    public:
 
         Settings settings;
 
-        const Context & context ;
+         Context * context ;
+         std::string jobId;
+         int stageid;
     };
 
 

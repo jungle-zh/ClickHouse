@@ -10,9 +10,9 @@ namespace  DB {
         ExecNode::serializeExpressActions(*actions,buffer);
     }
 
-    std::shared_ptr<ExecNode> ProjectExecNode::deseralize(DB::ReadBuffer &buffer) {
+    std::shared_ptr<ExecNode> ProjectExecNode::deseralize(DB::ReadBuffer &buffer ,Context  * context) {
 
-        std::shared_ptr<ExpressionActions> actions = ExecNode::deSerializeExpressActions(buffer);
+        std::shared_ptr<ExpressionActions> actions = ExecNode::deSerializeExpressActions(buffer,context);
         return  std::make_shared<ProjectExecNode>(actions);
 
     }
@@ -23,7 +23,8 @@ namespace  DB {
         actions->execute(block);
         return block;
     }
-    Block ProjectExecNode::getHeader() {
+    Block ProjectExecNode::getHeader(bool isAnalyze) {
+        (void) isAnalyze;
         Block header  = inputHeader;
         actions->execute(header);
         return  header ;

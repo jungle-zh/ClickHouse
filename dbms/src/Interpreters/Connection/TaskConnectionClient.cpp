@@ -28,7 +28,7 @@ namespace DB {
 
         writeVarUInt(Protocol::TaskClient::TaskReq, *out);
 
-        out_stream.write(task);
+        out_stream->write(task);
 
 
     }

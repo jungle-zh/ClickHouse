@@ -16,14 +16,7 @@ class Context ;
 class DataServer  {
 
 public:
-    DataServer(int port):
-    portNum(port){
-        connectionFactory = std::make_unique<DataConnectionHandlerFactory>(this);
-        server = std::make_unique<Poco::Net::TCPServer>(connectionFactory.get(),portNum);
-
-        //connectionFactory->setServer(this);
-
-    }
+    DataServer(int port);
     void start() {
         server->start();
     }
@@ -33,6 +26,8 @@ public:
     //DataReceiver * receiver() { return receiver_; }
     int portNum ;
 
+    bool  isCancelled(){ return false;}
+    Context * context(){ return  NULL;}
 private:
 
     Context * global_context;

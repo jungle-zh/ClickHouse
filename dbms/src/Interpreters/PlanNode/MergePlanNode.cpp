@@ -14,7 +14,6 @@ namespace DB {
                 aggregationKeys,
                 aggregateColumns,
                 aggregateDescriptions,
-                settings,
                 context
         );
 

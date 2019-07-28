@@ -11,6 +11,8 @@
 #include <DataTypes/DataTypeFactory.h>
 #include <IO/VarInt.h>
 #include <IO/WriteHelpers.h>
+#include <IO/ReadHelpers.h>
+#include <DataStreams/NativeBlockInputStream.h>
 
 namespace ProfileEvents
 {
@@ -29,17 +31,17 @@ namespace DB {
 
     }
 
-    std::shared_ptr<ExecNode> AggExecNode::deserialize(ReadBuffer & buffer) {
+    std::shared_ptr<ExecNode> AggExecNode::deserialize(ReadBuffer & buffer,Context * context) {
 
         Block header =  ExecNode::deSerializeHeader(buffer);
-        std::shared_ptr<ExpressionActions> actions = ExecNode::deSerializeExpressActions(buffer);
+        std::shared_ptr<ExpressionActions> actions = ExecNode::deSerializeExpressActions(buffer,context );
         NamesAndTypesList aggregationKeys_ ;
         NamesAndTypesList  aggregateColumns_;
         aggregationKeys_.readText(buffer);
         aggregateColumns_.readText(buffer);
         AggregateDescriptions desc_ = deserializeAggDesc(buffer);
 
-        return std::make_shared<AggExecNode>(header,aggregationKeys_,aggregateColumns_,desc_,actions, NULL);
+        return std::make_shared<AggExecNode>(header,aggregationKeys_,aggregateColumns_,desc_,actions, context);
 
     }
 
@@ -151,7 +153,7 @@ namespace DB {
                                   context->getTemporaryPath());
 
         //Aggregator(std::move(params));
-        aggregator =  std::make_unique<Aggregator>(params);
+        aggregator =  std::make_unique<Aggregator>(*params);
 
 
     }
@@ -179,7 +181,7 @@ namespace DB {
                   *  then read and merge them, spending the minimum amount of memory.
                   */
 
-                ProfileEvents::increment(ProfileEvents::ExternalNodeAggregationMerge);
+               // ProfileEvents::increment(ProfileEvents::ExternalNodeAggregationMerge);
 
                 if (!isCancelled())
                 {
@@ -212,13 +214,19 @@ namespace DB {
 
     }
 
-    Block  AggExecNode::getHeader()  {
-        return aggregator->getHeader(final);
+    Block  AggExecNode::getHeader(bool isAnalyze)  {
+        return aggregator->getHeader(final, isAnalyze);
     }
 
 
-
-
-
+    AggExecNode::TemporaryFileStream::TemporaryFileStream(const std::string & path)
+            : file_in(path), compressed_in(file_in),
+              block_in(std::make_shared<NativeBlockInputStream>(compressed_in, 1)) {}
 
 }
+
+
+
+
+
+

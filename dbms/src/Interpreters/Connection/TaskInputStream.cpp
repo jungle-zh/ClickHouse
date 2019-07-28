@@ -23,23 +23,26 @@ namespace  DB {
         switch (nodeType) {
 
             case ExecNode::NodeType::TAgg : {
-
-                return AggExecNode::deserialize(*in);
+                return AggExecNode::deserialize(*in,context);
 
             }
 
 
         }
+        std::shared_ptr<ExecNode> ret ;
+        return   ret ;
 
     }
 
     ExechangeTaskDataDest TaskInputStream::readTaskDest() {
-
+        ExechangeTaskDataDest ret;
+        return  ret;
 
     }
 
     ExechangeTaskDataSource TaskInputStream::readTaskSource() {
-
+        ExechangeTaskDataSource ret ;
+        return  ret ;
     }
 
     std::shared_ptr<Task> TaskInputStream::read(){
@@ -49,7 +52,7 @@ namespace  DB {
         auto dest = readTaskDest();
         int ExecNodeNum ;
         readVarInt(ExecNodeNum,*in);
-        std::vector<ExecNode> nodes;
+        std::vector<std::shared_ptr<ExecNode>> nodes;
         for(int i=0;i < ExecNodeNum ;++i){
            auto node =  readExecNode();
             nodes.emplace_back(node);

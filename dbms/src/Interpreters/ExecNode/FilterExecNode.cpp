@@ -12,7 +12,7 @@ namespace DB {
         //children.push_back(input);
 
         /// Determine position of filter column.
-        header = children->getHeader();
+        header = children->getHeader(false);
         inputHeader = header;
         expression->execute(header);
 
@@ -147,16 +147,17 @@ namespace DB {
 
         writeStringBinary(filter_column_name, buffer);
         ExecNode::serializeExpressActions(*expression,buffer);
+        ExecNode::serializeHeader(inputHeader,buffer);
 
     }
 
-    std::shared_ptr<ExecNode> FilterExecNode::deserialize(DB::ReadBuffer &buffer) {
+    std::shared_ptr<ExecNode> FilterExecNode::deserialize(DB::ReadBuffer &buffer, Context * context) {
 
         std::string filter_column_name ;
         readStringBinary(filter_column_name,buffer);
-        std::shared_ptr<ExpressionActions> expression = ExecNode::deSerializeExpressActions(buffer);
-
-        return  std::make_shared<FilterExecNode>(filter_column_name,expression);
+        std::shared_ptr<ExpressionActions> expression = ExecNode::deSerializeExpressActions(buffer,context);
+        Block inputHeader = ExecNode::deSerializeHeader(buffer);
+        return  std::make_shared<FilterExecNode>(filter_column_name,expression,inputHeader);
 
     }
 

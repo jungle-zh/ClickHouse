@@ -8,6 +8,7 @@
 #include <IO/WriteHelpers.h>
 #include <Columns/ColumnConst.h>
 #include <Common/typeid_cast.h>
+#include <Interpreters/Context.h>
 #include <DataTypes/DataTypesNumber.h>
 #include <DataTypes/DataTypeString.h>
 #include <DataTypes/DataTypeArray.h>
@@ -39,7 +40,7 @@ namespace DB {
                     writeVarUInt(ExpressionAction::ADD_COLUMN,buffer);
                     writeStringBinary(action.result_name,buffer);
                     writeStringBinary(action.result_type->getName(),buffer);
-                    if(ColumnConst* columnConst = typeid_cast<ColumnConst *>(action.added_column.get())){ //in getActionsImpl createColumnConst
+                    if(const ColumnConst* columnConst = static_cast< const ColumnConst *>(action.added_column.get())){ //in getActionsImpl createColumnConst
 
                         action.result_type->serializeBinary((*columnConst)[0],buffer); //call DataTypeNumberBase<T>::serializeBinary
 
@@ -53,6 +54,7 @@ namespace DB {
 
                     writeVarUInt(ExpressionAction::REMOVE_COLUMN,buffer);
                     writeStringBinary(action.source_name,buffer);
+                    break;
 
                 }
                 case ExpressionAction::COPY_COLUMN : {
@@ -61,6 +63,7 @@ namespace DB {
                     writeStringBinary(action.source_name,buffer);
                     writeStringBinary(action.result_name,buffer);
                     writeStringBinary(action.result_type->getName(),buffer);
+                    break;
                 }
                 case ExpressionAction::APPLY_FUNCTION : {
 
@@ -74,7 +77,7 @@ namespace DB {
 
                     writeStringBinary(action.function_name,buffer);
 
-
+                    break;
                 }
                 case ExpressionAction::PROJECT :{
                    writeVarUInt(ExpressionAction::PROJECT,buffer);
@@ -84,6 +87,7 @@ namespace DB {
                        writeStringBinary(action.projection[i].first,buffer);
                        writeStringBinary(action.projection[i].second,buffer);
                    }
+                    break;
                 }
                 default:
                     break;
@@ -95,14 +99,15 @@ namespace DB {
 
 
 
-    std::shared_ptr<ExpressionActions> ExecNode::deSerializeExpressActions( ReadBuffer &buffer) {
+    std::shared_ptr<ExpressionActions> ExecNode::deSerializeExpressActions( ReadBuffer &buffer ,Context * context) {
 
 
         NamesAndTypesList inputColumn;
         inputColumn.readText(buffer);
 
 
-        auto actions =  std::make_shared<ExpressionActions>(inputColumn,settings);
+        //Settings settings;
+        auto actions =  std::make_shared<ExpressionActions>(inputColumn,context->getSettingsRef());
 
         Int64  actionNum ;
         readVarInt(actionNum,buffer);
@@ -145,7 +150,8 @@ namespace DB {
                     }
                     readStringBinary(action.function_name,buffer);
 
-                    action.function_builder = FunctionFactory::instance().get(action.function_name, context);
+                    //Context context = Context::createGlobal();
+                    action.function_builder = FunctionFactory::instance().get(action.function_name, *context);
 
                     //action.function will be create in ExpressionActions::addImpl
 
@@ -161,7 +167,7 @@ namespace DB {
                     action.function = action.function_builder->build(arguments);
                     action.result_type = action.function->getReturnType();
                     */
-
+                    break;
                 }
                 case ExpressionAction::COPY_COLUMN : {
                     readStringBinary(action.source_name ,buffer);
@@ -170,7 +176,7 @@ namespace DB {
                     readStringBinary(type,buffer);
                     action.result_type = createDataTypeFromString(type);
 
-
+                    break;
                 }
                 case ExpressionAction::PROJECT : {
                     int projectNum ;
@@ -182,7 +188,10 @@ namespace DB {
                         readStringBinary(second,buffer);
                         action.projection.push_back(std::pair<std::string,std::string>(first,second));
                     }
+                    break;
                 }
+                default:
+                    break;
             }
 
             actions->add(action); // will build funtion and convert sample_block

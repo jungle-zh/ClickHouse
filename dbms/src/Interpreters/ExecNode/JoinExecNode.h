@@ -16,11 +16,11 @@ class JoinExecNode : public ExecNode {
 
 public:
 
-    void  readPrefix() override;
-    void  readSuffix() override;
+    void  readPrefix() override ;
+    void  readSuffix() override {};
     Block read() override ;
-    Block getHeader () override;
-    Block getInputHeader() override { return  getHeader();};
+    Block getHeader (bool isAnalyze) override;
+    Block getInputHeader() override { return  getHeader(true);};
 
     virtual ~JoinExecNode() {}
     JoinExecNode(Names  & joinKey_ , Block & inputLeftHeader_ , Block & inputRightHeader_,
@@ -51,6 +51,8 @@ private:
 
     Settings settings ;
 
+    ASTTableJoin::Kind kind;
+    ASTTableJoin::Strictness strict;
 
 
 };

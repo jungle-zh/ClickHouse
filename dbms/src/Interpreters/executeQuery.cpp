@@ -407,7 +407,7 @@ void executeQuery(Context & context, std::string & query , bool internal){
 
     ParserQuery parser(end);
     ASTPtr ast;
-    size_t query_size;
+    //size_t query_size;
 
     /// Don't limit the size of internal queries.
     size_t max_query_size = 0;
@@ -422,7 +422,7 @@ void executeQuery(Context & context, std::string & query , bool internal){
         /// Copy query into string. It will be written to log and presented in processlist. If an INSERT query, string will not include data to insertion.
         if (!(begin <= ast->range.first && ast->range.second <= end))
             throw Exception("Unexpected behavior: AST chars range is not inside source range", ErrorCodes::LOGICAL_ERROR);
-        query_size = ast->range.second - begin;
+        //query_size = ast->range.second - begin;
     }
     catch (...)
     {

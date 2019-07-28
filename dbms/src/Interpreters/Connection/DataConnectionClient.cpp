@@ -76,9 +76,9 @@ namespace DB {
 
         if (!block_out)
         {
-            if (compression == Protocol::Compression::Enable)
-                maybe_compressed_out = std::make_shared<CompressedWriteBuffer>(*out, compression_settings);
-            else
+            //if (compression == Protocol::Compression::Enable)
+               // maybe_compressed_out = std::make_shared<CompressedWriteBuffer>(*out, compression_settings);
+            //else
                 maybe_compressed_out = out;
 
             block_out = std::make_shared<NativeBlockOutputStream>(*maybe_compressed_out, server_revision, block.cloneEmpty());

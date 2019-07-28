@@ -54,7 +54,7 @@ namespace ErrorCodes
 
 void TCPHandler::runImpl()
 {
-    connection_context = server.context();
+    connection_context = server->context();
     connection_context.setSessionContext(connection_context);
 
     Settings global_settings = connection_context.getSettings();
@@ -122,11 +122,11 @@ void TCPHandler::runImpl()
     while (1)
     {
         /// We are waiting for a packet from the client. Thus, every `POLL_INTERVAL` seconds check whether we need to shut down.
-        while (!static_cast<ReadBufferFromPocoSocket &>(*in).poll(global_settings.poll_interval * 1000000) && !server.isCancelled())
+        while (!static_cast<ReadBufferFromPocoSocket &>(*in).poll(global_settings.poll_interval * 1000000) && !server->isCancelled())
             ;
 
         /// If we need to shut down, or client disconnects.
-        if (server.isCancelled() || in->eof())
+        if (server->isCancelled() || in->eof())
             break;
 
         Stopwatch watch;
@@ -161,7 +161,7 @@ void TCPHandler::runImpl()
             state.maybe_compressed_in.reset();  /// For more accurate accounting by MemoryTracker.
 
             /// Processing Query
-            startReceiver();
+            //startReceiver();
             //state.io = executeQuery(state.query, query_context, false, state.stage);
             executeQuery(query_context,state.query);// will start result task and submit child task
 
@@ -517,8 +517,8 @@ void TCPHandler::receiveHello()
         if (packet_type == 'G' || packet_type == 'P')
         {
             writeString("HTTP/1.0 400 Bad Request\r\n\r\n"
-                "Port " + server.config().getString("tcp_port") + " is for clickhouse-client program.\r\n"
-                "You must use port " + server.config().getString("http_port") + " for HTTP.\r\n",
+                "Port " + server->config().getString("tcp_port") + " is for clickhouse-client program.\r\n"
+                "You must use port " + server->config().getString("http_port") + " for HTTP.\r\n",
                 *out);
 
             throw Exception("Client has connected to wrong port", ErrorCodes::CLIENT_HAS_CONNECTED_TO_WRONG_PORT);

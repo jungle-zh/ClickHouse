@@ -16,7 +16,9 @@ namespace DB {
 
         //DataReceiverInfo receiverInfo(destIp,destPort);
 
-        std::shared_ptr<Stage> resultStage = std::make_shared<Stage>();//set desc ip ,address ,query id
+        std::shared_ptr<Stage> resultStage = std::make_shared<Stage>(queryAnalyzer->jobId,queryAnalyzer->stageid++);//set desc ip ,address ,query id
+        resultStage->setReslutStage();
+
         std::shared_ptr<PlanNode> plan =  queryAnalyzer->analyse(&query);
         std::shared_ptr<PlanNode> result  = queryAnalyzer->addResultPlanNode(plan); // result planNode at top
 

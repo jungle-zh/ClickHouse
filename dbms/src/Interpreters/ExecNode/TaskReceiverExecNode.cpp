@@ -17,7 +17,8 @@ namespace DB {
         return  block;
     }
 
-    Block TaskReceiverExecNode::getHeader() {
+    Block TaskReceiverExecNode::getHeader(bool isAnalyze) {
+        (void) isAnalyze;
         return  buffer->front();
     }
 

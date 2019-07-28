@@ -12,6 +12,7 @@ namespace DB {
 
 class  ProjectPlanNode  : public  PlanNode {
 
+public:
     ProjectPlanNode(Block header_ ,std::shared_ptr<ExpressionActions> actions_){
         header = header_;
         actions = actions_;

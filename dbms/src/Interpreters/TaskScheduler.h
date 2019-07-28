@@ -26,6 +26,7 @@ public:
             std::vector<std::shared_ptr<TaskConnectionClient>> taskReceiver, std::shared_ptr<Stage> root);
 private:
 
+    void buildStageTask(std::shared_ptr<Stage> root);
     void submitStage(std::shared_ptr<Stage> root);
     void submitTask(Task & task);
 
@@ -33,7 +34,7 @@ private:
 
 
 
-    std::shared_ptr<TaskConnectionClient> createConnection(TaskReceiverInfo receiver );
+    std::shared_ptr<TaskConnectionClient> createConnection(TaskReceiverInfo receiver ){ (void) receiver; return std::shared_ptr<TaskConnectionClient> ();}
     //std::vector<TaskReceiverInfo> receivers;
 
     std::vector<TaskReceiverInfo> createTaskExecutorByScanDistribution(ScanDistribution * s);

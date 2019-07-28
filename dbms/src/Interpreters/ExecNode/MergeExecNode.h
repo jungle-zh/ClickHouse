@@ -26,11 +26,12 @@ public:
                   context(context_){
 
     }
+    ~MergeExecNode(){};
 
     void  readPrefix() override;
-    void  readSuffix() override;
+    void  readSuffix() override{};
     Block read() override ;
-    Block getHeader ()  override;
+    Block getHeader (bool  isAnalyze)  override;
     Block getInputHeader() override  { return inputHeader ;}
 
     void   serialize(WriteBuffer & buffer) ;
@@ -64,6 +65,9 @@ private:
     bool executed = false;
     BlocksList blocks;
     BlocksList::iterator it;
+
+    bool isCancelled();
+    bool isCancelledOrThrowIfKilled();
 };
 
 }

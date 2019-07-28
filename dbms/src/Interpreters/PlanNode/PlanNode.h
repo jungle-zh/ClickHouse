@@ -9,6 +9,7 @@
 #include <Core/Block.h>
 #include <Interpreters/Partition.h>
 #include <Interpreters/Settings.h>
+#include <Interpreters/Context.h>
 
 
 namespace DB {
@@ -25,14 +26,9 @@ public:
     using PlanNodePtr = std::shared_ptr<PlanNode>;
 public:
 
-    PlanNode(Settings  settings_ , Context * context_  ):settings(settings_),context(context_){
 
-    };
-    PlanNode(Settings   settings_  ):settings(settings_){
-
-    };
-    PlanNode();
-    virtual ~PlanNode();
+    PlanNode(){};
+    virtual ~PlanNode(){};
 
     //virtual void serialize(WriteBuffer & ostr) ;
     //virtual void deserialze(ReadBuffer & istr) ;
@@ -42,18 +38,18 @@ public:
       //  child->setFather(this);
     }
     //void setFather(PlanNode *father_){ father  = father_;}
-    void cleanChild();
+    void cleanChild(){ childs.clear();}
 
-    void setUnaryChild();
-    void setLeftChild();
-    void setRightChild();
+    void setUnaryChild(){};
+    void setLeftChild(){};
+    void setRightChild(){};
 
-    virtual  std::string  type();
+    virtual  std::string  type(){ return  "";};
     //virtual  Block getHeader();
-    virtual std::shared_ptr<ExecNode>  createExecNode() ;
-    std::string getName() ;
+    virtual std::shared_ptr<ExecNode>  createExecNode() { return  NULL;}
+    virtual std::string getName() { return  "PlanNode";}
 
-    Block getHeader() ;
+    virtual  Block getHeader() ;
 
 
 
@@ -70,8 +66,9 @@ public:
 
     void setDistribution(std::shared_ptr<Distribution>  distribution_) { distribution = distribution_ ;}
 protected:
-    Settings settings  ;
-    Context * context ;
+    //Context * context ;
+    //Settings settings  ;
+
     std::shared_ptr<Distribution> distribution;
 private:
 

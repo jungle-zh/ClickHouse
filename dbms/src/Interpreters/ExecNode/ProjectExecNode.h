@@ -22,10 +22,12 @@ public:
     }
 
     void serialize(WriteBuffer & buffer);
-    static  std::shared_ptr<ExecNode> deseralize(ReadBuffer & buffer);
+    static  std::shared_ptr<ExecNode> deseralize(ReadBuffer & buffer,Context * context);
 
+     void  readPrefix() override {};
+     void  readSuffix() override {};
     Block read() override;
-    Block getHeader() override;
+    Block getHeader(bool isAnalyze) override;
     Block getInputHeader() override;
 
     //NamesWithAliases projection;

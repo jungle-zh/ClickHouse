@@ -31,13 +31,13 @@ namespace DB {
     }
 
 
-    DataConnectionHandler::DataConnectionHandler(const Poco::Net::StreamSocket & socket_,IServer * server_)
+    DataConnectionHandler::DataConnectionHandler(const Poco::Net::StreamSocket & socket_,DataServer * server_)
             :Poco::Net::TCPServerConnection(socket_),
-             server(server_), connection_context(&server_->context()) {
+             server(server_), connection_context(server_->context()) {
 
         log = &Poco::Logger::get("DataConnectionHandler");
 
-        block_in = std::make_shared<NativeBlockInputStream>(std::make_shared<ReadBufferFromPocoSocket>(socket(),1));
+
         //block_out = std::make_shared<NativeBlockOutputStream>(std::make_shared<WriteBufferFromPocoSocket>(socket()),1);
 
     };
@@ -45,7 +45,7 @@ namespace DB {
 
     void DataConnectionHandler::runImpl() {
 
-        connection_context = &server->context();
+        connection_context = server->context();
         connection_context->setSessionContext(*connection_context);
 
         Settings global_settings = connection_context->getSettings();
@@ -54,11 +54,14 @@ namespace DB {
         socket().setSendTimeout(global_settings.send_timeout);
         socket().setNoDelay(true);
 
-        connection_context->setProgressCallback([this](const Progress &value) { return this->updateProgress(value); });
+        //connection_context->setProgressCallback([this](const Progress &value) { return this->updateProgress(value); });
 
 
         in = std::make_shared<ReadBufferFromPocoSocket>(socket());
         out = std::make_shared<WriteBufferFromPocoSocket>(socket());
+
+        UInt64 version = 1;
+        block_in = std::make_shared<NativeBlockInputStream>(*in,version);
 
         if (in->eof())
         {
@@ -208,10 +211,10 @@ namespace DB {
               */
             if (packet_type == 'G' || packet_type == 'P')
             {
-                writeString("HTTP/1.0 400 Bad Request\r\n\r\n"
-                            "Port " + server->config().getString("tcp_port") + " is for clickhouse-client program.\r\n"
-                                                                              "You must use port " + server->config().getString("http_port") + " for HTTP.\r\n",
-                            *out);
+               // writeString("HTTP/1.0 400 Bad Request\r\n\r\n"
+               //             "Port " + server->config().getString("tcp_port") + " is for clickhouse-client program.\r\n"
+               //                                                               "You must use port " + server->config().getString("http_port") + " for HTTP.\r\n",
+               //             *out);
 
                 throw Exception("Client has connected to wrong port", ErrorCodes::DATA_CLIENT_HAS_CONNECTED_TO_WRONG_PORT);
             }
@@ -248,7 +251,7 @@ namespace DB {
 
     void DataConnectionHandler::sendEndOfStream()
     {
-        state.sent_all_data = true;
+        //state.sent_all_data = true;
         writeVarUInt(Protocol::Server::EndOfStream, *out);
         out->next();
     }

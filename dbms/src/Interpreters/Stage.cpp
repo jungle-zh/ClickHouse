@@ -6,6 +6,7 @@
 #include <Interpreters/PlanNode/ResultPlanNode.h>
 #include <Common/typeid_cast.h>
 #include <Interpreters/PlanNode/AggPlanNode.h>
+#include <Interpreters/PlanNode/ScanPlanNode.h>
 #include <Interpreters/PlanNode/FilterPlanNode.h>
 #include <Interpreters/ExecNode/FilterExecNode.h>
 #include <Interpreters/PlanNode/JoinPlanNode.h>
@@ -54,9 +55,15 @@ namespace DB {
 
     }
     void Stage::buildTask() {
-        buildTaskSourceAndDest();
-        buildTaskExecNode();
 
+        buildTaskExecNode();
+        buildTaskSourceAndDest();
+
+
+
+    }
+    ScanPlanNode* Stage::getScanNode() {
+        return static_cast<ScanPlanNode * >(planNodes[planNodes.size()-1].get());
     }
 
     void Stage::buildTaskSourceAndDest() {
@@ -82,9 +89,10 @@ namespace DB {
 
                 auto task = std::make_shared<Task>() ;
 
+
                 ExechangeTaskDataSource source;
                 source.distributeKeys = getExechangeDistribution()->distributeKeys;
-                for(size_t j ;j< childs.size(); ++j){
+                for(size_t j=0 ;j< childs.size(); ++j){
 
                     for(std::string taskId : childStageToTask[childs[j]->stageId]){
                         source.inputTaskIds.push_back(taskId);   // one2one maybe only one input
@@ -106,14 +114,24 @@ namespace DB {
                     // no dest ,fill buffer and wait to be consumed
                     ExechangeTaskDataDest dest ;
                     dest.isResult = true;
-                }
+                    task->setResultTask();
+                    task->setExechangeDest(dest);
 
+                }
+                task->setExecNodes(execNodes);
                 tasks.insert({i,task});
             }
 
         } else if(!exechangeDistribution && scanDistribution){
 
             assert(!isResultStage());
+
+            std::map<int,ScanPartition> scanPartitions ;
+            for (int i = 0; i < getScanDistribution()->partitionNum; ++i) {
+                scanPartitions.insert({i,getScanDistribution()->scanPartitions[i]});
+            }
+
+
             for (int i = 0; i < getPartitionNum(); ++i) {
                 auto task = std::make_shared<Task>();
                 ExechangeTaskDataDest dest ;
@@ -122,8 +140,18 @@ namespace DB {
                 dest.receiverInfo =  father->getExechangeDistribution()->receiverInfo;
                 task->setExechangeDest(dest);
 
+                ScanTaskDataSource source1;
+                source1.distributeKeys  = getScanDistribution()->distributeKeys;
+                source1.partition = scanPartitions[i]; // same partitionId;
+
+                task->setScanSource(source1);
+
+
+                task->setExecNodes(execNodes);
+                task->setScanTask();
                 tasks.insert({i,task});
             }
+
         } else { // have scan and exechange
 
 
@@ -176,8 +204,11 @@ namespace DB {
 
                     ExechangeTaskDataDest dest ;
                     dest.isResult = true;
+                    task->setResultTask();
+                    task->setExechangeDest(dest);
                 }
-
+                task->setExecNodes(execNodes);
+                task->setScanTask();
                 tasks.insert({i,task});
             }
         }

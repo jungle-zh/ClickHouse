@@ -10,6 +10,18 @@ namespace DB {
 
 class FromClauseNode : public PlanNode {
 
+public:
+    FromClauseNode(){};
+    ~FromClauseNode(){
+
+    }
+    Block getHeader() override{
+        return  getChild(0)->getHeader();
+    }
+    std::string getName() override{
+        return  "fromClauseNode";
+    }
+
 };
 
 

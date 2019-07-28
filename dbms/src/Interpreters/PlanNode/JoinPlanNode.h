@@ -21,7 +21,13 @@ public:
     std::string joinKind;
     std::string  strictness;
 
-    JoinPlanNode(Names joinKey_, Block inputLeftHeader_ , Block inputRightHeader, std::string joinKind, std::string strictness);
+    JoinPlanNode(Names joinKey_, Block inputLeftHeader_ , Block inputRightHeader_, std::string joinKind_, std::string strictness_){
+        joinKeys= joinKey_;
+        inputLeftHeader = inputLeftHeader_;
+        inputRightHeader = inputRightHeader_;
+        joinKind = joinKind_;
+        strictness = strictness_;
+    }
 
     std::shared_ptr<ExecNode> createExecNode() override;
 

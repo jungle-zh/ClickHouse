@@ -16,7 +16,7 @@ class TaskOutputStream {  //
 
 
 
-private:
+public:
     void  writeTaskSource(ExechangeTaskDataSource source);
     void  writeTaskDest(ExechangeTaskDataDest dest);
     void  writeExecNode(std::shared_ptr<ExecNode> ndoe);

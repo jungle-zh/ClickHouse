@@ -21,16 +21,18 @@ private:
     NamesAndTypesList aggregationKeys;
     NamesAndTypesList aggregateColumns;
     AggregateDescriptions  aggregateDescriptions ;
+    Context * context ;
 
 
 public:
     AggPlanNode(Block & inputHeader_ ,ExpressionActionsPtr & expressionActions_,
-                NamesAndTypesList & aggKeys_ , NamesAndTypesList & aggColumns_, AggregateDescriptions & desc_ )
+                NamesAndTypesList & aggKeys_ , NamesAndTypesList & aggColumns_, AggregateDescriptions & desc_ ,Context * context_)
     :inputHeader(inputHeader_),
      actions(expressionActions_),
      aggregationKeys(aggKeys_),
      aggregateColumns(aggColumns_),
-     aggregateDescriptions(desc_){
+     aggregateDescriptions(desc_),
+     context(context_){
 
 
     }

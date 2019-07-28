@@ -16,10 +16,12 @@ public:
     TaskReceiverExecNode( std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer_){
         buffer = buffer_;
     }
-    virtual  ~TaskReceiverExecNode(){};
+    ~TaskReceiverExecNode(){};
     std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer;
+    void  readPrefix() override{};
+    void  readSuffix() override{};
     Block read() override ;
-    Block getHeader() override  ;
+    Block getHeader(bool isAnalyze) override  ;
     Block getInputHeader() override ;
 
 };

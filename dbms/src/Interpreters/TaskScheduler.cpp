@@ -12,6 +12,7 @@ namespace DB {
     void TaskScheduler::applyResourceAndSubmitStage(std::shared_ptr<Stage> root) {
 
         assignDataReciver(root);// stage 的 task receiver 个数 和 stage partitonNum 一样,每个 task 启动的
+        buildStageTask(root);
         submitStage(root);                      // data receiver 个数 和 child stage 个数一样
     }
 
@@ -21,10 +22,18 @@ namespace DB {
         //std::vector<Partition> parts;
         if (root->scanDistribution && !root->exechangeDistribution) {  // stage with scanNode , data all come from table
 
-            ScanPlanNode *scanPlanNode = root->getScanNode();
+            // no data receiver
+            ScanPlanNode * scanPlanNode = root->getScanNode();
             scanPlanNode->buildFullDistribution();
             root->setScanDistribution(scanPlanNode->getDistribution());
 
+            std::vector<std::shared_ptr<TaskConnectionClient>> taskClients = applyTaskReceiverForStageScanPart(root);
+
+            assert(taskClients.size() ==  (size_t)root->getPartitionNum());
+            for (int i = 0; i < root->getPartitionNum(); ++i) {
+                taskToConnection[root->getTaskId(i)] = taskClients[i];
+            }
+            // do not need for dataReceiver ;
 
         } else if (root->scanDistribution && root->exechangeDistribution) { // has scan table and exechange input
 
@@ -33,26 +42,43 @@ namespace DB {
             root->setScanDistribution(scanPlanNode->getDistribution());
 
             assert(root->getExechangeDistribution()->equals(*(root->getScanDistribution())));
-            std::vector<std::shared_ptr<TaskConnectionClient>> taskClients = applyTaskReceiverForStageScanPart(root);
-             applyDataReceiverForStageExechangePart(taskClients, root);
+            std::vector<std::shared_ptr<TaskConnectionClient>> taskReceiver = applyTaskReceiverForStageScanPart(root);// scan node and receiver node in the same server
+            assert(taskReceiver.size() ==  (size_t)root->getPartitionNum());
+
+            for (int i = 0; i < root->getPartitionNum(); ++i) {
+                taskToConnection[root->getTaskId(i)] = taskReceiver[i];
+            }
+             applyDataReceiverForStageExechangePart(taskReceiver, root);
 
 
         } else if (root->exechangeDistribution && root->isResultStage()) {
 
             assert(root->getExechangeDistribution()->partitionNum == 1);
             std::map<int,ExechangePartition> & parts = root->getExechangeDistribution()->partitionInfo;
-
+            std::map<int,DataReceiverInfo> & receiver = root->getExechangeDistribution()->receiverInfo;
             // receiver is local TCPHandler ;
             //std::map<int,DataReceiverInfo> & receiver = root->getExechangeDistribution()->receiverInfo;
 
-            parts[0].exechangeType = DataExechangeType::tresult;
+            ExechangePartition exechangePartition;
+            exechangePartition.exechangeType = DataExechangeType::tresult;
 
 
             for(auto child : root->getChildStages()){
                 std::vector<std::string > childTasks =  child->getTaskIds() ;
-                parts[0].childTaskIds.insert(parts[0].childTaskIds.end(),childTasks.begin(),childTasks.end());
+                for(auto taskid : childTasks){
+                    exechangePartition.childTaskIds.push_back(taskid);
+                }
             }
-            parts[0].partitionId = 0 ;
+            exechangePartition.mainTableChildStageId  = root->mainintTableChildStageId;
+            exechangePartition.partitionId = 0 ;
+            parts.insert({0,exechangePartition});
+
+            DataReceiverInfo dataReceiverInfo ;
+            dataReceiverInfo.ip = "localhost"; // result task
+            dataReceiverInfo.dataPort = 5000;
+
+            receiver.insert({0,dataReceiverInfo});
+
 
             root->getExechangeDistribution()->isPartitionTaskAssigned = true;
 
@@ -60,6 +86,11 @@ namespace DB {
 
             std::vector<std::shared_ptr<TaskConnectionClient>> taskReceiver = applyTaskReceiverForStageExechangePart(
                     root);
+            assert(taskReceiver.size() ==  (size_t)root->getPartitionNum());
+
+            for (int i = 0; i < root->getPartitionNum(); ++i) {
+                taskToConnection[root->getTaskId(i)] = taskReceiver[i];
+            }
              applyDataReceiverForStageExechangePart(taskReceiver, root);
 
         } else {
@@ -81,8 +112,9 @@ namespace DB {
 
         std::vector<std::shared_ptr<TaskConnectionClient>> ret;
         std::vector<TaskReceiverInfo> receivers = createTaskExecutorByScanDistribution(root->getScanDistribution());
+        assert(receivers.size() == size_t (root->getPartitionNum()));
         for (int i = 0; i < root->getPartitionNum(); ++i) {
-            TaskReceiverInfo rec = receivers[++receiverIndex % totalReceiverNum];
+            TaskReceiverInfo rec = receivers[i];
             std::shared_ptr<TaskConnectionClient> conn = createConnection(rec);
             ret.push_back(conn);
         }
@@ -95,8 +127,9 @@ namespace DB {
 
         std::vector<TaskReceiverInfo> receivers = createTaskExecutorByExechangeDistribution(root->getExechangeDistribution());
         std::vector<std::shared_ptr<TaskConnectionClient>> ret;
-        for (int i = 0; i < root->getExechangeDistribution()->partitionNum; ++i) {
-            TaskReceiverInfo rec = receivers[++receiverIndex % totalReceiverNum];
+        assert(receivers.size() == size_t (root->getPartitionNum()));
+        for (int i = 0; i < root->getPartitionNum(); ++i) {
+            TaskReceiverInfo rec = receivers[i];
             std::shared_ptr<TaskConnectionClient> conn = createConnection(rec);
             ret.push_back(conn);
         }
@@ -106,10 +139,12 @@ namespace DB {
     }
 
     std::vector<TaskReceiverInfo> TaskScheduler::createTaskExecutorByScanDistribution(DB::ScanDistribution *s) {
+        (void)(s);
         return   std::vector<TaskReceiverInfo>();
     }
 
     std::vector<TaskReceiverInfo> TaskScheduler::createTaskExecutorByExechangeDistribution(DB::ExechangeDistribution *e) {
+        (void)(e);
         return   std::vector<TaskReceiverInfo>();
     }
 
@@ -122,9 +157,7 @@ namespace DB {
 
         for (int i = 0; i < root->getPartitionNum(); ++i) {
 
-            std::shared_ptr<TaskConnectionClient> conn = taskClients[i];
-
-            DataReceiverInfo receiverInfo = conn->applyResource(root->getTaskId(i)); // receiver for the  partition crrespond task
+            DataReceiverInfo receiverInfo = taskClients[i]->applyResource(root->getTaskId(i)); // receiver for the  partition crrespond task
             receiver.insert({i,receiverInfo});
 
             for(auto child : root->getChildStages()){
@@ -142,21 +175,29 @@ namespace DB {
             }
             parts[i].mainTableChildStageId = root->mainintTableChildStageId;
 
-            taskToConnection[root->getTaskId(i)] = conn;
+            //taskToConnection[root->getTaskId(i)] = conn;
         }
         //root->getExechangeDistribution()->setExechangePartitions(parts);
 
 
     }
 
+    void TaskScheduler::buildStageTask(std::shared_ptr<DB::Stage> root) {
+
+        root->buildTask(); //set executor in partition
+
+
+        for (auto child : root->getChildStages()) {
+
+            buildStageTask(child);
+        }
+    }
 
     void TaskScheduler::submitStage(std::shared_ptr<DB::Stage> root) {
 
         //assert(root->getExechangeSender()->getDistribution()->isPartitionAssigned);
         //assert(root->getExechangeReceiver()->getDistribution()->isPartitionAssigned);
 
-
-        root->buildTask(); //set executor in partition
 
         for (auto task : root->getTasks()) {
             submitTask(*task.second);
@@ -173,14 +214,26 @@ namespace DB {
     void TaskScheduler::submitTask(Task &task) {
 
 
-        if(!task.getExecDest().isResult) {
+        if(task.isScanTask()) {  //
+
+           // task.getScanSource().partition.info;
             try {
                 taskToConnection[task.getTaskId()]->sendTask(task);  // task  desc and source exechange  already build , remote task server and data server already start
             } catch (Exception e) {
 
             }
+
+
+        } else if(task.isResultTask()) {
+             //handler->startResultTask(task);
+
         } else {
-             handler->startResultTask(task);
+
+            try {
+                taskToConnection[task.getTaskId()]->sendTask(task);  // task  desc and source exechange  already build , remote task server and data server already start
+            } catch (Exception e) {
+
+            }
         }
 
 
@@ -190,7 +243,7 @@ namespace DB {
 
     void TaskScheduler::checkTaskStatus(std::string taskId) {
 
-
+        (void)taskId;
     }
 
 

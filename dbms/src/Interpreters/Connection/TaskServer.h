@@ -25,6 +25,7 @@ namespace DB {
         void start() {
             server->start();
         }
+        Context * context();
         bool  isCancelled();
         DataReceiverInfo  applyResource();
 

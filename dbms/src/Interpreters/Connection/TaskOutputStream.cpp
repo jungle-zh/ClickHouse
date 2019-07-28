@@ -59,19 +59,19 @@ namespace DB {
 
     }
     void  TaskOutputStream::write(std::vector<std::shared_ptr<ExecNode>> execnodes) {
-
+        (void)(execnodes);
 
 
     }
 
     void  TaskOutputStream::write(ExechangeTaskDataSource & source){
-
+        (void)(source);
     }
     void  TaskOutputStream::write(ExechangeTaskDataDest & dest){
-
+        (void)(dest);
     }
     void  TaskOutputStream::write(ScanTaskDataSource & source){
-
+        (void)(source);
     }
 
 

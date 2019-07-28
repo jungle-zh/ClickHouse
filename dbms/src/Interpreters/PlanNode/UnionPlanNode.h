@@ -11,7 +11,7 @@ class UnionPlanNode :public  PlanNode{
 
 public:
 
-    UnionPlanNode();
+    UnionPlanNode(){};
 
 
 

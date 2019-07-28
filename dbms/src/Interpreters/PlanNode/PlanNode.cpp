@@ -6,9 +6,10 @@
 namespace DB {
 
     Block PlanNode::getHeader() {
+
         std::shared_ptr<ExecNode> execNode =  createExecNode();
         execNode->readPrefix();
-        return  execNode->getHeader();
+        return  execNode->getHeader(true);
     }
 
 
