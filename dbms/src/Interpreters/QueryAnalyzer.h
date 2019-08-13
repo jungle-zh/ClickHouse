@@ -71,6 +71,8 @@ namespace DB {
          Context * context ;
          std::string jobId;
          int stageid;
+
+        void  collectUsedColumns( IAST *  query,std::set<std::string>  & usedColumns);
     };
 
 

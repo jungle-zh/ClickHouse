@@ -70,7 +70,7 @@ std::unique_ptr<IInterpreter> InterpreterFactory::get(ASTPtr & query, Context & 
     }
     else if (typeid_cast<ASTSelectWithUnionQuery *>(query.get()))
     {
-       // return std::make_unique<InterpreterSelectWithUnionQuery>(query, context, Names{}, stage);
+        //return std::make_unique<InterpreterSelectWithUnionQuery>(query, context, Names{}, stage); // origin
         return  std::make_unique<InterpreterSelectQueryNew>(query,&context);
     }
     else if (typeid_cast<ASTInsertQuery *>(query.get()))

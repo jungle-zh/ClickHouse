@@ -15,8 +15,11 @@ Block materializeBlock(const Block & block)
     {
         auto & element = res.getByPosition(i);
         auto & src = element.column;
-        if (ColumnPtr converted = src->convertToFullColumnIfConst())
-            src = converted;
+        if(src){
+            if (ColumnPtr converted = src->convertToFullColumnIfConst())
+                src = converted;
+        }
+
     }
 
     return res;

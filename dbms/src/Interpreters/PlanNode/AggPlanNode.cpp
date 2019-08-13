@@ -18,7 +18,8 @@ namespace DB {
                 aggregateColumns,
                 aggregateDescriptions,
                 actions,
-                context
+                context,
+                final
                 );
 
         return   aggExecNode ;

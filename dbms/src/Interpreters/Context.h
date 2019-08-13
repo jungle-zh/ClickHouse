@@ -13,6 +13,7 @@
 #include <Interpreters/Settings.h>
 #include <Interpreters/ClientInfo.h>
 #include <IO/CompressionSettings.h>
+#include <Interpreters/Connection/DataConnectionHandlerFactory.h>
 
 
 namespace Poco
@@ -94,6 +95,7 @@ private:
     Shared shared;
 
     std::shared_ptr<IRuntimeComponentsFactory> runtime_components_factory;
+    //std::shared_ptr<DataConnectionHandlerFactory> data_connection_handler_factory;
 
     ClientInfo client_info;
 
@@ -390,6 +392,8 @@ public:
 
     /// User name and session identifier. Named sessions are local to users.
     using SessionKey = std::pair<String, String>;
+
+    //DB::DataConnectionHandlerFactory *getDataConnectionHandlerFactory() { return  data_connection_handler_factory.get();}
 
 private:
     /** Check if the current client has access to the specified database.

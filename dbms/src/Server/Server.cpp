@@ -24,6 +24,7 @@
 #include <Interpreters/DDLWorker.h>
 #include <Interpreters/ProcessList.h>
 #include <Interpreters/loadMetadata.h>
+#include <Interpreters/Connection/TaskConnectionHandlerFactory.h>
 #include <Storages/StorageReplicatedMergeTree.h>
 #include <Storages/System/attachSystemTables.h>
 #include <AggregateFunctions/registerAggregateFunctions.h>
@@ -508,6 +509,13 @@ int Server::main(const std::vector<std::string> & /*args*/)
 
         for (auto & server : servers)
             server->start();
+
+        //std::unique_ptr<TaskConnectionHandlerFactory> taskHandlerFactory = std::make_unique<TaskConnectionHandlerFactory>();
+        //std::unique_ptr<TaskServer> taskServer = std::make_unique<TaskServer>(taskHandlerFactory.get(),6000,&context());
+        TaskConnectionHandlerFactory * taskHandlerFactory = new TaskConnectionHandlerFactory();
+        TaskServer * taskServer = new TaskServer(taskHandlerFactory,6000,&context());
+        taskHandlerFactory->setTaskServer(taskServer);
+        taskServer->start();
 
         main_config_reloader->start();
         users_config_reloader->start();

@@ -25,6 +25,7 @@ public:
     static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer,Context * context) ;
 
     std::shared_ptr<ExpressionActions> expression ;
+    std::string getName() override { return  "expressionExecNode";}
 
 };
 

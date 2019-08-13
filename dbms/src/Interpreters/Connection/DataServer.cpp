@@ -5,20 +5,28 @@
 #include "DataServer.h"
 #include <Interpreters/DataReceiver.h>
 #include <Interpreters/Connection/DataConnectionHandlerFactory.h>
+#include <Interpreters/Connection/DataConnectionHandler.h>
 
 
 namespace DB {
 
 
-    DataServer::DataServer(int port):
-            portNum(port){
-        connectionFactory = std::make_unique<DataConnectionHandlerFactory>(this);
-        server = std::make_unique<Poco::Net::TCPServer>(connectionFactory.get(),portNum);
+    DataServer::DataServer(UInt32 port,Context * context,Task * task_):
+    portNum(port){
+            context_ = context;
+            connectionFactory = new DataConnectionHandlerFactory();
 
-        //connectionFactory->setServer(this);
-
+            server = std::make_unique<Poco::Net::TCPServer>(connectionFactory,portNum);
+            static_cast<DataConnectionHandlerFactory *>(connectionFactory)->setDataServer(this);
+        task = task_;
+        log = &Logger::get("DataReceiver");
     }
 
+    void DataServer::addConnection(DataConnectionHandler * conn) {
+        connections_.insert({conn->childTaskId(),conn}) ;
+        task->addChildTask(conn->childTaskId());
+        LOG_INFO(log,"task :" + task->getTaskId() + " receive data connection from child task :" +  conn->childTaskId());
+    }
 
 
 }

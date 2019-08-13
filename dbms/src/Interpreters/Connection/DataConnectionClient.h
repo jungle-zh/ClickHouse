@@ -11,12 +11,14 @@
 #include <DataStreams/IBlockOutputStream.h>
 #include <IO/ConnectionTimeouts.h>
 #include <IO/CompressionSettings.h>
+#include <common/ThreadPool.h>
 
 namespace DB {
 
 
 
 
+    class  Task;
     class DataConnectionClient {
 
 
@@ -25,11 +27,12 @@ namespace DB {
     public:
 
 
-        DataConnectionClient(std::string ip_, UInt32  port_){
+        DataConnectionClient(std::string ip_, UInt32  port_,Task * task_ ):resolved_address(ip_,port_){
 
             ip = ip_;
             port = port_;
             log = &Poco::Logger::get("DataConnectionClient");
+            task = task_;
             //settings = settings_;
             //compression_settings =  CompressionSettings(settings) ;
         }
@@ -63,13 +66,15 @@ namespace DB {
         void sendHello(std::string taskId,int partionId); // send taskId(include stageId)
         void receiveHello();
         int  stageId ;
-
+        void startListen();
         void listen();
 
         std::thread  listener; // listen remote command
 
         Poco::Logger * log;
         bool stopSend = true;
+        Task * task;
+        ThreadPool pool{1};
 
     };
 

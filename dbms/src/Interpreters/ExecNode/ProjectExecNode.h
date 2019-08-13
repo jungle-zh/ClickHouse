@@ -33,6 +33,7 @@ public:
     //NamesWithAliases projection;
     std::shared_ptr<ExpressionActions> actions ;
     Block inputHeader ;
+    std::string getName() override { return  "projectExecNode";}
     //Block header ;
 };
 

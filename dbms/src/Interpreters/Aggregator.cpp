@@ -672,7 +672,7 @@ bool Aggregator::executeOnBlock(const Block & block, AggregatedDataVariants & re
     /// Remember the columns we will work with
     for (size_t i = 0; i < params.keys_size; ++i)
     {
-        key_columns[i] = block.safeGetByPosition(params.keys[i]).column.get();
+        key_columns[i] = block.safeGetByPosition(params.keys[i]).column.get();// todo keys range out of block
 
         if (ColumnPtr converted = key_columns[i]->convertToFullColumnIfConst())
         {
@@ -1166,7 +1166,7 @@ Block Aggregator::prepareBlockAndFill(
     MutableColumns final_aggregate_columns(params.aggregates_size);
     AggregateColumnsData aggregate_columns_data(params.aggregates_size);
 
-    Block header = getHeader(final);
+    Block header = getHeader(final, true);
 
     for (size_t i = 0; i < params.keys_size; ++i)
     {

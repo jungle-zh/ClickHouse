@@ -23,6 +23,7 @@
 #include <Interpreters/ProcessList.h>
 #include <Interpreters/QueryLog.h>
 #include <Interpreters/executeQuery.h>
+#include "InterpreterSelectQueryNew.h"
 
 
 namespace ProfileEvents
@@ -394,7 +395,7 @@ BlockIO executeQuery(
     std::tie(std::ignore, streams) = executeQueryImpl(query.data(), query.data() + query.size(), context, internal, stage);
     return streams;
 }
-void executeQuery(Context & context, std::string & query , bool internal){
+    std::shared_ptr<InterpreterSelectQueryNew> executeQuery(Context & context, std::string & query , bool internal){
 
     char * begin = query.data();
     char * end = query.data() + query.size();
@@ -437,8 +438,11 @@ void executeQuery(Context & context, std::string & query , bool internal){
         throw;
     }
 
-    auto interpreter = InterpreterFactory::get(ast, context);
+    //auto interpreter = InterpreterFactory::get(ast, context);
+    //return interpreter->execute();
+    auto  interpreter = std::make_shared<InterpreterSelectQueryNew>(ast,&context);
     interpreter->execute();
+    return  interpreter;
 }
 
 void executeQuery(

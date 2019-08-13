@@ -25,6 +25,7 @@ public:
                   aggregateDescriptions(aggregateDescriptions_),
                   context(context_){
 
+        executed = false;
     }
     ~MergeExecNode(){};
 
@@ -39,6 +40,7 @@ public:
     void  serializeAggDesc(WriteBuffer & buffer);
     static AggregateDescriptions deserializeAggDesc (ReadBuffer & buffer);
 
+    std::string getName() override { return  "mergeExecNode";}
 private:
 
 

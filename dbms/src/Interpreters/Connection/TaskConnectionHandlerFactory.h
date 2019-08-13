@@ -19,10 +19,13 @@ namespace DB {
 
 
     public:
-        explicit TaskConnectionHandlerFactory( TaskServer * server_,bool secure_ = false)
-                : server(server_), log(&Logger::get(std::string("TCP") + (secure_ ? "S" : "") + "HandlerFactory")) {
-        }
+        TaskConnectionHandlerFactory(){
+            log  = &Logger::get("TaskConnectionHandlerFactory");
+        };
 
+        void setTaskServer(TaskServer * server_) {
+            server  = server_;
+        }
 
         Poco::Net::TCPServerConnection * createConnection(const Poco::Net::StreamSocket & socket) override ;
 

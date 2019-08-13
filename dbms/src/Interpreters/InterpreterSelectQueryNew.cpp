@@ -16,7 +16,7 @@ namespace DB {
 
         //DataReceiverInfo receiverInfo(destIp,destPort);
 
-        std::shared_ptr<Stage> resultStage = std::make_shared<Stage>(queryAnalyzer->jobId,queryAnalyzer->stageid++);//set desc ip ,address ,query id
+        std::shared_ptr<Stage> resultStage = std::make_shared<Stage>(queryAnalyzer->jobId,queryAnalyzer->stageid++,context);//set desc ip ,address ,query id
         resultStage->setReslutStage();
 
         std::shared_ptr<PlanNode> plan =  queryAnalyzer->analyse(&query);
@@ -25,14 +25,20 @@ namespace DB {
         queryAnalyzer->normilizePlanTree(result);
         queryAnalyzer->addExechangeNode(result);
 
-        queryAnalyzer->removeUnusedMergePlanNode(result);
+        queryAnalyzer->removeUnusedMergePlanNode(result); // single node tree
 
-        queryAnalyzer->splitStageByExechangeNode(result,resultStage);
+        //todo
+        /*
+        if(onlyOneStage(result)){
+            addUnionToSplitStage(result);
+        }
+        */
+        queryAnalyzer->splitStageByExechangeNode(result,resultStage); // single node tree to distribute task
+
 
         taskScheduler->applyResourceAndSubmitStage(resultStage);
-
-            BlockIO io;
-            return  io;
+        auto io =    taskScheduler->getBlockIO();
+        return   io;
 
     }
 

@@ -43,24 +43,28 @@ namespace DB {
         bool isCancelledOrThrowIfKilled() { return false;}
         bool isCancelled(){ return false;}
 
-        AggExecNode(){};
+        AggExecNode(){
+            executed = false;
+        };
 
 
 
         AggExecNode(Block & inputHeader_ , NamesAndTypesList & aggkeys_ ,  NamesAndTypesList & aggColumn_,
-                    AggregateDescriptions & desc_ ,ExpressionActionsPtr & actions_ ,Context * context_ ):
+                    AggregateDescriptions & desc_ ,ExpressionActionsPtr & actions_ ,Context * context_ , bool final_ ):
                     inputHeader(inputHeader_),
                     aggregationKeys(aggkeys_),
                     aggregateColumns(aggColumn_),
                     aggregateDescriptions(desc_),
                     actions(actions_),
                     context(context_),
-                    settings(context_->getSettingsRef())
+                    settings(context_->getSettingsRef()),
+                    final(final_)
 
                     {
+                        executed = false;
                     }
         AggExecNode(AggPlanNode * planNode);
-
+        std::string getName() override { return  "aggExecNode";}
 
     private:
 
@@ -77,7 +81,6 @@ namespace DB {
         ExpressionActionsPtr actions;
         //ExpressionActions actions;
 
-        bool  final;
 
         std::unique_ptr<Aggregator::Params> params;
         std::unique_ptr<Aggregator> aggregator;
@@ -85,7 +88,7 @@ namespace DB {
 
         Context * context;
         Settings  settings  ;
-
+        bool  final;
 
 
         std::vector<std::unique_ptr<TemporaryFileStream>> temporary_inputs;

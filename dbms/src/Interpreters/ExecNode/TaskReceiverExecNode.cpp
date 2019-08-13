@@ -3,7 +3,9 @@
 //
 
 
+#include <common/logger_useful.h>
 #include "TaskReceiverExecNode.h"
+#include <Interpreters/Task.h>
 
 
 namespace DB {
@@ -12,8 +14,15 @@ namespace DB {
 
     Block TaskReceiverExecNode::read() {
 
+
         Block block;
         buffer->pop(block); // will block if buffer empty
+        if(!block){
+            LOG_DEBUG(log,"task: "+ task->getTaskId() + " received all child task data");
+        } else {
+            LOG_DEBUG(log,"task: "+ task->getTaskId() + " received block row size:"  << block.rows() );
+        }
+
         return  block;
     }
 

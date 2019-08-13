@@ -19,8 +19,10 @@ class DataSender {
 
 public:
 
-    DataSender(ExechangeTaskDataDest &  dest_ ){
+    DataSender(ExechangeTaskDataDest &  dest_ ,Task * task_ ){
          dest  = dest_;
+         task = task_;
+         log =  &Logger::get("DataSender");
     }
 
     ExechangeTaskDataDest dest;
@@ -41,7 +43,7 @@ public:
 
     Task * task ;
 
-    //Poco::Logger * log;
+    Poco::Logger * log;
 
 
 };

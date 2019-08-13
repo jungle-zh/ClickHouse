@@ -13,21 +13,25 @@ namespace DB {
 class ScanPlanNode : public PlanNode {
 
 public:
-    ScanPlanNode(std::string dbName_ ,std::string tableName_){
+    ScanPlanNode(std::string dbName_ ,std::string tableName_ ,std::set<std::string> required_column_, std::string query_, Context *context_){
         dbName = dbName_;
         tableName = tableName_;
+        required_column = required_column_;
+        query = query_;
+        context  = context_;
     }
 
 public:
     void init();
     Block getHeader() override;
+    std::shared_ptr<ExecNode>  createExecNode() override;
     void buildBaseDistribution(){
         std::vector<std::string> keys;
         if(tableName == "stu"){
             partitionNum = 2;
             keys.push_back("name");
         } else if(tableName == "score"){
-            partitionNum = 3;
+            partitionNum = 1;
             keys.push_back("name");
         } else{
             partitionNum = 1 ;
@@ -58,7 +62,9 @@ private:
     std::string dbName ;
     std::string tableName;
     std::vector<std::string> hosts;
-
+    std::set<std::string> required_column ;
+    std::string query;
+    Context * context ;
 
 };
 

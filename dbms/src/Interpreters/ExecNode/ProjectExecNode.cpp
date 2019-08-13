@@ -20,7 +20,8 @@ namespace  DB {
     Block ProjectExecNode::read() {
 
         Block block = children->read();
-        actions->execute(block);
+        if(block)
+            actions->execute(block);
         return block;
     }
     Block ProjectExecNode::getHeader(bool isAnalyze) {

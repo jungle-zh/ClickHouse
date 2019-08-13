@@ -48,7 +48,7 @@ public:
     void   serialize(WriteBuffer & buffer) ;
     static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer ,Context * context) ;
 
-
+    std::string getName() override { return  "filterExecNode";}
 
 };
 

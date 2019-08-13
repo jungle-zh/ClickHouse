@@ -36,6 +36,7 @@ public:
     virtual void  readSuffix() = 0;
     virtual Block getHeader (bool isAnalyze) = 0;
     virtual Block getInputHeader() = 0;
+    virtual std::string getName() { return  "execNode";}
     static void serializeExpressActions( ExpressionActions & actions,WriteBuffer & buffer );
 
     static std::shared_ptr<ExpressionActions> deSerializeExpressActions( ReadBuffer & buffer,Context * context);

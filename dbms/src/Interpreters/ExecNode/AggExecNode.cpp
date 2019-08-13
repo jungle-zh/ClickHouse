@@ -47,9 +47,9 @@ namespace DB {
 
     void AggExecNode::serializeAggDesc(WriteBuffer & buffer){
 
-        int descNum = aggregateDescriptions.size();
+        size_t descNum = aggregateDescriptions.size();
         writeVarUInt(descNum,buffer);
-        for(int i=0;i<descNum ; ++i){
+        for(size_t i=0;i<descNum ; ++i){
 
             writeStringBinary(aggregateDescriptions[i].function_name,buffer);
             writeVarUInt(aggregateDescriptions[i].argument_types.size(),buffer);

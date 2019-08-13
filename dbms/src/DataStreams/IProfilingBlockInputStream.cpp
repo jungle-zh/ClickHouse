@@ -78,8 +78,10 @@ Block IProfilingBlockInputStream::read()
     if (res)
     {
         Block header = getHeader();
-        if (header)
-            assertBlocksHaveEqualStructure(res, header, getName());
+        if (header){
+           // assertBlocksHaveEqualStructure(res, header, getName());
+        }
+
     }
 #endif
 

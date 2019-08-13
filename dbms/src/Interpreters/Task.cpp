@@ -14,6 +14,35 @@
 namespace DB {
 
 
+    Task::Task(std::string taskId_, Context *context_) {
+        taskId = taskId_;
+        log = &Logger::get("Task");
+        context = context_;
+        buffer = std::make_shared<ConcurrentBoundedQueue<Block>> ();
+    };
+    Task::Task(DB::ExechangeTaskDataSource source, DB::ScanTaskDataSource source1, DB::ExechangeTaskDataDest dest,
+               std::vector<std::shared_ptr<DB::ExecNode>> nodes, std::string taskId_,Context * context_) {
+
+        exechangeTaskDataSource = source;
+        scanTaskDataSource = source1;
+        exechangeTaskDataDest = dest;
+        execNodes  = nodes;
+        taskId  = taskId_;
+        log = &Logger::get("Task");
+        context = context_;
+        std::shared_ptr<ExecNode> tmp = NULL;
+        for(size_t i=0 ;i<nodes.size(); ++i){
+            if(!tmp){
+                tmp = nodes[i];
+                root = tmp;
+            } else{
+                tmp->setChild(nodes[i]);
+                tmp = nodes[i];
+            }
+        }
+        buffer = std::make_shared<ConcurrentBoundedQueue<Block>> ();
+    }
+
     void Task::setExechangeDest(ExechangeTaskDataDest & dest ) {
         exechangeTaskDataDest = dest ;
 
@@ -28,19 +57,46 @@ namespace DB {
         //exechangeTaskDataSources.insert({source.childStageId,source});
         //childStageIds.push_back(source.childStageId);
     }
+    void Task::initFinal(){
+
+
+        assert(root == NULL);
+            std::shared_ptr<ExecNode> tmp = NULL;
+            for(size_t i=0 ;i<execNodes.size(); ++i){
+                if(!tmp){
+                    tmp = execNodes[i];
+                    root = tmp;
+                } else{
+                    tmp->setChild(execNodes[i]);
+                    tmp = execNodes[i];
+                }
+            }
+
+        //resultBuffer = io_buffer;
+        init();
+    }
 
     void Task::init(){
 
-        if(!exechangeTaskDataDest.isResult){
-            sender = std::make_shared<DataSender>(exechangeTaskDataDest);
+
+
+        if(!isResultTask()){
+            sender = std::make_shared<DataSender>(exechangeTaskDataDest,this);
             sender->tryConnect();  //block until success
         }
-        receiver = std::make_shared<DataReceiver>(exechangeTaskDataSource); // will create tcp server and accept connection
+        if(exechangeTaskDataSource.inputTaskIds.size() > 0){
+            receiver = std::make_shared<DataReceiver>(exechangeTaskDataSource,this,context); // will create tcp server and accept connection
+            receiver->init();  // if has join then call receiveHashTable until read all  to HashTable
+            createBottomExecNodeByBuffer();
+        }
+        LOG_DEBUG(log,"task :" + taskId + " start to receive data and execute ");
 
-        receiver->init();  // if has join then call receiveHashTable until read all  to HashTable
+        auto curNode = root;
+        while(curNode){
+            curNode->readPrefix();
+            curNode = curNode->getChild();
+        }
 
-
-        createBottomExecNodeByBuffer();
 
     }
 
@@ -56,6 +112,8 @@ namespace DB {
         while(Block res = root->read()){ // read until Databuffer  , read all until child send empty block
              sender->send(res);           // logic thread  may be block in sendData if upstream buffer rich high waiter mark
         }
+        Block end ;
+        sender->send(end); // maybe two task send two empty block;
     }
 
     void Task::execute(std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer){
@@ -63,6 +121,8 @@ namespace DB {
         while(Block res = root->read()){ // read until Databuffer  , read all until child send empty block
             buffer->push(res);
         }
+        Block end ;
+        buffer->push(end);
     }
     void Task::finish(){
 
@@ -79,7 +139,9 @@ namespace DB {
 
     void Task::receiveBlock(Block &block) { // receive block and put to buffer
 
-        buffer->push(block);
+        buffer->push(block);// last block is empty
+
+        LOG_DEBUG(log,"task :" + taskId + " receive block ,buffer size :" << buffer->size());
 
     }
 
@@ -89,7 +151,7 @@ namespace DB {
 
     void Task::createBottomExecNodeByBuffer(){
 
-        std::shared_ptr<TaskReceiverExecNode> node = std::make_shared<TaskReceiverExecNode>(buffer)  ;
+        std::shared_ptr<TaskReceiverExecNode> node = std::make_shared<TaskReceiverExecNode>(buffer,this)  ;
         auto  cur = root;
         auto  pre = root ;
         while(cur){

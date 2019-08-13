@@ -261,6 +261,7 @@ Context::Context() = default;
 Context Context::createGlobal(std::shared_ptr<IRuntimeComponentsFactory> runtime_components_factory)
 {
     Context res;
+    //res.data_connection_handler_factory = std::make_shared<DataConnectionHandlerFactory>();
     res.runtime_components_factory = runtime_components_factory;
     res.shared = std::make_shared<ContextShared>(runtime_components_factory);
     res.quota = std::make_shared<QuotaForIntervals>();
@@ -789,8 +790,11 @@ StoragePtr Context::getTable(const String & database_name, const String & table_
 {
     Exception exc;
     auto res = getTableImpl(database_name, table_name, &exc);
-    if (!res)
+    if (!res){
+        LOG_ERROR(&Logger::get("Context"),"not find table " + table_name);
         throw exc;
+    }
+
     return res;
 }
 

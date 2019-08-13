@@ -22,7 +22,7 @@ private:
     NamesAndTypesList aggregateColumns;
     AggregateDescriptions  aggregateDescriptions ;
     Context * context ;
-
+    bool final  = false;
 
 public:
     AggPlanNode(Block & inputHeader_ ,ExpressionActionsPtr & expressionActions_,
@@ -40,9 +40,12 @@ public:
     //Block getHeader() override ;
 
     std::shared_ptr<ExecNode> createExecNode() override;
+
     //void initDistribution() override ;
 
-
+    void setFinal(bool final){
+        final = true;
+    }
 
 };
 

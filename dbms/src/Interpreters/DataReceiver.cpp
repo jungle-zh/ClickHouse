@@ -10,7 +10,7 @@ namespace DB {
 
  void DataReceiver::init() {
 
-     while(connections.size() < childTaskIds.size()){
+     while(server->connections().size() < childTaskIds.size()){
          std::this_thread::sleep_for(std::chrono::milliseconds(100));// wait for all child to connect
      }
 
@@ -23,8 +23,18 @@ namespace DB {
          //task->receiveMainTable(b);
          task->receiveBlock(b);
      };
+
+
      auto highWaterMark  = [this]() ->  bool {
          return task->highWaterMark();
+     };
+     auto childTaskFinish = [this] (std::string childTaskId) {
+         task->addFinishChildTask(childTaskId);
+         if(task->allChildTaskFinish()){
+             Block last;
+             LOG_DEBUG(log,"task :" + task->getTaskId() + " child all finished");
+             task->receiveBlock(last);
+         }
      };
 
 
@@ -32,15 +42,16 @@ namespace DB {
       ||exechangeType == DataExechangeType::tone2onejoin
       ||exechangeType == DataExechangeType::ttwoshufflejoin){
 
-         for(auto p : connections){
+         for(auto p : server->connections()){
 
              if(beloneTo(p.first,rightTableStageId)){
                  p.second->setStartToReceive(true);
                  p.second->receiveBlockCall  = receiveHashTable;
+                 p.second->finishCall = childTaskFinish;
              }
          }
 
-         for(auto p : connections){  // wait all right table read done
+         for(auto p : server->connections()){  // wait all right table read done
              if(beloneTo(p.first,rightTableStageId)){
                  while(!p.second->getEndOfReceive()){ // hash table preprare
                      std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -50,12 +61,13 @@ namespace DB {
      }
 
 
-     for(auto p : connections){
+     for(auto p : server->connections()){
 
          p.second->highWaterMarkCall = highWaterMark;
          if(beloneTo(p.first,mainTableStageIds)){   // start to receive main table
              p.second->setStartToReceive(true);
              p.second->receiveBlockCall  = receiveMainTable;
+             p.second->finishCall = childTaskFinish;
          }
      }
 
@@ -64,23 +76,51 @@ namespace DB {
  }
 
  void DataReceiver::startToAccept() {
-     server = std::make_shared<DataServer>(port);
+     server = std::make_shared<DataServer>(port,context,task);
      server->start(); // start receive data connection and create handler
+     LOG_DEBUG(log," task " +  task->getTaskId() + " receiver start to accept on port " << port);
  }
 
  bool DataReceiver::beloneTo(const std::string taskId, std::string stageId) {
 
-     (void)taskId;
-     (void)stageId;
-     return false;
+     auto stringVec = split(taskId,"_");
+     std::string res ;
+     assert(stringVec.size() == 3);
+     res = stringVec[0] + "_" + stringVec[1];
+     if(res == stageId)
+         return true;
+     else
+         return false;
+
  }
 
  bool DataReceiver::beloneTo(const std::string taskId, std::vector<std::string> stageIds) {
 
-     (void)taskId;
-     (void)stageIds;
+     for(auto s : stageIds){
+         if(beloneTo(taskId,s))
+             return true;
+     }
      return false;
  }
+   std::vector<std::string> DataReceiver::split(const std::string& str, const std::string& delim) {
+        std::vector<std::string>  res;
+        if("" == str) return res;
+        //先将要切割的字符串从string类型转换为char*类型
+        char * strs = new char[str.length() + 1] ; //不要忘了
+        strcpy(strs, str.c_str());
+
+        char * d = new char[delim.length() + 1];
+        strcpy(d, delim.c_str());
+
+        char *p = strtok(strs, d);
+        while(p) {
+            std::string s = p; //分割得到的字符串转换为string类型
+            res.push_back(s); //存入结果数组
+            p = strtok(NULL, d);
+        }
+
+        return res;
+    }
 
 
 }

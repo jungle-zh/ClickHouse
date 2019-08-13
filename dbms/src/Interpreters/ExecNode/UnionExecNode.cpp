@@ -17,6 +17,10 @@ namespace DB {
     Block UnionExecNode::getInputHeader() {
         return  children->getHeader(true);
     }
+    std::shared_ptr<ExecNode> UnionExecNode::deseralize(DB::ReadBuffer &buffer) {
+        (void) buffer;
+        return std::shared_ptr<ExecNode>();
+    }
 
 
 }

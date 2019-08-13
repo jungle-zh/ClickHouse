@@ -14,15 +14,21 @@ namespace DB {
 
 
     public:
-        void init();
+       // void init();
         std::shared_ptr<Task> read();
-        TaskInputStream(std::shared_ptr<ReadBuffer> in_  , int version_){
+        TaskInputStream(std::shared_ptr<ReadBuffer> in_  , int version_ , Context * context_){
             in = in_;
             version = version_;
+            context = context_;
         }
 
     private:
-        ExechangeTaskDataSource readTaskSource();
+        ExechangeTaskDataSource readTaskExechangeSource();
+        ExechangePartition readExechangePartition();
+        ScanTaskDataSource readTaskScanSource();
+        ScanPartition readScanPartition();
+        scanTableInfo readScanTableInfo();
+        DataReceiverInfo readDataReceiverInfo();
         ExechangeTaskDataDest readTaskDest();
         std::shared_ptr<ExecNode> readExecNode();
 

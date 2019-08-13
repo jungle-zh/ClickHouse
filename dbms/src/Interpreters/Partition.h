@@ -89,7 +89,7 @@ struct ExechangeTaskDataDest {
     std::vector<std::string> distributeKeys;
     std::map<int,ExechangePartition>  partitionInfo; // partitionId -> partition
     std::map<int,DataReceiverInfo> receiverInfo;     // partitionId -> reciever
-    bool isResult = false;
+   // bool isResult = false;
 };
 
 

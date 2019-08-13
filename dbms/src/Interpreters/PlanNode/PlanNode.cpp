@@ -5,6 +5,7 @@
 #include "PlanNode.h"
 namespace DB {
 
+    
     Block PlanNode::getHeader() {
 
         std::shared_ptr<ExecNode> execNode =  createExecNode();
@@ -12,6 +13,6 @@ namespace DB {
         return  execNode->getHeader(true);
     }
 
-
+    
 }
 

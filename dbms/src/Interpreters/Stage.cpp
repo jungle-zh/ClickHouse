@@ -50,7 +50,8 @@ namespace DB {
         for(auto p : planNodes){
 
             auto execNode = p->createExecNode();
-            execNodes.push_back(execNode);
+            if(execNode)
+                execNodes.push_back(execNode);
         }
 
     }
@@ -82,12 +83,13 @@ namespace DB {
                 for (int j = 0; j < childs[i]->getPartitionNum(); ++j) {
                     inputTaskIds.push_back(childs[i]->getTaskId(j));
                 }
-                childStageToTask[childs[i]->stageId] = inputTaskIds;
+                childStageToTask.insert({childs[i]->stageId,inputTaskIds});
+                //childStageToTask[childs[i]->stageId] = inputTaskIds;
             }
 
             for (int i = 0; i < getExechangeDistribution()->partitionNum; ++i) {
 
-                auto task = std::make_shared<Task>() ;
+                auto task = std::make_shared<Task>(getTaskId(i),context) ;
 
 
                 ExechangeTaskDataSource source;
@@ -112,10 +114,8 @@ namespace DB {
                     task->setExechangeDest(dest);
                 }else {
                     // no dest ,fill buffer and wait to be consumed
-                    ExechangeTaskDataDest dest ;
-                    dest.isResult = true;
+
                     task->setResultTask();
-                    task->setExechangeDest(dest);
 
                 }
                 task->setExecNodes(execNodes);
@@ -133,7 +133,7 @@ namespace DB {
 
 
             for (int i = 0; i < getPartitionNum(); ++i) {
-                auto task = std::make_shared<Task>();
+                auto task = std::make_shared<Task>(getTaskId(i),context);
                 ExechangeTaskDataDest dest ;
                 dest.partitionInfo = father->getExechangeDistribution()->partitionInfo;   //father receiver is already set
                 dest.distributeKeys = father->getExechangeDistribution()->distributeKeys;
@@ -162,7 +162,8 @@ namespace DB {
                 for (int j = 0; j < childs[i]->getPartitionNum(); ++j) {
                     inputTaskIds.push_back(childs[i]->getTaskId(j));
                 }
-                childStageToTask[childs[i]->stageId] = inputTaskIds;
+                childStageToTask.insert({childs[i]->stageId,inputTaskIds});
+                //childStageToTask[childs[i]->stageId] = inputTaskIds;
             }
 
             assert(getScanDistribution()->equals(*getExechangeDistribution()));
@@ -174,7 +175,7 @@ namespace DB {
 
             for (int i = 0; i < getExechangeDistribution()->partitionNum; ++i) {
 
-                auto task = std::make_shared<Task>() ;
+                auto task = std::make_shared<Task>(getTaskId(i),context) ;
                 ExechangeTaskDataSource source;
                 source.distributeKeys = getExechangeDistribution()->distributeKeys;
 
@@ -202,10 +203,7 @@ namespace DB {
                 }else {
                     // no dest ,fill buffer and wait to be consumed
 
-                    ExechangeTaskDataDest dest ;
-                    dest.isResult = true;
                     task->setResultTask();
-                    task->setExechangeDest(dest);
                 }
                 task->setExecNodes(execNodes);
                 task->setScanTask();

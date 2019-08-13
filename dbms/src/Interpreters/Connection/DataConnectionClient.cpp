@@ -10,6 +10,7 @@
 #include <IO/WriteHelpers.h>
 #include <Common/ClickHouseRevision.h>
 #include <IO/WriteBufferFromPocoSocket.h>
+#include <Interpreters/Task.h>
 #include "DataConnectionClient.h"
 
 namespace DB {
@@ -28,6 +29,13 @@ namespace DB {
 
 
         out->next();
+
+    }
+
+    void DataConnectionClient::receiveHello()
+    {
+        //LOG_TRACE(log_wrapper.get(), "Receiving hello");
+
 
     }
 
@@ -77,33 +85,26 @@ namespace DB {
         if (!block_out)
         {
             //if (compression == Protocol::Compression::Enable)
-               // maybe_compressed_out = std::make_shared<CompressedWriteBuffer>(*out, compression_settings);
+                //maybe_compressed_out = std::make_shared<CompressedWriteBuffer>(*out, compression_settings);
             //else
-                maybe_compressed_out = out;
-
-            block_out = std::make_shared<NativeBlockOutputStream>(*maybe_compressed_out, server_revision, block.cloneEmpty());
+               // maybe_compressed_out = out;
+            server_revision = 1;
+            block_out = std::make_shared<NativeBlockOutputStream>(*out, server_revision, block.cloneEmpty());
         }
 
-        if(!stopSend){
-
-
-            writeVarUInt(Protocol::Client::Data, *out); // with one block
-            writeStringBinary("dataClient", *out);
-
-            //size_t prev_bytes = out->count();
-
-            block_out->write(block);
-            maybe_compressed_out->next();
-            out->next();
-
-
-            
-        } else {
-            //wait until notified in listen
-            while(stopSend) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            }
+        while(stopSend) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
+
+
+        writeVarUInt(Protocol::Client::Data, *out); // with one block
+        writeStringBinary(task->getTaskId(), *out);
+
+        //size_t prev_bytes = out->count();
+
+        block_out->write(block);
+        //maybe_compressed_out->next();
+        out->next();
     }
 
     bool DataConnectionClient::receiveStopCommand(){
@@ -113,11 +114,11 @@ namespace DB {
 
         readVarUInt(packet_type, *in);
 
-        if (packet_type == Protocol::Server::StopSendCommand){
+        if (packet_type == Protocol::DataControl::STOP){
 
             LOG_INFO(log,"DataConnectionClient receive StopSendCommand  "  );
             return true;
-        } else if(packet_type == Protocol::Server::StartSendCommand){
+        } else if(packet_type == Protocol::DataControl::START){
 
             LOG_INFO(log,"DataConnectionClient receive StartSendCommand  "  );
             return false;
@@ -127,26 +128,30 @@ namespace DB {
         }
 
     }
-    void DataConnectionClient::listen() { // io thread
+    void DataConnectionClient::startListen() {
+        pool.schedule(std::bind(&DataConnectionClient::listen, this));
+    }
+    void DataConnectionClient::listen() { // io thread, only read
 
-        while (1) {
+        while (true) {
             /// We are waiting for a packet from the client. Thus, every `POLL_INTERVAL` seconds check whether we need to shut down.
             while (!static_cast<ReadBufferFromPocoSocket &>(*in).poll(
                     settings.poll_interval * 1000000) );
 
             /// If we need to shut down, or client disconnects.
-           // if (server->isCancelled() || in->eof())
-           //     break;
+            if (in->eof())
+                break;
 
-
-            if(receiveStopCommand()){  // command from upstream
+            bool  cmd  = receiveStopCommand();
+            if(cmd){  // command from upstream
                 stopSend = true;
-                writeVarUInt(Protocol::DataControl::CLIENT_ACK, *out);
+                //writeStringBinary("client_ack", *out);
 
             } else {
                 stopSend = false;
-                writeVarUInt(Protocol::DataControl::CLIENT_ACK, *out);
+                //writeStringBinary("client_ack", *out);
             }
+            //out->next();
 
         }
     }

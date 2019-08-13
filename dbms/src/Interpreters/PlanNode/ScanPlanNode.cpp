@@ -4,11 +4,23 @@
 
 #include <Interpreters/PlanNode/ScanPlanNode.h>
 #include <DataTypes/DataTypeFactory.h>
+#include <Interpreters/ExecNode/ScanExecNode.h>
+#include <Storages/IStorage.h>
 
 namespace DB {
 
 
- Block ScanPlanNode::getHeader() {
+    std::shared_ptr<ExecNode> ScanPlanNode::createExecNode() {
+
+        Context * context = NULL;
+        std::vector<std::string> required_column_;
+        for(auto col : required_column){
+            required_column_.push_back(col);
+        }
+        return   std::make_shared<ScanExecNode>(dbName,tableName,required_column_,query,context);
+
+    }
+     Block ScanPlanNode::getHeader() {
      if(tableName == "stu"){
 
 
@@ -49,7 +61,16 @@ namespace DB {
          return block;
 
      } else{
-         throw  Exception("not find table yet");
+         auto storage = context->getTable(dbName, tableName);
+         Block all =  storage->getSampleBlock();
+         ColumnsWithTypeAndName cols;
+         for(auto col : required_column){
+             ColumnWithTypeAndName c = all.getByName(col);
+             cols.push_back(c);
+         }
+
+         Block block(cols);
+         return  block;
      }
  }
 

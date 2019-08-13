@@ -23,7 +23,7 @@
 #include <Interpreters/Quota.h>
 #include <Interpreters/TablesStatus.h>
 #include <Interpreters/DataReceiver.h>
-
+#include <Interpreters/InterpreterSelectQueryNew.h>
 #include <Storages/StorageMemory.h>
 #include <Storages/StorageReplicatedMergeTree.h>
 
@@ -161,9 +161,9 @@ void TCPHandler::runImpl()
             state.maybe_compressed_in.reset();  /// For more accurate accounting by MemoryTracker.
 
             /// Processing Query
-            //startReceiver();
-            //state.io = executeQuery(state.query, query_context, false, state.stage);
-            executeQuery(query_context,state.query);// will start result task and submit child task
+
+            //state.io = executeQuery(state.query, query_context, false, state.stage); // origin
+            auto interpreterNew = executeQuery(query_context,state.query);// will start result task and submit child task
 
             if (state.io.out)
                 state.need_receive_data_for_insert = true;
@@ -176,8 +176,8 @@ void TCPHandler::runImpl()
                 processInsertQuery(global_settings);
             }
             else {
-               // processOrdinaryQuery();
-                pullQueryResultAndSend();
+                //processOrdinaryQuery(); // origin
+                pullQueryResultAndSend(interpreterNew);  // new
             }
 
 
@@ -328,9 +328,9 @@ void TCPHandler::processInsertQuery(const Settings & global_settings)
 }
 
 
-void TCPHandler::pullQueryResultAndSend(){
+void TCPHandler::pullQueryResultAndSend(std::shared_ptr<InterpreterSelectQueryNew> interpreter){
 
-   buffer = std::make_shared<ConcurrentBoundedQueue<Block>>();
+   auto buffer = interpreter->getScheduler()->getBlockIO().buffer;
    while(1){
        Block block;
        buffer->pop(block);
@@ -341,11 +341,14 @@ void TCPHandler::pullQueryResultAndSend(){
 
 }
 
+/*
 void TCPHandler::startResultTask(Task & task ){
 
+    task.init();
     task.execute(buffer);
 
 }
+ */
 
 void TCPHandler::processOrdinaryQuery()
 {

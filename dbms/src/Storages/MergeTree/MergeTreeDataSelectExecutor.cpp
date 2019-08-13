@@ -724,7 +724,7 @@ BlockInputStreams MergeTreeDataSelectExecutor::spreadMarkRangesAmongStreams(
                             part.ranges.pop_back();
                     }
                 }
-
+                //jungle comment  each task read need_marks
                 BlockInputStreamPtr source_stream = std::make_shared<MergeTreeBlockInputStream>(
                     data, part.data_part, max_block_size, settings.preferred_block_size_bytes,
                     settings.preferred_max_column_in_block_size_bytes, column_names, ranges_to_get_from_part,

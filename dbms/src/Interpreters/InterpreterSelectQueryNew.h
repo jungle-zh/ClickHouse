@@ -27,6 +27,7 @@ public:
             query(typeid_cast<ASTSelectQuery &>(*(unionQuery.list_of_selects->children[0]))),
             context(context_){
         queryAnalyzer = std::make_unique<QueryAnalyzer>(context_,"jobid");
+        taskScheduler = std::make_unique<TaskScheduler>();
     }
     ASTPtr query_ptr;
 
@@ -40,7 +41,7 @@ public:
 
 public:
     BlockIO  execute() override;
-
+    TaskScheduler * getScheduler() { return  taskScheduler.get();}
 
 };
 

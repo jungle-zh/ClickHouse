@@ -32,6 +32,7 @@ void executeQuery(
 ///
 /// Correctly formatting the results (according to INTO OUTFILE and FORMAT sections)
 /// must be done separately.
+class InterpreterSelectQueryNew;
 BlockIO executeQuery(
     const String & query,    /// Query text without INSERT data. The latter must be written to BlockIO::out.
     Context & context,        /// DB, tables, data types, storage engines, functions, aggregate functions...
@@ -39,6 +40,6 @@ BlockIO executeQuery(
     QueryProcessingStage::Enum stage = QueryProcessingStage::Complete    /// To which stage the query must be executed.
     );
 
-    void executeQuery(Context & context, std::string & query , bool internal = false );
+    std::shared_ptr<InterpreterSelectQueryNew> executeQuery(Context & context, std::string & query , bool internal = false );
 
 }

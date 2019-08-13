@@ -15,7 +15,7 @@ class  DataConnectionHandler;
 class DataReceiver {
 
 public:
-    DataReceiver(ExechangeTaskDataSource source){
+    DataReceiver(ExechangeTaskDataSource source,Task *task_ , Context * context_){
 
         childTaskIds = source.partition.childTaskIds;
         exechangeType = source.partition.exechangeType;
@@ -23,7 +23,10 @@ public:
         mainTableStageIds = source.partition.mainTableChildStageId;
         port = source.receiver.dataPort;
         ip = source.receiver.ip;
-        //inputHeader = inputHeader_;
+        task = task_;
+        log = &Logger::get("DataReceiver");
+        //factory  = factory_;
+        context = context_;
         startToAccept();
     }
 
@@ -40,18 +43,21 @@ public:
     std::string ip;
     //Blocks inputHeader ;
     bool  isResultReceiver;
+    //DataConnectionHandlerFactory * factory;
 
 
     std::vector<std::string> childTaskIds; // stageId_taskId
     DataExechangeType  exechangeType;
     std::string rightTableStageId  ;
     std::vector<std::string> mainTableStageIds ;
-    std::map<std::string,DataConnectionHandler * >  connections; // rstageId_taskId  receiver may have multi connection , for example ,join , aggMerge
+    //std::map<std::string,DataConnectionHandler * >  connections; // rstageId_taskId  receiver may have multi connection , for example ,join , aggMerge
     Task * task ;
-
+    Poco::Logger *log  ;
+    Context * context;
 
     bool beloneTo(const std::string taskId, std::string stageId);
     bool beloneTo(const std::string taskId, std::vector<std::string> stageIds);
+    std::vector<std::string> split(const std::string& str, const std::string& delim);
 };
 
 

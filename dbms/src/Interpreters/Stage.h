@@ -30,8 +30,9 @@ namespace DB {
     public:
 
         //static  int g_id;
-        Stage(std::string jobId,int  stageid ){
+        Stage(std::string jobId,int  stageid,Context * context_ ){
             stageId = jobId + "_"  + std::to_string(stageid);
+            context = context_;
         };
         void addPlanNode(std::shared_ptr<PlanNode>  node) { planNodes.push_back(node);}
         void addChild(std::shared_ptr<Stage>  child){ childs.push_back(child);}
@@ -79,6 +80,7 @@ namespace DB {
         }
         std::vector<std::string> mainintTableChildStageId ;
 
+        Context * context;
 
 
     };

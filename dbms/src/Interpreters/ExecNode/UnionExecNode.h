@@ -21,6 +21,8 @@ public:
 
     void serialize(WriteBuffer & buffer){ (void)buffer;}
     static  std::shared_ptr<ExecNode> deseralize(ReadBuffer & buffer);
+    std::string getName() override { return  "unionExecNode";}
+
 };
 
 

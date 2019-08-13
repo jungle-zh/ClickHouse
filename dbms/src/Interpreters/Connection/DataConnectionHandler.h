@@ -7,6 +7,7 @@
 #include <Poco/Net/TCPServerConnection.h>
 #include <Core/Protocol.h>
 #include <DataStreams/NativeBlockInputStream.h>
+#include <common/ThreadPool.h>
 //#include <Interpreters/Connection/DataServer.h>
 
 namespace DB {
@@ -39,7 +40,7 @@ private:
     UInt64 client_version_major = 0;
     UInt64 client_version_minor = 0;
     UInt64 client_revision = 0;
-    std::string upstream_task_id ;
+    std::string child_task_id ;
     int upstream_task_partition;
 
     Poco::Logger * log;
@@ -51,7 +52,7 @@ public:
     DataConnectionHandler(const Poco::Net::StreamSocket & socket_,DataServer * server_);
 
 
-    void run(){};
+    void run() override;
     void initBlockInput();
     void runImpl(); // receive data and fill
 
@@ -67,15 +68,19 @@ public:
     bool startToReceive = false;
     bool endOfReceive = false;
     std::function<void(Block & ) >  receiveBlockCall;
+    std::function<void(std::string)> finishCall;
     std::function<bool ()> highWaterMarkCall;
 
+    ThreadPool pool{1};
     void sendCommandToClient(Protocol::DataControl::Enum  type);
 
+    void checkHighWaterMark();
 
     bool getEndOfReceive();
 
     void  sendException(const Exception & e) ;
     void  sendEndOfStream();
+    std::string childTaskId(){ return  child_task_id;}
 };
 
 

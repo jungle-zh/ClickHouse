@@ -171,7 +171,7 @@ void selectWithinPartition(
             if (max_total_size_to_merge && sum_size > max_total_size_to_merge)
                 break;
 
-            if (allow(sum_size, max_size, min_age, end - begin, parts_count, settings))
+            if (allow(sum_size, max_size, min_age, end - begin, parts_count, settings) || true)
                 estimator.consider(
                     parts.begin() + begin,
                     parts.begin() + end,

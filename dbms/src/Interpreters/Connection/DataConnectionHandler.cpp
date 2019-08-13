@@ -97,7 +97,7 @@ namespace DB {
             throw;
         }
 
-
+        server->addConnection(this);
         //sendHello();
 
 
@@ -126,13 +126,6 @@ namespace DB {
                 break;
 
 
-
-            if(highWaterMarkCall()){
-                sendCommandToClient(Protocol::DataControl::STOP);
-            } else {
-                sendCommandToClient(Protocol::DataControl::START);
-            }
-
             if(!receiveBlock())  // return false  at end of data
                 break;
 
@@ -144,12 +137,36 @@ namespace DB {
     }
 
 
+    void DataConnectionHandler::checkHighWaterMark(){ // only write
+        auto cmd = [&](void){
+            if(highWaterMarkCall()){
+                sendCommandToClient(Protocol::DataControl::STOP);
+            } else {
+                sendCommandToClient(Protocol::DataControl::START);
+            }
+        };
+        pool.schedule(cmd);
+
+    }
+
     void DataConnectionHandler::sendCommandToClient(Protocol::DataControl::Enum  type){
 
 
-        UInt32  rep = 0 ;
+        std::string  rep ;
         writeVarUInt(type, *out);
-        readVarUInt(rep,*in);
+        out->next();
+        //readStringBinary(rep,*in);
+        //assert(rep == "client_ack");
+
+        std::string cmd ;
+        if(type == Protocol::DataControl::START){
+            cmd = "start";
+        } else if(type == Protocol::DataControl::STOP){
+            cmd = "stop";
+        }
+      ;
+        LOG_DEBUG(log, "task:" + server->getTask()->getTaskId() + " send " + cmd + " to child task: " +  child_task_id + " success" );
+
 
     }
 
@@ -175,9 +192,10 @@ namespace DB {
         readVarUInt(packet_type, *in);
         assert(packet_type == Protocol::Client::Data );
 
-        String external_table_name;
-        readStringBinary(external_table_name, *in);
+        String child_task_id;
+        readStringBinary(child_task_id, *in);
 
+        LOG_DEBUG(log,"current task:" + server->getTask()->getTaskId() + " receive child task： " + child_task_id + " data");
         /// Read one block from the network and write it down
         Block block = block_in->read();
 
@@ -187,6 +205,8 @@ namespace DB {
             receiveBlockCall(block);
             return true;
         } else {
+            finishCall(child_task_id);
+          //  receiveBlockCall(block); //receive end block ; // todo when receive all task  block do it
             return false;
         }
     }
@@ -226,7 +246,7 @@ namespace DB {
         readVarUInt(client_version_major, *in);
         readVarUInt(client_version_minor, *in);
         readVarUInt(client_revision, *in);
-        readStringBinary(upstream_task_id,*in);
+        readStringBinary(child_task_id,*in);
         readVarUInt(upstream_task_partition,*in);
 
 
@@ -234,7 +254,7 @@ namespace DB {
                                     << " version " << client_version_major
                                     << "." << client_version_minor
                                     << "." << client_revision
-                                    << " task id " << upstream_task_id
+                                    << " task id " << child_task_id
                                     << " partition " << upstream_task_partition
                                     << ".");
 
@@ -254,6 +274,27 @@ namespace DB {
         //state.sent_all_data = true;
         writeVarUInt(Protocol::Server::EndOfStream, *out);
         out->next();
+    }
+    void DataConnectionHandler::run(){
+
+        try
+        {
+            runImpl();
+
+            //LOG_INFO(log, "Done processing connection.");
+        }
+        catch (Poco::Exception & e)
+        {
+            /// Timeout - not an error.
+            if (!strcmp(e.what(), "Timeout"))
+            {
+                //LOG_DEBUG(log, "Poco::Exception. Code: " << ErrorCodes::POCO_EXCEPTION << ", e.code() = " << e.code()
+                //                                         << ", e.displayText() = " << e.displayText() << ", e.what() = " << e.what());
+            }
+            else
+                throw;
+        }
+
     }
 
 

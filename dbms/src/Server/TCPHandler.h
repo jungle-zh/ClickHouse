@@ -5,7 +5,6 @@
 #include <Common/getFQDNOrHostName.h>
 #include <Common/CurrentMetrics.h>
 #include <Common/Stopwatch.h>
-#include <Common/ConcurrentBoundedQueue.h>
 #include <IO/Progress.h>
 #include <Core/Protocol.h>
 #include <Core/QueryProcessingStage.h>
@@ -78,6 +77,7 @@ struct QueryState
 
 
 class Task;
+class InterpreterSelectQueryNew;
 class TCPHandler : public Poco::Net::TCPServerConnection
 {
 public:
@@ -96,7 +96,7 @@ public:
 private:
     IServer * server;
     Poco::Logger * log;
-    std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer ;
+   // std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer ;
 
     String client_name;
     UInt64 client_version_major = 0;
@@ -138,7 +138,7 @@ private:
     /// Process a request that does not require the receiving of data blocks from the client
     void startReceiver();
     void processOrdinaryQuery();
-    void pullQueryResultAndSend();
+    void pullQueryResultAndSend(std::shared_ptr<InterpreterSelectQueryNew> interpreter);
 
     void processTablesStatusRequest();
 

@@ -2,7 +2,7 @@
 
 #include <DataStreams/IBlockInputStream.h>
 #include <DataStreams/IBlockOutputStream.h>
-
+#include <Common/ConcurrentBoundedQueue.h>
 
 namespace DB
 {
@@ -20,6 +20,7 @@ struct BlockIO
 
     BlockInputStreamPtr in;
     BlockOutputStreamPtr out;
+    std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer ;
 
     /// Callbacks for query logging could be set here.
     std::function<void(IBlockInputStream *, IBlockOutputStream *)>    finish_callback;
