@@ -3,3 +3,11 @@
 //
 
 #include <Interpreters/PlanNode/UnionPlanNode.h>
+#include <Interpreters/ExecNode/UnionExecNode.h>
+
+namespace DB  {
+
+    std::shared_ptr<ExecNode> UnionPlanNode::createExecNode() {
+        return std::make_shared<UnionExecNode>(header);
+    }
+}

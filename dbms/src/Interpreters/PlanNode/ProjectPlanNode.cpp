@@ -8,6 +8,11 @@
 namespace DB {
 
 
+    Block ProjectPlanNode::getHeader(){
+        Block ret  = inputHeader;
+        actions->execute(ret);
+        return ret;
+    }
     std::shared_ptr<ExecNode> ProjectPlanNode::createExecNode() {
 
         return std::make_shared<ProjectExecNode>(actions);

@@ -11,15 +11,18 @@ namespace DB {
     }
 
     Block UnionExecNode::getHeader(bool isAnalyze) {
-
-        return  children->getHeader(isAnalyze);
+        (void)isAnalyze;
+        return  header;
     }
     Block UnionExecNode::getInputHeader() {
-        return  children->getHeader(true);
+        return  header;
+    }
+    void UnionExecNode::serialize(DB::WriteBuffer &buffer) {
+        ExecNode::serializeHeader(header,buffer);
     }
     std::shared_ptr<ExecNode> UnionExecNode::deseralize(DB::ReadBuffer &buffer) {
-        (void) buffer;
-        return std::shared_ptr<ExecNode>();
+        Block header =  ExecNode::deSerializeHeader(buffer);
+        return std::make_shared<UnionExecNode>(header);
     }
 
 

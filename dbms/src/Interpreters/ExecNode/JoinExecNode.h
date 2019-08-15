@@ -16,20 +16,31 @@ class JoinExecNode : public ExecNode {
 
 public:
 
-    void  readPrefix() override ;
+    std::string getName() override { return  "joinExecNode";}
+    void  readPrefix() override {}
     void  readSuffix() override {};
     Block read() override ;
     Block getHeader (bool isAnalyze) override;
     Block getInputHeader() override { return  getHeader(true);};
 
     virtual ~JoinExecNode() {}
-    JoinExecNode(Names  & joinKey_ , Block & inputLeftHeader_ , Block & inputRightHeader_,
+    JoinExecNode(Names  & joinKey_ , Block & mainTableHeader_ , Block & hashTableHeader_,
                  std::string joinKind_,std::string strictness_):
                  joinKey(joinKey_),
-                 inputLeftHeader(inputLeftHeader_),
-                 inputRightHeader(inputRightHeader_),
+                 mainTableHeader(mainTableHeader_),
+                 hashTableHeader(hashTableHeader_),
                  joinKind(joinKind_),
                  strictness(strictness_){
+
+
+        join = std::make_unique<Join>(
+                mainTableHeader.getNamesAndTypesList().getNames(), hashTableHeader.getNamesAndTypesList().getNames(),
+                settings.join_use_nulls, SizeLimits(settings.max_rows_in_join, settings.max_bytes_in_join, settings.join_overflow_mode),
+                kind, strict);
+
+
+        join->setSampleBlock(hashTableHeader);
+
 
     }
 
@@ -42,8 +53,8 @@ public:
     Join * getJoin(){ return  join.get();}
 private:
     Names joinKey;
-    Block inputLeftHeader;
-    Block inputRightHeader;
+    Block mainTableHeader;
+    Block hashTableHeader;
     std::string joinKind;
     std::string  strictness;
 
@@ -53,6 +64,8 @@ private:
 
     ASTTableJoin::Kind kind;
     ASTTableJoin::Strictness strict;
+
+   // std::string hashTable ;
 
 
 };

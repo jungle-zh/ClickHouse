@@ -28,16 +28,17 @@ namespace DB {
         queryAnalyzer->removeUnusedMergePlanNode(result); // single node tree
 
         //todo
-        /*
-        if(onlyOneStage(result)){
-            addUnionToSplitStage(result);
+
+        if(queryAnalyzer->onlyOneStage(result)){
+            queryAnalyzer->addUnionToSplitStage(result);
         }
-        */
+
         queryAnalyzer->splitStageByExechangeNode(result,resultStage); // single node tree to distribute task
 
 
         taskScheduler->applyResourceAndSubmitStage(resultStage);
         auto io =    taskScheduler->getBlockIO();
+        assert(io.buffer != NULL);
         return   io;
 
     }

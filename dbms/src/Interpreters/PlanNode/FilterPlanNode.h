@@ -21,6 +21,7 @@ private:
     Block inputHeader;
     std::shared_ptr<ExpressionActions> actions;
     std::string filterColumn;
+    Block getHeader() override{ return inputHeader;};
 
     std::shared_ptr<ExecNode> createExecNode() override;
 

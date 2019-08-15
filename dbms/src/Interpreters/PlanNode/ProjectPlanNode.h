@@ -14,14 +14,15 @@ class  ProjectPlanNode  : public  PlanNode {
 
 public:
     ProjectPlanNode(Block header_ ,std::shared_ptr<ExpressionActions> actions_){
-        header = header_;
+        inputHeader = header_;
         actions = actions_;
     }
 private:
-    Block header;
+    Block inputHeader;
     std::shared_ptr<ExpressionActions> actions;
 public:
 
+    Block getHeader() override;
     std::shared_ptr<ExecNode> createExecNode() override;
 
 

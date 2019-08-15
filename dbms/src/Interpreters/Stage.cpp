@@ -179,7 +179,7 @@ namespace DB {
                 ExechangeTaskDataSource source;
                 source.distributeKeys = getExechangeDistribution()->distributeKeys;
 
-                for(size_t j ;j< childs.size(); ++j){
+                for(size_t j =0;j< childs.size(); ++j){
                     for(std::string taskId : childStageToTask[childs[j]->stageId]){
                         source.inputTaskIds.push_back(taskId);   // one2one maybe only one input
                     }

@@ -39,6 +39,7 @@ public:
     }
     Context * context;
 
+    Block getHeader() override;
     std::shared_ptr<ExecNode>  createExecNode() override;
     //void initDistribution(Distribution & distribution_) override;
 

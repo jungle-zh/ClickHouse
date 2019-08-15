@@ -41,7 +41,7 @@ public:
     }
     void buildFullDistribution(){
 
-        std::map<int,ScanPartition> scanPartitions;
+        std::map<int,ScanPartition> &  scanPartitions =  (static_cast<ScanDistribution *>(distribution.get()))->getScanPartitions();
 
         for(int i=0;i< partitionNum ;++i){
 
@@ -50,12 +50,12 @@ public:
             scanPartition.partitionId = i;
             scanPartition.info.dbName = dbName;
             scanPartition.info.tableName = tableName;
-            //scanPartition.info.host = hosts[i];
+            scanPartition.info.host = "127.0.0.1"; //for local test
 
             scanPartitions.insert({i,scanPartition});
         }
 
-        static_cast<ScanDistribution *>(distribution.get())->setScanPartitions(scanPartitions);
+        //static_cast<ScanDistribution *>(distribution.get())->setScanPartitions(scanPartitions);
     }
 private:
     int partitionNum;

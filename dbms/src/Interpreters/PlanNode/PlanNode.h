@@ -38,8 +38,8 @@ public:
       //  child->setFather(this);
     }
     //void setFather(PlanNode *father_){ father  = father_;}
-    void cleanChild(){ childs.clear();}
-
+    //void cleanChild(){ childs.clear();}
+    void cleanAndResizeToNChild(size_t n){ assert(childs.size() == n);childs.clear();childs.resize(n);}
     void setUnaryChild(){};
     void setLeftChild(){};
     void setRightChild(){};
@@ -49,7 +49,8 @@ public:
     virtual std::shared_ptr<ExecNode>  createExecNode() { return  NULL;}
     virtual std::string getName() { return  "PlanNode";}
 
-    virtual  Block getHeader() ;
+    virtual  Block getHeader()  { return  header;}
+    void setHeader(Block header_){header = header_;}
 
 
 
@@ -57,7 +58,7 @@ public:
 
     std::vector<PlanNodePtr> getChilds () { return childs ;}
 
-    void setChild(PlanNodePtr child ,int index) { childs[index] = child;}
+    void setChild(PlanNodePtr child ,int index) { assert((size_t)index < childs.size()); childs[index] = child;}
     PlanNodePtr getChild(int index) { return childs[index];}
     virtual int  exechangeCost() { return  0 ;}
     //virtual void initDistribution();
@@ -70,7 +71,7 @@ protected:
     //Settings settings  ;
 
     std::shared_ptr<Distribution> distribution;
-private:
+protected:
 
     std::vector<PlanNodePtr> childs;
     Block  header;

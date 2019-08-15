@@ -42,9 +42,10 @@ public:
     std::shared_ptr<ExecNode> createExecNode() override;
 
     //void initDistribution() override ;
+    Block  getHeader() override;
 
-    void setFinal(bool final){
-        final = true;
+    void setFinal(bool final_){
+        final = final_;
     }
 
 };

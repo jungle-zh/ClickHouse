@@ -56,8 +56,8 @@ private:
 
     Settings  settings  ;
 
-    bool allow_to_use_two_level_group_by;
-    bool overflow_row;
+    bool allow_to_use_two_level_group_by = false;
+    bool overflow_row = false;
 
     Context * context ;
 

@@ -10,6 +10,7 @@
 #include <Interpreters/ExecNode/TaskReceiverExecNode.h>
 #include <Common/typeid_cast.h>
 #include <Interpreters/ExecNode/AggExecNode.h>
+#include <Interpreters/ExecNode/ProjectExecNode.h>
 #include "Task.h"
 namespace DB {
 
@@ -130,8 +131,9 @@ namespace DB {
 
     void Task::receiveHashTable(Block &block) {
 
-        JoinExecNode * joinExecNode = typeid_cast<JoinExecNode*>( root.get() );
-
+        ProjectExecNode * projectExecNode = typeid_cast<ProjectExecNode*>( root.get() );
+        assert(projectExecNode != NULL);
+        JoinExecNode * joinExecNode = typeid_cast<JoinExecNode*>( projectExecNode->getChild().get() );
         assert(joinExecNode != NULL);
         joinExecNode->getJoin()->insertFromBlock(block);
 

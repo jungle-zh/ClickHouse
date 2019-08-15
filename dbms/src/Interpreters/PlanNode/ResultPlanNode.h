@@ -10,6 +10,9 @@ namespace  DB {
 
 class ResultPlanNode : public PlanNode{
 
+    std::string getName () override{
+        return  "resultPlanNode";
+    }
 
 
 };

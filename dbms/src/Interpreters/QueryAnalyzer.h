@@ -63,7 +63,8 @@ namespace DB {
         void removeUnusedMergePlanNode(std::shared_ptr<PlanNode> root);
         void splitStageByExechangeNode(std::shared_ptr<PlanNode> root, std::shared_ptr<Stage>  currentStage);
 
-
+        bool onlyOneStage(std::shared_ptr<PlanNode> root);
+        void addUnionToSplitStage(std::shared_ptr<PlanNode> root);
     public:
 
         Settings settings;

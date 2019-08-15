@@ -28,6 +28,11 @@ namespace DB {
         aggregationKeys.writeText(buffer);
         aggregateColumns.writeText(buffer);
         serializeAggDesc(buffer);
+        if(final){
+            writeStringBinary("final",buffer);
+        } else{
+            writeStringBinary("notFinal",buffer);
+        }
 
     }
 
@@ -40,8 +45,15 @@ namespace DB {
         aggregationKeys_.readText(buffer);
         aggregateColumns_.readText(buffer);
         AggregateDescriptions desc_ = deserializeAggDesc(buffer);
-
-        return std::make_shared<AggExecNode>(header,aggregationKeys_,aggregateColumns_,desc_,actions, context);
+        std::string isFinal;
+        bool final ;
+        readStringBinary(isFinal,buffer);
+        if(isFinal == "final"){
+            final = true;
+        } else {
+            final = false;
+        }
+        return std::make_shared<AggExecNode>(header,aggregationKeys_,aggregateColumns_,desc_,actions, context,final);
 
     }
 

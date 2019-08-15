@@ -29,7 +29,7 @@ namespace DB {
         //    preActionSampleBlock.insert(ColumnWithTypeAndName(nullptr, input_elem.type, input_elem.name));
         //serializeHeader(preActionSampleBlock,buffer);
 
-        int actionNum = actions.getActions().size();
+        size_t actionNum = actions.getActions().size();
         writeVarUInt(actionNum,buffer);
         for(const ExpressionAction & action : actions.getActions()){
 
@@ -81,9 +81,9 @@ namespace DB {
                 }
                 case ExpressionAction::PROJECT :{
                    writeVarUInt(ExpressionAction::PROJECT,buffer);
-                   int projectNum = action.projection.size();
-                   writeVarInt(projectNum,buffer) ;
-                   for(int i =0;i< projectNum; ++i){
+                   size_t projectNum = action.projection.size();
+                   writeVarUInt(projectNum,buffer) ;
+                   for(size_t i =0;i< projectNum; ++i){
                        writeStringBinary(action.projection[i].first,buffer);
                        writeStringBinary(action.projection[i].second,buffer);
                    }
@@ -109,13 +109,13 @@ namespace DB {
         //Settings settings;
         auto actions =  std::make_shared<ExpressionActions>(inputColumn,context->getSettingsRef());
 
-        Int64  actionNum ;
-        readVarInt(actionNum,buffer);
-        for(int i = 0;i< actionNum ; ++i){
+        size_t  actionNum ;
+        readVarUInt(actionNum,buffer);
+        for(size_t i = 0;i< actionNum ; ++i){
 
-            Int64  type ;
+            size_t  type ;
             ExpressionAction action;
-            readVarInt(type,buffer);
+            readVarUInt(type,buffer);
             switch (type) {
                 case ExpressionAction::ADD_COLUMN :{
 
@@ -130,11 +130,13 @@ namespace DB {
                     }catch (Exception e) {
                         throw e;
                     }
+                    action.type = ExpressionAction::ADD_COLUMN;
                     break;
                 }
                 case ExpressionAction::REMOVE_COLUMN :{
 
                     readStringBinary(action.source_name,buffer);
+                    action.type = ExpressionAction::REMOVE_COLUMN;
                     break;
                 }
                 case ExpressionAction::APPLY_FUNCTION : {
@@ -143,16 +145,16 @@ namespace DB {
                     std::string funReturnype ;
                     readStringBinary(funReturnype,buffer);
                     // action.result_type = createDataNumTypeFromString(type);
-                    int arg_num ;
-                    readVarInt(arg_num,buffer);
-                    for(int i =0; i< arg_num;++i){
+                    size_t arg_num ;
+                    readVarUInt(arg_num,buffer);
+                    for(size_t i =0; i< arg_num;++i){
                         readStringBinary(action.argument_names[i],buffer);
                     }
                     readStringBinary(action.function_name,buffer);
 
                     //Context context = Context::createGlobal();
                     action.function_builder = FunctionFactory::instance().get(action.function_name, *context);
-
+                    action.type = ExpressionAction::APPLY_FUNCTION;
                     //action.function will be create in ExpressionActions::addImpl
 
                     /*
@@ -175,24 +177,26 @@ namespace DB {
                     std::string type ;
                     readStringBinary(type,buffer);
                     action.result_type = createDataTypeFromString(type);
-
+                    action.type = ExpressionAction::COPY_COLUMN;
                     break;
                 }
                 case ExpressionAction::PROJECT : {
-                    int projectNum ;
-                    readVarInt(projectNum,buffer);
-                    for(int i=0;i<projectNum;++i){
+                    size_t projectNum ;
+                    readVarUInt(projectNum,buffer);
+                    for(size_t i=0;i<projectNum;++i){
                         std::string first ;
                         std::string second ;
                         readStringBinary(first,buffer);
                         readStringBinary(second,buffer);
                         action.projection.push_back(std::pair<std::string,std::string>(first,second));
                     }
+                    action.type = ExpressionAction::PROJECT;
                     break;
                 }
                 default:
                     break;
             }
+
 
             actions->add(action); // will build funtion and convert sample_block
 

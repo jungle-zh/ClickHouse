@@ -38,7 +38,7 @@ namespace  DB {
         } else if(nodeName == "scanExecNode"){
             return ScanExecNode::deseralize(*in,context);
         } else {
-            throw Exception("unknow execNode to deseralize ");
+            throw Exception("unknow execNode to deseralize " + nodeName);
         }
 
 

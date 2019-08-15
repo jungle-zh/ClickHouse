@@ -165,7 +165,9 @@ namespace DB {
                 for (size_t i = 0; i < unionQuery->list_of_selects->children.size(); ++i) {
                     ASTSelectQuery *selectQuery = typeid_cast<ASTSelectQuery *>(
                             unionQuery->list_of_selects->children[i].get());
-                    childNode->addChild(analyse(selectQuery));
+                    auto subqueryRoot = analyse(selectQuery);
+                    childNode->addChild(subqueryRoot);
+                    childNode->setHeader(subqueryRoot->getHeader());// UnionPlanNode is header is child's header
                 }
 
 
@@ -199,6 +201,7 @@ namespace DB {
 
             fromClauseNode->addChild(childNode);
 
+            fromClauseNode->setHeader(childNode->getHeader());
 
         } else if (cnum == 2) {
 
@@ -221,7 +224,9 @@ namespace DB {
                 for (size_t i = 0; i < unionQuery->list_of_selects->children.size(); ++i) {
                     ASTSelectQuery *selectQuery = typeid_cast<ASTSelectQuery *>(
                             unionQuery->list_of_selects->children[i].get());
-                    leftNode->addChild(analyse(selectQuery));
+                    auto subqueryRoot = analyse(selectQuery);
+                    leftNode->addChild(subqueryRoot);
+                    leftNode->setHeader(subqueryRoot->getHeader());
                 }
 
             } else if (leftexp->database_and_table_name) {
@@ -261,7 +266,9 @@ namespace DB {
                 for (size_t i = 0; i < unionQuery->list_of_selects->children.size(); ++i) {
                     ASTSelectQuery *selectQuery = typeid_cast<ASTSelectQuery *>(
                             unionQuery->list_of_selects->children[i].get());
-                    rightNode->addChild(analyse(selectQuery));
+                    auto subqueryRoot = analyse(selectQuery);
+                    rightNode->addChild(subqueryRoot);
+                    rightNode->setHeader(subqueryRoot->getHeader());
                 }
 
             } else if (rightexp->database_and_table_name) {
@@ -297,6 +304,7 @@ namespace DB {
             std::shared_ptr<PlanNode> joinNode = analyseJoin(leftNode, rightNode,joininfo);
 
             fromClauseNode->addChild(joinNode);
+            fromClauseNode->setHeader(joinNode->getHeader());
 
         } else {
             throw new Exception("select query table child num err");
@@ -376,8 +384,8 @@ namespace DB {
         }
         std::shared_ptr<PlanNode> joinNode = std::make_shared<JoinPlanNode>(join_key,leftHeader,rightHeader,kind,strictness);
 
-        joinNode->addChild(left);
-        joinNode->addChild(right);
+        joinNode->addChild(left);//left is child[0];
+        joinNode->addChild(right);//right is child[1];
 
         return joinNode;
     }
@@ -769,58 +777,70 @@ namespace DB {
 
         } else if( JoinPlanNode* joinPlanNode = typeid_cast<JoinPlanNode*>(root.get())){
 
-           assert(root->getChilds().size() ==2 );
+           assert(joinPlanNode->getChilds().size() ==2 );
 
            //todo broadcast case
 
             std::shared_ptr<Distribution>  joinNodeDistribution ;
 
-           if(root->getChild(0)->getDistribution()->equals(*(root->getChild(1)->getDistribution())) &&
-                   root->getChild(0)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
+           if(joinPlanNode->getChild(0)->getDistribution()->equals(*(joinPlanNode->getChild(1)->getDistribution())) &&
+                   joinPlanNode->getChild(0)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
 
-               joinNodeDistribution = root->getChild(0)->getDistribution();
+               auto leftDis = joinPlanNode->getChild(0)->getDistribution();
+               joinNodeDistribution =  std::make_shared<ExechangeDistribution>(leftDis->distributeKeys,leftDis->partitionNum);
+
                std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(DataExechangeType::tone2onejoin,joinNodeDistribution); // exechangeNode sender distribution,
-               if( root->getChild(0)->exechangeCost() > root->getChild(1)->exechangeCost()){                                       // submit father stage will set executor info in distribution for child
-                   enode->addChild(root->getChild(1));
-                   root->setChild(enode,1); // 0 is origin table ,1 is enode
+               if( joinPlanNode->getChild(0)->exechangeCost() > joinPlanNode->getChild(1)->exechangeCost()){                                       // submit father stage will set executor info in distribution for child
+                   enode->addChild(joinPlanNode->getChild(1));
+                   joinPlanNode->setChild(enode,1); // 0 is origin table ,1 is enode
+                   joinPlanNode->setHashTable("right");
                 } else{
-                   enode->addChild(root->getChild(0));
-                   root->setChild(enode,0);
+                   enode->addChild(joinPlanNode->getChild(0));
+                   joinPlanNode->setChild(enode,0);
+                   joinPlanNode->setHashTable("left");
                 }
 
 
 
-           }else if( root->getChild(0)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
+           }else if( joinPlanNode->getChild(0)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
 
-               joinNodeDistribution = root->getChild(0)->getDistribution();
+               auto leftDis = joinPlanNode->getChild(0)->getDistribution();
+               joinNodeDistribution =  std::make_shared<ExechangeDistribution>(leftDis->distributeKeys,leftDis->partitionNum);
+
                std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(DataExechangeType::toneshufflejoin,joinNodeDistribution); // exechangeNode sender distribution
-               enode->addChild(root->getChild(1));                                                                                  // submit father stage will set executor info in distribution for child
+               enode->addChild(joinPlanNode->getChild(1));                                                                                  // submit father stage will set executor info in distribution for child
 
-               root->setChild(enode,1);
+               joinPlanNode->setChild(enode,1);
+               joinPlanNode->setHashTable("right");
 
 
-           }else if( root->getChild(1)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
+           }else if( joinPlanNode->getChild(1)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
 
-               joinNodeDistribution = root->getChild(1)->getDistribution();
+
+               auto rightDis = joinPlanNode->getChild(1)->getDistribution();
+               joinNodeDistribution =  std::make_shared<ExechangeDistribution>(rightDis->distributeKeys,rightDis->partitionNum);
+
                std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(DataExechangeType::toneshufflejoin,joinNodeDistribution);
-               enode->addChild(root->getChild(0)); //add child1 distribution ,child 0 know how to redistribute
+               enode->addChild(joinPlanNode->getChild(0)); //add child1 distribution ,child 0 know how to redistribute
 
-               root->setChild(enode,0);
+               joinPlanNode->setChild(enode,0);
+               joinPlanNode->setHashTable("left");
 
            }else {
 
                joinNodeDistribution = std::make_shared<ExechangeDistribution>(joinPlanNode->joinKeys,64);
 
                std::shared_ptr<ExechangeNode> enode0 = std::make_shared<ExechangeNode>(DataExechangeType::ttwoshufflejoin,joinNodeDistribution);
-               enode0->addChild(root->getChild(0));
-               enode0->addChild(root->getChild(1));
+               enode0->addChild(joinPlanNode->getChild(0));
+               enode0->addChild(joinPlanNode->getChild(1));
 
-               root->cleanChild();
-               root->setChild(enode0,0);
+               joinPlanNode->cleanAndResizeToNChild(1);
+               joinPlanNode->setChild(enode0,0);
+               joinPlanNode->setHashTable("right");// todo  choose maller table
 
            }
 
-           root->setDistribution(joinNodeDistribution);
+            joinPlanNode->setDistribution(joinNodeDistribution);
 
 
         } else if(MergePlanNode* mergePlanNode = typeid_cast<MergePlanNode*>(root.get())){
@@ -861,7 +881,8 @@ namespace DB {
             for (auto child : root->getChilds()) {
                 enode->addChild(child);
             }
-            root->cleanChild();
+            root->cleanAndResizeToNChild(1);
+
             root->setChild(enode,0);
 
 
@@ -1011,7 +1032,7 @@ namespace DB {
 
             std::vector<std::shared_ptr<PlanNode>> childs = enode->getChilds();
 
-            assert(childs.size() > 1);
+            //assert(childs.size() > 1);
             for(size_t i=0;i< childs.size() ;++i){
 
                 auto childStage =  std::make_shared<Stage>(jobId,stageid++,context);
@@ -1066,6 +1087,73 @@ namespace DB {
                 && !typeid_cast<const ASTTableExpression *>(child.get()))
                 collectUsedColumns(child.get(), usedColumn);
         }
+
+    }
+
+    bool QueryAnalyzer::onlyOneStage(std::shared_ptr<PlanNode> root){
+        assert(root->getName() == "resultPlanNode");
+        auto cur  = root;
+        while(cur){
+
+            ScanPlanNode * scanPlanNode = typeid_cast<ScanPlanNode *>(cur.get());
+            ExechangeNode * exechangeNode = typeid_cast<ExechangeNode *>(cur.get());
+            JoinPlanNode * joinPlanNode = typeid_cast<JoinPlanNode *>(cur.get());
+            if(scanPlanNode)
+                return true;
+            else if(joinPlanNode){
+                if(joinPlanNode->getChilds().size() == 2 ){
+
+                    ExechangeNode * left = typeid_cast<ExechangeNode *>(joinPlanNode->getChild(0).get());
+                    if(!left){
+                        cur = joinPlanNode->getChild(0);
+                    } else{
+                        cur = joinPlanNode->getChild(1);
+                    }
+
+                } else {
+                    ExechangeNode * exechangeNode = typeid_cast<ExechangeNode *>(joinPlanNode->getChild(0).get());
+                    assert(exechangeNode != NULL);
+                    return false;
+                }
+            }
+            else if(exechangeNode)
+                return false;
+            else if(cur->getChilds().size() != 1)
+                return false;
+            else
+                cur = cur->getChild(0);
+
+        }
+        return false;
+
+    }
+    void QueryAnalyzer::addUnionToSplitStage(std::shared_ptr<PlanNode> root){
+
+        assert(root->getName() == "resultPlanNode");
+
+        assert(root->getChilds().size() == 1);
+
+        auto child = root->getChild(0);
+
+
+        auto unionPlanNode = std::make_shared<UnionPlanNode>();
+        unionPlanNode->setHeader(child->getHeader());
+
+        std::shared_ptr<Distribution> distribution = std::make_shared<ExechangeDistribution>();
+        std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(DataExechangeType::tunion,distribution); // submit stage will set executor info in distribution
+        distribution->partitionNum = 1;
+        distribution->distributeKeys = std::vector<std::string>();
+
+        enode->addChild(child);
+        unionPlanNode->addChild(enode);
+
+        //root->cleanChild();
+        root->setChild(unionPlanNode,0);
+
+        unionPlanNode->setDistribution(distribution);
+        root->setDistribution(distribution);
+
+
 
     }
 

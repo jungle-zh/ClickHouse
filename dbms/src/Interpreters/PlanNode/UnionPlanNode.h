@@ -11,6 +11,7 @@ class UnionPlanNode :public  PlanNode{
 
 public:
 
+    std::shared_ptr<ExecNode>  createExecNode() override;
     UnionPlanNode(){};
 
 

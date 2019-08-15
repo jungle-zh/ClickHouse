@@ -171,8 +171,10 @@ namespace DB {
     void TaskScheduler::applyDataReceiverForStageExechangePart(
             std::vector<std::shared_ptr<TaskConnectionClient>> taskClients, std::shared_ptr<Stage> root) {
 
-        std::map<int,ExechangePartition> & parts = root->getExechangeDistribution()->partitionInfo;
-        std::map<int,DataReceiverInfo> & receiver = root->getExechangeDistribution()->receiverInfo;
+        ExechangeDistribution * exechangeDistribution = root->getExechangeDistribution();
+        assert(exechangeDistribution != NULL);
+        std::map<int,ExechangePartition> & parts = exechangeDistribution->partitionInfo;
+        std::map<int,DataReceiverInfo> & receiver = exechangeDistribution->receiverInfo;
 
         for (int i = 0; i < root->getPartitionNum(); ++i) {
 

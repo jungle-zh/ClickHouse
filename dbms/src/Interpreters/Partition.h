@@ -140,8 +140,9 @@ public:
     std::map<int,ScanPartition> scanPartitions;
 
     bool isPartitionTaskAssigned = false;
+    std::map<int, ScanPartition> & getScanPartitions() { return  scanPartitions;}
 
-    void setScanPartitions(std::map<int,ScanPartition> part){ scanPartitions = part;isPartitionTaskAssigned = true;}
+    //void setScanPartitions(std::map<int,ScanPartition> part){ scanPartitions = part;isPartitionTaskAssigned = true;}
 
 
 };
