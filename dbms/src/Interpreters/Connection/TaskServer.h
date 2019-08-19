@@ -41,6 +41,7 @@ namespace DB {
         //std::vector<std::shared_ptr<DataServer>>  dataServers;
         Poco::Logger * log;
         Context * server_context ;
+        UInt16 dataPortCnt ;
 
     };
 

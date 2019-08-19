@@ -17,7 +17,7 @@ class TaskScheduler {
 
 public:
     TaskScheduler(){
-
+        log = &Logger::get("TaskScheduler");
     }
     void applyResourceAndSubmitStage(std::shared_ptr<Stage> root);
     void assignDataReciver(std::shared_ptr<Stage> root);
@@ -56,8 +56,12 @@ private:
     BlockIO io;
     //TCPHandler * handler;
 
+    Logger * log;
 
 
+
+
+    void debugStage(std::shared_ptr<Stage> cur, std::stringstream  & ss, int blankNum) ;
 };
 
 

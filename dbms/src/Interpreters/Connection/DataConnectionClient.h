@@ -26,16 +26,8 @@ namespace DB {
 
     public:
 
+        DataConnectionClient(std::string ip_, UInt16  port_,Task * task_,Context * context_ );
 
-        DataConnectionClient(std::string ip_, UInt32  port_,Task * task_ ):resolved_address(ip_,port_){
-
-            ip = ip_;
-            port = port_;
-            log = &Poco::Logger::get("DataConnectionClient");
-            task = task_;
-            //settings = settings_;
-            //compression_settings =  CompressionSettings(settings) ;
-        }
 
         bool connected = false;
         std::shared_ptr<IBlockOutputStream> block_out; //NativeBlockOutputStream
@@ -54,7 +46,7 @@ namespace DB {
         ConnectionTimeouts timeouts;
 
         std::string ip;
-        UInt32 port ;
+        UInt16 port ;
         Settings settings;
         CompressionSettings  compression_settings ;
 
@@ -74,6 +66,7 @@ namespace DB {
         Poco::Logger * log;
         bool stopSend = true;
         Task * task;
+        Context * context;
         ThreadPool pool{1};
 
     };

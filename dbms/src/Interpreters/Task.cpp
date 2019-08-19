@@ -12,6 +12,8 @@
 #include <Interpreters/ExecNode/AggExecNode.h>
 #include <Interpreters/ExecNode/ProjectExecNode.h>
 #include "Task.h"
+#include "Stage.h"
+
 namespace DB {
 
 
@@ -82,8 +84,9 @@ namespace DB {
 
 
         if(!isResultTask()){
-            sender = std::make_shared<DataSender>(exechangeTaskDataDest,this);
-            sender->tryConnect();  //block until success
+            sender = std::make_shared<DataSender>(exechangeTaskDataDest,this,context);
+            LOG_DEBUG(log,"task :" + taskId + " is not result task ,and connect to father task ");
+            sender->tryConnect();    //jungle comment : block until success, create dest partion number connection ,shuffle result block using dest destribution key and send
         }
         if(exechangeTaskDataSource.inputTaskIds.size() > 0){
             receiver = std::make_shared<DataReceiver>(exechangeTaskDataSource,this,context); // will create tcp server and accept connection
@@ -163,6 +166,39 @@ namespace DB {
         pre->setChild(node);
 
     }
+    void Task::debugString(std::stringstream  & ss ,size_t blankNum) {
+
+        INSERT_BLANK(blankNum);
+        ss << "task id :" << getTaskId();
+        ss << "     receive from:"<< exechangeTaskDataSource.receiver.ip <<":"<<exechangeTaskDataSource.receiver.dataPort;
+        ss << "     send to  :";
+        for(auto pair : exechangeTaskDataDest.receiverInfo){
+            int partitionId =  pair.first;
+            ss << partitionId;
+            ss << ",";
+            DataReceiverInfo receiverInfo = pair.second;
+            ss << receiverInfo.ip << ":" << receiverInfo.dataPort;
+            ss << "|";
+
+        }
+        //ss << "\n";
+        ss << "     distribute keys:";
+        for(auto key : exechangeTaskDataDest.distributeKeys){
+            ss << key ;
+            ss << "#";
+        }
+        //ss << "\n";
+        ss << "      execnode :";
+        for(auto e : execNodes){
+
+            ss <<  e->getName();
+            ss << ",";
+        }
+        //ss << "\n";
+    }
+
+
+
 
 
 }

@@ -32,9 +32,32 @@ public:
                  joinKind(joinKind_),
                  strictness(strictness_){
 
+        if(joinKind == "Comma"){
+            kind =  ASTTableJoin::Kind::Comma ;
+        } else if(joinKind == "Cross") {
+            kind =  ASTTableJoin::Kind::Cross ;
+        } else if(joinKind == "Full") {
+            kind =  ASTTableJoin::Kind::Full ;
+        } else if(joinKind == "Inner") {
+            kind =  ASTTableJoin::Kind::Inner ;
+        } else if(joinKind == "Left") {
+            kind =  ASTTableJoin::Kind::Left ;
+        } else if(joinKind == "Right") {
+            kind =  ASTTableJoin::Kind::Right ;
+        }
+
+        if(strictness == "All"){
+            strict = ASTTableJoin::Strictness::All;
+        } else if(strictness == "Any"){
+            strict = ASTTableJoin::Strictness::Any;
+        } else {
+            strict = ASTTableJoin::Strictness::Unspecified;
+        }
+
+
 
         join = std::make_unique<Join>(
-                mainTableHeader.getNamesAndTypesList().getNames(), hashTableHeader.getNamesAndTypesList().getNames(),
+                joinKey, joinKey,
                 settings.join_use_nulls, SizeLimits(settings.max_rows_in_join, settings.max_bytes_in_join, settings.join_overflow_mode),
                 kind, strict);
 

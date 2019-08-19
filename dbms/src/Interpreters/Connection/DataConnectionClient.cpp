@@ -10,11 +10,24 @@
 #include <IO/WriteHelpers.h>
 #include <Common/ClickHouseRevision.h>
 #include <IO/WriteBufferFromPocoSocket.h>
+#include <Poco/Net/NetException.h>
 #include <Interpreters/Task.h>
+#include <Interpreters/Context.h>
 #include "DataConnectionClient.h"
 
 namespace DB {
 
+    DataConnectionClient::DataConnectionClient(std::string ip_, UInt16  port_,Task * task_,Context * context_ ):resolved_address(ip_,port_){
+
+    ip = ip_;
+    port = port_;
+    log = &Poco::Logger::get("DataConnectionClient");
+    task = task_;
+    context = context_;
+    timeouts = ConnectionTimeouts::getTCPTimeoutsWithFailover(context->getSettings());
+    //settings = settings_;
+    //compression_settings =  CompressionSettings(settings) ;
+    }
     void  DataConnectionClient::sendHello(std::string taskId, int partionId) {
 
 
@@ -60,17 +73,36 @@ namespace DB {
 
         socket = std::make_unique<Poco::Net::StreamSocket>();
 
+        while (!connected){
+
         try {
-
-            socket->connect(resolved_address, timeouts.connection_timeout);
-            socket->setReceiveTimeout(timeouts.receive_timeout);
-            socket->setSendTimeout(timeouts.send_timeout);
-            socket->setNoDelay(true);
-
-        }catch (Exception e){
-            LOG_ERROR(log,e.what());
+            auto timeout = Poco::Timespan(50000);
+            LOG_DEBUG(log,"task " + task->getTaskId() + " sender  start to  connect to remote ,time_out:" << timeouts.connection_timeout.microseconds() );
+            socket->connect(resolved_address, timeout);
+            connected = true;
+        }catch (Poco::Net::ConnectionAbortedException& exception){
             connected = false;
+            LOG_ERROR(log,exception.what());
+
+        }catch (Poco::Net::ConnectionResetException& exception){
+            connected = false;
+            LOG_ERROR(log,exception.what());
         }
+        catch (Poco::Net::ConnectionRefusedException& exception){
+            connected = false;
+            LOG_ERROR(log,exception.what());
+        }
+        if(!connected){
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            LOG_WARNING(log,"connect failed, retry.. ");
+        }
+
+        }
+
+        socket->setReceiveTimeout(timeouts.receive_timeout);
+        socket->setSendTimeout(timeouts.send_timeout);
+        socket->setNoDelay(true);
+
 
         in = std::make_shared<ReadBufferFromPocoSocket>(*socket);
         out = std::make_shared<WriteBufferFromPocoSocket>(*socket);

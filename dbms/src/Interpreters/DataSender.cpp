@@ -9,12 +9,10 @@ namespace DB {
     void DataSender::tryConnect(){
 
         for(auto e :    dest.receiverInfo){
-           auto connClient =  std::make_shared<DataConnectionClient>(e.second.ip,e.second.dataPort,task);
-            if(!connClient->connect()){
-                LOG_ERROR(log,"connect failed ");
-            } else {
-                LOG_DEBUG(log,"task " + task->getTaskId() + " sender  connect to server :" << e.second.ip );
-            }
+           auto connClient =  std::make_shared<DataConnectionClient>(e.second.ip,e.second.dataPort,task,context);
+            connClient->connect();
+            LOG_DEBUG(log,"task " + task->getTaskId() + " sender  connect to server success:" << e.second.ip );
+
             connClient->sendHello(task->getTaskId(),e.first); // send taskId and partition,receive send command in listen
             connClient->startListen();
             connections.insert({e.first,connClient});

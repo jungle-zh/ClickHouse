@@ -250,15 +250,50 @@ namespace DB {
 
     }
 
-    void ExecNode::serializeHeader(Block & header ,WriteBuffer & buffer){
+    void ExecNode::serializeHeader(Block & block ,WriteBuffer & buffer){
 
+        /*
         header.getNamesAndTypesList().writeText(buffer);
+        */
+        size_t columns = block.columns();
+        size_t rows = block.rows();
+        writeVarUInt(columns, buffer);
+        writeVarUInt(rows, buffer);
 
+        for (size_t i = 0; i < columns; ++i) {
+
+
+            const ColumnWithTypeAndName &column = block.safeGetByPosition(i);
+
+            /// Name
+            writeStringBinary(column.name, buffer);
+
+            /// Type
+            String type_name = column.type->getName();
+
+
+
+            writeStringBinary(type_name, buffer);
+
+            /// Data
+            if (rows)   {
+                ColumnPtr full_column;
+
+                if (ColumnPtr converted = column.column->convertToFullColumnIfConst())
+                    full_column = converted;
+                else
+                    full_column = column.column;
+
+                IDataType::OutputStreamGetter output_stream_getter = [&] (const IDataType::SubstreamPath &) { return &buffer; };
+                column.type->serializeBinaryBulkWithMultipleStreams(*full_column, output_stream_getter, 0, 0, false, {});
+            }
+        }
 
     }
 
     Block ExecNode::deSerializeHeader( DB::ReadBuffer &buffer) {
 
+        /*
         Block header ;
         NamesAndTypesList res ;
         res.readText(buffer);
@@ -267,6 +302,49 @@ namespace DB {
             header.insert(ColumnWithTypeAndName(nullptr, input_elem.type, input_elem.name));
 
         return header;
+        */
+        size_t columns = 0;
+        size_t rows = 0;
+
+        readVarUInt(columns, buffer);
+        readVarUInt(rows, buffer);
+        Block res;
+        const DataTypeFactory & data_type_factory = DataTypeFactory::instance();
+        for (size_t i = 0; i < columns; ++i)
+        {
+
+            ColumnWithTypeAndName column;
+
+            /// Name
+            readBinary(column.name, buffer);
+
+            /// Type
+            String type_name;
+            readBinary(type_name, buffer);
+            column.type = data_type_factory.get(type_name);
+
+
+
+            /// Data
+            MutableColumnPtr read_column = column.type->createColumn();
+
+            double avg_value_size_hint = 0;
+            if (rows >0 )   {
+                IDataType::InputStreamGetter input_stream_getter = [&] (const IDataType::SubstreamPath &) { return &buffer; };
+                column.type->deserializeBinaryBulkWithMultipleStreams(*read_column, input_stream_getter, rows, avg_value_size_hint, false, {});
+
+                if (column.column->size() != rows)
+                    throw Exception("Cannot read all data in NativeBlockInputStream.", ErrorCodes::CANNOT_READ_ALL_DATA);
+            }
+               // readData(*column.type, *read_column, istr, rows, avg_value_size_hint);
+
+            column.column = std::move(read_column);
+
+            res.insert(std::move(column));
+
+
+        }
+        return  res;
 
     }
 

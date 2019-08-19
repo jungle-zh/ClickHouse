@@ -14,7 +14,7 @@ namespace DB {
 
 enum DataExechangeType {
 
-   tone2onejoin,
+   tone2onejoin, //jungle comment ,still shuffle  to dest
    toneshufflejoin,
    ttwoshufflejoin,
    taggmerge,
@@ -47,7 +47,7 @@ struct DataReceiverInfo {
     }
 
     std::string ip;  //dynamic allocate 
-    UInt32 dataPort;
+    UInt16 dataPort;
 };
 struct ExechangePartition{
     UInt32 partitionId;

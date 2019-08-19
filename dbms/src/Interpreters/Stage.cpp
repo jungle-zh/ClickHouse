@@ -23,6 +23,9 @@
 namespace DB {
 
 
+
+
+
     std::vector<std::string > Stage::getTaskIds(){
 
         auto dis = exechangeDistribution == NULL ?  scanDistribution : exechangeDistribution;
@@ -121,6 +124,7 @@ namespace DB {
                 task->setExecNodes(execNodes);
                 tasks.insert({i,task});
             }
+            //jungle comment : do not to care about source and dest distribution difference ,just shuffle and send to dest
 
         } else if(!exechangeDistribution && scanDistribution){
 
@@ -210,6 +214,17 @@ namespace DB {
                 tasks.insert({i,task});
             }
         }
+    }
+    void Stage::debugString(std::stringstream  & ss ,size_t blankNum ) {
+
+
+        INSERT_BLANK(blankNum);
+        ss << "stage id:" << stageId;
+        ss << "\n";
+        for(auto pair : getTasks()){
+            pair.second->debugString(ss,blankNum);
+        }
+
     }
 
 }

@@ -61,6 +61,8 @@ class  Context;
         bool allChildTaskFinish() { return finishedChildTask.size() ==  childTask.size(); }
 
         void createBottomExecNodeByBuffer();
+        void debugString(std::stringstream  & ss ,size_t blankNum );
+        void debugDest(std::stringstream  & ss);
         //void setDataConnectionHandlerFactory(DataConnectionHandlerFactory * factory_){  dataConnectionHandlerFactory = factory_;}
 
 
@@ -93,6 +95,8 @@ class  Context;
         std::vector<std::string> finishedChildTask;
         std::vector<std::string> childTask;
         //DataConnectionHandlerFactory * dataConnectionHandlerFactory ;
+
+
 
     };
 

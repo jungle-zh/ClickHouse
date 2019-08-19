@@ -19,9 +19,10 @@ class DataSender {
 
 public:
 
-    DataSender(ExechangeTaskDataDest &  dest_ ,Task * task_ ){
+    DataSender(ExechangeTaskDataDest &  dest_ ,Task * task_ , Context * context_){
          dest  = dest_;
          task = task_;
+        context  = context_;
          log =  &Logger::get("DataSender");
     }
 
@@ -42,8 +43,9 @@ public:
     int  stageId ;
 
     Task * task ;
-
+    Context * context;
     Poco::Logger * log;
+
 
 
 };

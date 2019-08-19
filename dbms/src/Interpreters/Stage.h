@@ -12,6 +12,10 @@
 namespace DB {
 
 
+#define INSERT_BLANK(n) \
+    for(size_t i=0;i<n;++i){  \
+        ss << " ";   \
+    }  \
 
     class ScanPlanNode;
     class Stage {
@@ -81,6 +85,7 @@ namespace DB {
         std::vector<std::string> mainintTableChildStageId ;
 
         Context * context;
+        void debugString(std::stringstream  & ss,size_t  blankNum) ;
 
 
     };

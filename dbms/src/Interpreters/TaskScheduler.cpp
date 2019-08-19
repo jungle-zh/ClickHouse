@@ -13,6 +13,10 @@ namespace DB {
 
         assignDataReciver(root);// stage 的 task receiver 个数 和 stage partitonNum 一样,每个 task 启动的
         buildStageTask(root);
+        std::stringstream ss ;
+        ss << "\n";
+        debugStage(root,ss,0);
+        LOG_DEBUG(log,ss.str());
         submitStage(root);                      // data receiver 个数 和 child stage 个数一样
     }
 
@@ -286,6 +290,17 @@ namespace DB {
         auto connect  = std::make_shared<TaskConnectionClient>(receiver.ip,receiver.taskPort);
         connect->connect();
         return connect;
+    }
+
+    void TaskScheduler::debugStage(std::shared_ptr<Stage> cur, std::stringstream  & ss, int blankNum) {
+
+        cur->debugString(ss,blankNum);
+        ss << "\n";
+        for(auto child : cur->getChildStages()){
+            debugStage(child,ss, blankNum + 5);
+        }
+
+
     }
 
 

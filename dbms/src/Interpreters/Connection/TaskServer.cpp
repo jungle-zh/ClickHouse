@@ -21,11 +21,12 @@ namespace DB{
         log = &Logger::get("TaskServer");
         server_context = context_;
         LOG_INFO(log,"TaskServer started ..");
+        dataPortCnt = 7000;
     }
     DataReceiverInfo TaskServer::applyResource() {
         DataReceiverInfo info;
-        info.ip = "localhost";
-        info.dataPort = 7000;
+        info.ip = "127.0.0.1";
+        info.dataPort = dataPortCnt++;
         return  info;
     }
 }
