@@ -15,12 +15,13 @@ namespace DB {
      }
 
 
-     auto receiveHashTable  = [this](Block & b) {
-         task->receiveHashTable(b);
+     auto receiveHashTable  = [this](Block & b,std::string childTaskId) {
+         task->receiveHashTable(b,childTaskId);
      };
 
-     auto receiveMainTable = [this](Block & b){
+     auto receiveMainTable = [this](Block & b,std::string childTaskId){
          //task->receiveMainTable(b);
+         (void) childTaskId;
          task->receiveBlock(b);
      };
 
@@ -55,6 +56,11 @@ namespace DB {
              if(beloneTo(p.first,rightTableStageId)){
                  while(!p.second->getEndOfReceive()){ // hash table preprare
                      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                 }
+                 if(p.second->getEndOfReceive()){
+                     LOG_DEBUG(log,"task:" << task->getTaskId()
+                     << " received all hash table data from stage :" << rightTableStageId
+                     << " ,total rows:" << p.second->recievedRows);
                  }
              }
          }

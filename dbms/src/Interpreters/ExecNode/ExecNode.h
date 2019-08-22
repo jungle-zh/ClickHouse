@@ -48,7 +48,7 @@ public:
 
     static DataTypePtr createDataTypeFromString(std::string type);
 
-
+    static bool verify(Block & exeBlock,Block & paramBlock) ; // todo
 
     std::shared_ptr<ExecNode> children;
 

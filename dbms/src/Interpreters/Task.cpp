@@ -131,14 +131,54 @@ namespace DB {
     void Task::finish(){
 
     }
+    std::vector<std::string> Task::split1(const std::string& str, const std::string& delim) {
+        std::vector<std::string>  res;
+        if("" == str) return res;
+        //先将要切割的字符串从string类型转换为char*类型
+        char * strs = new char[str.length() + 1] ; //不要忘了
+        strcpy(strs, str.c_str());
 
-    void Task::receiveHashTable(Block &block) {
+        char * d = new char[delim.length() + 1];
+        strcpy(d, delim.c_str());
+
+        char *p = strtok(strs, d);
+        while(p) {
+            std::string s = p; //分割得到的字符串转换为string类型
+            res.push_back(s); //存入结果数组
+            p = strtok(NULL, d);
+        }
+
+        return res;
+    }
+
+    void Task::receiveHashTable(Block &block ,std::string childTaskId) {
+
+        hashTableLock.lock();
+        auto stringVec = split1(childTaskId,"_");
+        assert(stringVec.size() == 3);
+        std::string childStageId = stringVec[0] + "_" + stringVec[1];
+
+        bool  findJoin  = false;
 
         ProjectExecNode * projectExecNode = typeid_cast<ProjectExecNode*>( root.get() );
         assert(projectExecNode != NULL);
-        JoinExecNode * joinExecNode = typeid_cast<JoinExecNode*>( projectExecNode->getChild().get() );
-        assert(joinExecNode != NULL);
-        joinExecNode->getJoin()->insertFromBlock(block);
+        std::shared_ptr<ExecNode> cur = projectExecNode->getChild();
+        while(cur){
+            JoinExecNode * joinExecNode = typeid_cast<JoinExecNode*>( cur.get() );
+
+            if(joinExecNode && joinExecNode->getHashTableStageId() == childStageId){
+                joinExecNode->getJoin()->insertFromBlock(block);
+                findJoin = true;
+                break;
+            }
+            cur = cur->getChild();
+        }
+
+        if(!findJoin){
+            throw Exception("not find join node in task:" + taskId);
+        }
+        hashTableLock.unlock();
+
 
     }
 

@@ -25,6 +25,12 @@ namespace DB {
 
 
 
+    std::shared_ptr<Stage> Stage::getChildStage(std::string childStageId) {
+          if(childs.find(childStageId) == childs.end()) {
+              throw Exception("not find child stage:" + childStageId);
+          }
+        return childs[childStageId];
+    }
 
     std::vector<std::string > Stage::getTaskIds(){
 

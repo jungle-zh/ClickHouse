@@ -795,9 +795,15 @@ namespace DB {
                    joinPlanNode->setChild(enode,1); // 0 is origin table ,1 is enode
                    joinPlanNode->setHashTable("right");
                 } else{
+                   /*
                    enode->addChild(joinPlanNode->getChild(0));
                    joinPlanNode->setChild(enode,0);
                    joinPlanNode->setHashTable("left");
+                   */
+
+                   enode->addChild(joinPlanNode->getChild(1));
+                   joinPlanNode->setChild(enode,1); // 0 is origin table ,1 is enode
+                   joinPlanNode->setHashTable("right");
                 }
 
 
@@ -814,7 +820,9 @@ namespace DB {
                joinPlanNode->setHashTable("right");
 
 
-           }else if( joinPlanNode->getChild(1)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
+           }
+           /*
+           else if( joinPlanNode->getChild(1)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
 
 
                auto rightDis = joinPlanNode->getChild(1)->getDistribution();
@@ -826,7 +834,8 @@ namespace DB {
                joinPlanNode->setChild(enode,0);
                joinPlanNode->setHashTable("left");
 
-           }else {
+           }*/
+           else {
 
                joinNodeDistribution = std::make_shared<ExechangeDistribution>(joinPlanNode->joinKeys,64);
 
@@ -954,7 +963,8 @@ namespace DB {
                 auto rstage = std::make_shared<Stage>(jobId,stageid++,context);
                 splitStageByExechangeNode(enode->getChild(1),rstage);
                 currentStage->addChild(rstage);
-                currentStage->rightTableChildStageId = rstage->stageId;
+                currentStage->addRightTableChildStageId(rstage->stageId);
+                joinPlanNode->setHashTableStageId(rstage->stageId);
                 rstage->setFather(currentStage);
                 rstage->setDestExechangeType(etype);
 
@@ -973,7 +983,8 @@ namespace DB {
                     auto childStage = std::make_shared<Stage>(jobId,stageid++,context);
                     splitStageByExechangeNode(left->getChild(0),childStage);
                     currentStage->addChild(childStage);
-                    currentStage->rightTableChildStageId = childStage->stageId;
+                    currentStage->addRightTableChildStageId(childStage->stageId);
+                    joinPlanNode->setHashTableStageId(childStage->stageId);
                     childStage->setDestExechangeType(left->getDateExechangeType());
                     childStage->setFather(currentStage);
 
@@ -986,11 +997,12 @@ namespace DB {
                     currentStage->setSourceExechangeType(right->getDateExechangeType());
                     currentStage->setExechangeDistribution(right->getDistribution());
 
-                    assert(left->getChilds().size() == 1);
+                    assert(right->getChilds().size() == 1);
                     auto childStage = std::make_shared<Stage>(jobId,stageid++,context);
                     splitStageByExechangeNode(right->getChild(0),childStage);
                     currentStage->addChild(childStage);
-                    currentStage->rightTableChildStageId = childStage->stageId;
+                    currentStage->addRightTableChildStageId(childStage->stageId);
+                    joinPlanNode->setHashTableStageId(childStage->stageId);
                     childStage->setDestExechangeType(right->getDateExechangeType());
                     childStage->setFather(currentStage);
 

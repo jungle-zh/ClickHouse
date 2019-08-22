@@ -67,7 +67,8 @@ public:
 
     bool startToReceive = false;
     bool endOfReceive = false;
-    std::function<void(Block & ) >  receiveBlockCall;
+    UInt64 recievedRows ;
+    std::function<void(Block & ,std::string ) >  receiveBlockCall;
     std::function<void(std::string)> finishCall;
     std::function<bool ()> highWaterMarkCall;
 

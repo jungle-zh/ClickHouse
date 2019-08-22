@@ -51,7 +51,7 @@ class  Context;
         //Task(ExechangeTaskDataSource source, ExechangeTaskDataDest dest, std::vector<std::shared_ptr<ExecNode>> nodes);
         DataExechangeType exechangeType;
 
-        void receiveHashTable(Block &block);
+        void receiveHashTable(Block &block,std::string childTaskId);
 
         void receiveBlock(Block &block);
 
@@ -64,7 +64,7 @@ class  Context;
         void debugString(std::stringstream  & ss ,size_t blankNum );
         void debugDest(std::stringstream  & ss);
         //void setDataConnectionHandlerFactory(DataConnectionHandlerFactory * factory_){  dataConnectionHandlerFactory = factory_;}
-
+        std::vector<std::string> split1(const std::string& str, const std::string& delim) ;
 
 
     private:
@@ -95,6 +95,8 @@ class  Context;
         std::vector<std::string> finishedChildTask;
         std::vector<std::string> childTask;
         //DataConnectionHandlerFactory * dataConnectionHandlerFactory ;
+        std::mutex hashTableLock;
+        std::mutex mainTableLock;
 
 
 

@@ -1063,8 +1063,15 @@ void Aggregator::execute(std::shared_ptr<ExecNode>  child, AggregatedDataVariant
         size_t src_bytes = 0;
 
         /// Read all the data
+        bool  verify = false;
         while (Block block = child->read())
         {
+            if(!verify){
+                if(!ExecNode::verify(block,params.src_header)){
+                    throw Exception("aggregator src_header is not the same as block from execNode");
+                }
+                verify = true;
+            }
             if (isCancelled())
                 return;
 

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <Interpreters/ExecNode/ExecNode.h>
+#include <common/logger_useful.h>
 #include <Interpreters/Join.h>
 
 namespace DB {
@@ -25,12 +26,14 @@ public:
 
     virtual ~JoinExecNode() {}
     JoinExecNode(Names  & joinKey_ , Block & mainTableHeader_ , Block & hashTableHeader_,
-                 std::string joinKind_,std::string strictness_):
+                 std::string joinKind_,std::string strictness_,Block adjustHeader_, std::string hashTableStageId_):
                  joinKey(joinKey_),
                  mainTableHeader(mainTableHeader_),
                  hashTableHeader(hashTableHeader_),
                  joinKind(joinKind_),
-                 strictness(strictness_){
+                 strictness(strictness_),
+                 adjustHeader(adjustHeader_),
+                 hashTableStageId(hashTableStageId_){
 
         if(joinKind == "Comma"){
             kind =  ASTTableJoin::Kind::Comma ;
@@ -54,16 +57,17 @@ public:
             strict = ASTTableJoin::Strictness::Unspecified;
         }
 
-
+        //Block resultHeader = getHeader(false);
 
         join = std::make_unique<Join>(
                 joinKey, joinKey,
                 settings.join_use_nulls, SizeLimits(settings.max_rows_in_join, settings.max_bytes_in_join, settings.join_overflow_mode),
-                kind, strict);
+                kind, strict,adjustHeader);
 
 
         join->setSampleBlock(hashTableHeader);
 
+         log = &Logger::get("JoinExecNode");
 
     }
 
@@ -74,6 +78,7 @@ public:
 public:
 
     Join * getJoin(){ return  join.get();}
+    std::string getHashTableStageId() { return  hashTableStageId ;}
 private:
     Names joinKey;
     Block mainTableHeader;
@@ -87,6 +92,10 @@ private:
 
     ASTTableJoin::Kind kind;
     ASTTableJoin::Strictness strict;
+
+    Block adjustHeader;
+    std::string hashTableStageId;
+    Poco::Logger *log;
 
    // std::string hashTable ;
 

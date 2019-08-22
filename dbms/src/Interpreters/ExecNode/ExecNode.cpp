@@ -348,5 +348,20 @@ namespace DB {
 
     }
 
+    bool ExecNode::verify(DB::Block &exeBlock, DB::Block &paramBlock) {
+        auto it = exeBlock.begin();
+        auto it1 = paramBlock.begin();
+        while(it!=exeBlock.end() && it1 !=paramBlock.end()){
+           if(it->name  != it1->name)
+               break;
+           it++;
+           it1++;
+        }
+        if(it == exeBlock.end() && it1 == paramBlock.end())
+            return true;
+        return false;
+
+    }
+
 
 }

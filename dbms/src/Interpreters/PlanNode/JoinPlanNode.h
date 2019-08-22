@@ -22,6 +22,7 @@ public:
     std::string  strictness;
 
     std::string hashTable = "";
+    std::string hashTableStage ;
 
     JoinPlanNode(Names joinKey_, Block inputLeftHeader_ , Block inputRightHeader_, std::string joinKind_, std::string strictness_){
         joinKeys= joinKey_;
@@ -36,6 +37,7 @@ public:
 
 
     void setHashTable(std::string);
+    void setHashTableStageId(std::string);
 };
 
 }

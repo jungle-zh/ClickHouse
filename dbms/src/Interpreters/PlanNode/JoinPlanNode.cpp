@@ -12,16 +12,19 @@ namespace DB {
     std::shared_ptr<ExecNode> JoinPlanNode::createExecNode() {
 
         assert(hashTable == "right" || hashTable ==  "left");
+        assert(header);
         return  std::make_shared<JoinExecNode>(
                     joinKeys,
                     hashTable == "right" ? inputLeftHeader : inputRightHeader,
                     hashTable == "right" ? inputRightHeader : inputLeftHeader,
                     joinKind,
-                    strictness
+                    strictness,
+                    header
                 );
     }
     Block JoinPlanNode::getHeader()  {
-
+        if(header)
+            return  header;
         Block joinHeader ;
         for(ColumnWithTypeAndName e : inputLeftHeader.getColumnsWithTypeAndName()){
             joinHeader.insert(e);
@@ -36,10 +39,14 @@ namespace DB {
             }
 
         }
+        header = joinHeader;
         return  joinHeader;
     }
 
     void JoinPlanNode::setHashTable(std::string table) {
         hashTable = table;
+    }
+    void JoinPlanNode::setHashTableStageId(std::string hashTableStage_) {
+        hashTableStage = hashTableStage_;
     }
 }

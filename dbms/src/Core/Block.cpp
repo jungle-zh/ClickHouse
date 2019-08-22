@@ -518,6 +518,28 @@ void Block::swap(Block & other) noexcept
     index_by_name.swap(other.index_by_name);
 }
 
+void Block::adjustAsHeader( DB::Block header) {
+    for(size_t i=0; i<header.data.size();++i){
+        if(index_by_name.find(header.data[i].name)==index_by_name.end())
+            throw Exception("block  don't match with header");
+    }
+    for(size_t j=0; j< data.size();++j){
+
+        std::string col_name = data[j].name;
+        int pos = -1;
+        for(size_t i=0; i<header.data.size();++i){
+            if(header.data[i].name == col_name){
+                pos = i ;
+                break;
+            }
+        }
+        auto tmp =  data[j];
+        data[j] = data[pos];
+        data[pos] = tmp;
+
+    }
+
+}
 
 void Block::updateHash(SipHash & hash) const
 {

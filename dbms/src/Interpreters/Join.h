@@ -222,6 +222,9 @@ public:
     Join(const Names & key_names_left_, const Names & key_names_right_, bool use_nulls_,
          const SizeLimits & limits, ASTTableJoin::Kind kind_, ASTTableJoin::Strictness strictness_);
 
+
+    Join(const Names & key_names_left_, const Names & key_names_right_, bool use_nulls_,
+         const SizeLimits & limits, ASTTableJoin::Kind kind_, ASTTableJoin::Strictness strictness_,Block  resultHeader);
     bool empty() { return type == Type::EMPTY; }
 
     /** Set information about structure of right hand of JOIN (joined data).
@@ -394,6 +397,7 @@ private:
     /// Limits for maximum map size.
     SizeLimits limits;
 
+    Block resultHeader;
     Block totals;
 
     /** Protect state for concurrent use in insertFromBlock and joinBlock.

@@ -37,7 +37,7 @@ namespace DB {
 
         log = &Poco::Logger::get("DataConnectionHandler");
 
-
+        recievedRows = 0;
         //block_out = std::make_shared<NativeBlockOutputStream>(std::make_shared<WriteBufferFromPocoSocket>(socket()),1);
 
     };
@@ -202,7 +202,8 @@ namespace DB {
 
         if (block){
             //server->fill(block,senderId);
-            receiveBlockCall(block);
+            receiveBlockCall(block,child_task_id);
+            recievedRows += block.rows();
             return true;
         } else {
             finishCall(child_task_id);

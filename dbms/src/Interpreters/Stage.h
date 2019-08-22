@@ -27,7 +27,8 @@ namespace DB {
         std::vector<std::shared_ptr<PlanNode>> planNodes;
         std::vector<std::shared_ptr<ExecNode>> execNodes;
 
-        std::vector<std::shared_ptr<Stage>>   childs;
+        std::map<std::string,std::shared_ptr<Stage>>   childs;
+        std::vector<std::string> childIds;
         std::shared_ptr<Stage> father;
         std::map<int,std::shared_ptr<Task>> tasks; // partitionId -> task
 
@@ -39,7 +40,8 @@ namespace DB {
             context = context_;
         };
         void addPlanNode(std::shared_ptr<PlanNode>  node) { planNodes.push_back(node);}
-        void addChild(std::shared_ptr<Stage>  child){ childs.push_back(child);}
+        void addChild(std::string childStageId,std::shared_ptr<Stage>  child){ childs.insert({childStageId,child});
+        childIds.push_back(childStageId);}
         //void convetPlanToExec();
 
         void init();
@@ -57,7 +59,8 @@ namespace DB {
 
         std::map<int,std::shared_ptr<Task>> getTasks() { return  tasks; }
 
-        std::vector<std::shared_ptr<Stage>> getChildStages() {return  childs;}
+        std::vector<std::string> getChildStageIds() {return  childIds;}
+        std::shared_ptr<Stage> getChildStage(std::string childStageId);
 
         void setSourceExechangeType(DataExechangeType type_)  { sourceExechangeType = type_;}
         void setDestExechangeType(DataExechangeType type_)  { destExechangeType = type_;}
@@ -78,11 +81,14 @@ namespace DB {
         DataExechangeType  sourceExechangeType;
         DataExechangeType  destExechangeType;
 
-        std::string rightTableChildStageId ;
-        void addMainTableChildStageId(std::string childStageId){
-            mainintTableChildStageId.push_back(childStageId);
+        void addRightTableChildStageId(std::string childStageId){
+            rightTableChildStageIds.push_back(childStageId);
         }
-        std::vector<std::string> mainintTableChildStageId ;
+        std::vector<std::string> rightTableChildStageIds ;
+        void addMainTableChildStageId(std::string childStageId){
+            mainintTableChildStageIds.push_back(childStageId);
+        }
+        std::vector<std::string> mainintTableChildStageIds ;
 
         Context * context;
         void debugString(std::stringstream  & ss,size_t  blankNum) ;

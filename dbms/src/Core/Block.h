@@ -127,6 +127,7 @@ public:
       *  with same structure, but different data.
       */
     void updateHash(SipHash & hash) const;
+    void adjustAsHeader( Block   header);
 
 private:
     void eraseImpl(size_t position);

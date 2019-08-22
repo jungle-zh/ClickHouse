@@ -4,6 +4,7 @@
 
 #include  <Interpreters/ExecNode/JoinExecNode.h>
 
+
 namespace DB {
 
     Block JoinExecNode::getHeader(bool isAnalyze)  {
@@ -36,7 +37,12 @@ namespace DB {
         Block res = children->read();
         if (!res)
             return res;
+        //todo verify
+        if(!ExecNode::verify(res,mainTableHeader)){
+            throw Exception("join exec child block don't match ");
+        }
         join->joinBlock(res);
+        LOG_DEBUG(log,"joined block size:" << res.rows());
         return res;
 
     }
@@ -51,6 +57,7 @@ namespace DB {
         ExecNode::serializeHeader(hashTableHeader,buffer);
         writeStringBinary(joinKind, buffer);
         writeStringBinary(strictness, buffer);
+        ExecNode::serializeHeader(adjustHeader,buffer);
     }
     std::shared_ptr<ExecNode> JoinExecNode::deserialize(DB::ReadBuffer &buffer) {
         size_t joinKeySize ;
@@ -68,7 +75,8 @@ namespace DB {
         std::string strictness ;
         readStringBinary(joinKind,buffer);
         readStringBinary(strictness, buffer);
-        return  std::make_shared<JoinExecNode>(keys,inputLeftHeader,inputRightHeader,joinKind,strictness);
+        Block adjustHeader = ExecNode::deSerializeHeader(buffer);
+        return  std::make_shared<JoinExecNode>(keys,inputLeftHeader,inputRightHeader,joinKind,strictness,adjustHeader);
 
     }
 

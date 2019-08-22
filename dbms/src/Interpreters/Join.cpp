@@ -42,6 +42,20 @@ Join::Join(const Names & key_names_left_, const Names & key_names_right_, bool u
 }
 
 
+    Join::Join(const Names & key_names_left_, const Names & key_names_right_, bool use_nulls_,
+               const SizeLimits & limits, ASTTableJoin::Kind kind_, ASTTableJoin::Strictness strictness_,Block resultHeader_)
+            : kind(kind_), strictness(strictness_),
+              key_names_left(key_names_left_),
+              key_names_right(key_names_right_),
+              use_nulls(use_nulls_),
+              log(&Logger::get("Join")),
+              limits(limits),
+              resultHeader(resultHeader_)
+
+    {
+    }
+
+
 Join::Type Join::chooseMethod(const ColumnRawPtrs & key_columns, Sizes & key_sizes)
 {
     size_t keys_size = key_columns.size();
@@ -877,6 +891,10 @@ void Join::joinBlock(Block & block) const
         joinBlockImplCross(block);
     else
         throw Exception("Logical error: unknown combination of JOIN", ErrorCodes::LOGICAL_ERROR);
+
+    if(resultHeader){//todo
+        block.adjustAsHeader(resultHeader);
+    }
 }
 
 
