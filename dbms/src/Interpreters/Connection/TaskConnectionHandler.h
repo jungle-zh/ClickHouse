@@ -40,7 +40,8 @@ public:
 
 
     void receivePackage();
-    void receiveApplyRequest(); // start task exec and data receive thread , need to be thread safe
+    //void receiveApplyRequest(); // start task exec and data receive thread , need to be thread safe
+    void receiveTaskSourceInfoRequest();
     void receiveTask();
 
     void receiveTaskDone();

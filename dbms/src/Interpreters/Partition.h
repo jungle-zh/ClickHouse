@@ -41,6 +41,7 @@ struct TaskReceiverInfo {
     UInt32 taskPort;
 
 };
+/*
 struct DataReceiverInfo {
     bool equals(DataReceiverInfo & other){
         return  ip == other.ip && dataPort == other.dataPort;
@@ -49,6 +50,8 @@ struct DataReceiverInfo {
     std::string ip;  //dynamic allocate 
     UInt16 dataPort;
 };
+ */
+/*
 struct ExechangePartition{
     UInt32 partitionId;
     std::vector<std::string> childTaskIds;
@@ -57,6 +60,7 @@ struct ExechangePartition{
     std::vector<std::string> mainTableChildStageId;
 
 };
+ */
 
 struct scanTableInfo {
     std::string host ;// todo :current set one host one shard
@@ -66,39 +70,52 @@ struct scanTableInfo {
 };
 struct ScanPartition{
     UInt32 partitionId;
-    std::string taskId;
+    //std::string taskId;
     scanTableInfo info ;
 };
 
-struct ScanTaskDataSource {
+struct ScanSource {
     std::vector<std::string> distributeKeys;
-    ScanPartition partition;
+    std::vector<UInt32> partitionIds;
+    std::map<UInt32,ScanPartition> partition;
 };
 
-struct ExechangeTaskDataSource {
-    //DataExechangeType type;
-    //int childStageId;
-   // bool isRightTable;
-    std::vector<std::string> distributeKeys;
-    ExechangePartition partition;
-    std::vector<std::string> inputTaskIds;
-    DataReceiverInfo receiver;
+
+struct TaskSource {
+
+    bool equals(TaskSource & other){
+        return  ip == other.ip && dataPort == other.dataPort;
+    }
+    std::string taskId;
+    std::string ip;  //dynamic allocate
+    UInt16 dataPort;
+};
+struct StageSource {
+    std::vector<std::string> newDistributeKeys;
+    std::vector<UInt32> newPartitionIds;
+    std::map<std::string,TaskSource> taskSources; //
+};
+
+struct ExechangeDataSource {
+
+    std::map<std::string  , StageSource> stageSource ;
 
 };
+/*
 struct ExechangeTaskDataDest {
     std::vector<std::string> distributeKeys;
     std::map<int,ExechangePartition>  partitionInfo; // partitionId -> partition
     std::map<int,DataReceiverInfo> receiverInfo;     // partitionId -> reciever
    // bool isResult = false;
 };
-
+*/
 
 class Distribution {
 
 public:
 
     bool equals(Distribution &  right) {
-        if(keyEquals(right.distributeKeys) &&  partitionNum == right.partitionNum)
+        if(keyEquals(right.distributeKeys) &&  partitionEquals(right.parititionIds))
             return true;
         return false;
     }
@@ -110,9 +127,26 @@ public:
         }
         return true;
     }
-    Distribution( std::vector<std::string> distributeKeys_ , int partitionNum_){
+    bool partitionEquals(std::vector<UInt32 > ids){
+        for(size_t i=0;i< parititionIds.size(); ++i){
+            if(parititionIds[i] != ids[i]){
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    Distribution( std::vector<std::string> distributeKeys_ , size_t partitionNum){
         distributeKeys = distributeKeys_;
-        partitionNum = partitionNum_;
+        for(size_t i=0;i<partitionNum;++i){
+            parititionIds.push_back(i);
+        }
+    }
+
+    Distribution( std::vector<std::string> distributeKeys_ , std::vector<UInt32>  parititionIds_){
+        distributeKeys = distributeKeys_;
+        parititionIds = parititionIds_;
     }
     Distribution(){}
 
@@ -120,11 +154,12 @@ public:
 
     std::vector<std::string> distributeKeys; //exechangePartitions and scanPartitions partition num and distribute key must be the same
 
-
-    int partitionNum ;
+    std::vector<UInt32> parititionIds;
+    //size_t partitionNum ;
 
 };
 
+/*
 class ScanDistribution : public Distribution {
 
 public:
@@ -146,8 +181,10 @@ public:
 
 
 };
+ */
 
 
+/*
 class ExechangeDistribution  : public Distribution{
 
 public:
@@ -167,6 +204,6 @@ public:
 
 
 };
-
+*/
 }
 

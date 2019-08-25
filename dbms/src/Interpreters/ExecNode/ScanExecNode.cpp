@@ -15,8 +15,8 @@
 namespace DB {
 
 
-    void ScanExecNode::readPrefix() {
-
+    void ScanExecNode::readPrefix(std::shared_ptr<DataExechangeClient> client ) {
+        (void)(client);
         storage = context->getTable(database_name, table_name);
         //storage->getSampleBlock();
         QueryProcessingStage::Enum from_stage = QueryProcessingStage::FetchColumns;

@@ -3,7 +3,7 @@
 //
 
 #include  <Interpreters/ExecNode/JoinExecNode.h>
-
+#include <Interpreters/DataExechangeClient.h>
 
 namespace DB {
 
@@ -25,12 +25,15 @@ namespace DB {
         }
         return  joinHeader;
     }
-    /*
-    void JoinExecNode::readPrefix(){
 
+
+    void JoinExecNode::readPrefix(std::shared_ptr<DataExechangeClient> client) {
+
+        while(Block hashBlock = client->read(hashTableStageId)){
+            getJoin()->insertFromBlock(hashBlock);
+        }
 
     }
-     */
 
     Block JoinExecNode::read() {
 
@@ -57,6 +60,7 @@ namespace DB {
         ExecNode::serializeHeader(hashTableHeader,buffer);
         writeStringBinary(joinKind, buffer);
         writeStringBinary(strictness, buffer);
+        writeStringBinary(hashTableStageId,buffer);
         ExecNode::serializeHeader(adjustHeader,buffer);
     }
     std::shared_ptr<ExecNode> JoinExecNode::deserialize(DB::ReadBuffer &buffer) {
@@ -73,10 +77,12 @@ namespace DB {
         Block inputRightHeader = ExecNode::deSerializeHeader(buffer);
         std::string joinKind ;
         std::string strictness ;
+        std::string hashTableStageId;
         readStringBinary(joinKind,buffer);
         readStringBinary(strictness, buffer);
+        readStringBinary(hashTableStageId,buffer);
         Block adjustHeader = ExecNode::deSerializeHeader(buffer);
-        return  std::make_shared<JoinExecNode>(keys,inputLeftHeader,inputRightHeader,joinKind,strictness,adjustHeader);
+        return  std::make_shared<JoinExecNode>(keys,inputLeftHeader,inputRightHeader,joinKind,strictness,adjustHeader,hashTableStageId);
 
     }
 

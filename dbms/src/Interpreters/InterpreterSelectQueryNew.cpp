@@ -36,7 +36,7 @@ namespace DB {
         queryAnalyzer->splitStageByExechangeNode(result,resultStage); // single node tree to distribute task
 
 
-        taskScheduler->applyResourceAndSubmitStage(resultStage);
+        taskScheduler->schedule(resultStage);
         auto io =    taskScheduler->getBlockIO();
         assert(io.buffer != NULL);
         return   io;

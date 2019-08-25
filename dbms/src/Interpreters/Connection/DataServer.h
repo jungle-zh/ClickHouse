@@ -14,15 +14,18 @@
 namespace DB {
 
 class DataConnectionHandlerFactory;
-class DataReceiver;
+class DataExechangeServer;
 class Context ;
 class DataConnectionHandler;
+class ConcurrentBoundedQueue;
+class Block;
 class Task ;
 class DataServer  {
 
 public:
 
-    DataServer(UInt32 port,Context * context,Task * task);
+    DataServer(std::map<UInt32 ,std::shared_ptr<ConcurrentBoundedQueue<Block>> > buffer,
+            UInt32 port,Context * context,Task * task);
 
     void start() {
         server->start();
@@ -38,9 +41,11 @@ public:
     Context * context(){ return  context_;}
     Task * getTask() { return  task;}
     std::map<std::string,DataConnectionHandler * > connections(){ return  connections_;}
+    std::shared_ptr<ConcurrentBoundedQueue<Block>> getBufferByPartition(size_t partitionId);
 
 private:
 
+    std::map<UInt32 ,std::shared_ptr<ConcurrentBoundedQueue<Block>> > partitionBuffer;
 
     std::unique_ptr<Poco::Net::TCPServer> server;
     //std::unique_ptr<Poco::Net::TCPServerConnectionFactory > connectionFactory;

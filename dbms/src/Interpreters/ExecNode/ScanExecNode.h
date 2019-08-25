@@ -30,7 +30,7 @@ namespace DB {
 
         std::string getName() override { return  "scanExecNode";}
         Block read() override;
-        void readPrefix() override;
+        void readPrefix(std::shared_ptr<DataExechangeClient>) override;
          void  readSuffix() override {};
          Block getHeader (bool isAnalyze)  override { (void)isAnalyze ;return  read() ;};
          Block getInputHeader()  override { return  Block();};

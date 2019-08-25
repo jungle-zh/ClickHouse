@@ -19,8 +19,13 @@ public:
     TaskScheduler(){
         log = &Logger::get("TaskScheduler");
     }
-    void applyResourceAndSubmitStage(std::shared_ptr<Stage> root);
-    void assignDataReciver(std::shared_ptr<Stage> root);
+
+    void schedule(std::shared_ptr<DB::Stage> current);
+    void assignDistributionToChildStage(std::shared_ptr<Stage> root);
+    void fillStageSource(std::shared_ptr<DB::Stage> current);
+    void getStagesWithNoDependence(std::shared_ptr<DB::Stage> current,std::vector<std::shared_ptr<Stage>> & res);
+    //void applyResourceAndSubmitStage(std::shared_ptr<Stage> root);
+    //void assignDataReciver(std::shared_ptr<Stage> root);
     std::vector<ExechangePartition> applyResourceForStage(std::shared_ptr<Stage> stage);
 
     std::vector<std::shared_ptr<TaskConnectionClient>> connectTaskReceiverForStageScanPart(std::shared_ptr<Stage> root);
@@ -43,10 +48,12 @@ private:
     std::shared_ptr<TaskConnectionClient> createConnection(TaskReceiverInfo  & receiver );
     //std::vector<TaskReceiverInfo> receivers;
 
-    std::vector<TaskReceiverInfo> createTaskExecutorByScanDistribution(ScanDistribution * s);
-    std::vector<TaskReceiverInfo> createTaskExecutorByExechangeDistribution(ExechangeDistribution * e);
+    std::map<UInt32 ,TaskReceiverInfo> createTaskExecutorByScanDistribution(ScanSource & s);
+    std::map<UInt32,TaskReceiverInfo>createTaskExecutorByDistribution(Distribution & d);
     void sendTaskDone(std::string taskId);    // if task status is finished ,send task done package and close connection;
 
+
+    std::map<std::string , std::map<std::string,TaskSource>> submittedTaskInfo;
     std::map<std::string , std::shared_ptr<TaskConnectionClient>> taskToConnection;
 
     int receiverIndex;
@@ -57,6 +64,7 @@ private:
     //TCPHandler * handler;
 
     Logger * log;
+
 
 
 

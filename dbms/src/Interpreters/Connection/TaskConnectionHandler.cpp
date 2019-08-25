@@ -77,11 +77,11 @@ namespace DB {
 
         switch (packet_type) {
 
-            case Protocol::TaskClient::AppalyResource:{
+            case Protocol::TaskClient::DataExechangeSource:{
                 std::string taskTmpId ;
                 readStringBinary(taskTmpId,*in);
                 taskId = taskTmpId;
-                receiveApplyRequest();
+                receiveTaskSourceInfoRequest();
                 break;
             }
 
@@ -105,10 +105,10 @@ namespace DB {
 
     }
 
-    void TaskConnectionHandler::receiveApplyRequest() {
+    void TaskConnectionHandler::receiveTaskSourceInfoRequest() {
 
 
-        DataReceiverInfo resource =  server->applyResource() ; // need to be thread safe ,apply ip and host  for task dataReceiver
+        TaskSource resource =  server->getExechangeServerInfo() ; // need to be thread safe ,apply ip and host  for task dataReceiver
 
         writeVarUInt(resource.dataPort, *out);
         writeStringBinary(resource.ip, *out);

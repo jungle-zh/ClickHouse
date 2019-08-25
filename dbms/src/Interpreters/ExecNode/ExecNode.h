@@ -9,7 +9,7 @@
 
 namespace DB {
 
-
+class DataExechangeClient;
 
 class ExecNode  {
 
@@ -32,7 +32,7 @@ public:
     virtual  ~ExecNode(){};
 
     virtual Block read() = 0;
-    virtual void  readPrefix() = 0 ;
+    virtual void  readPrefix(std::shared_ptr<DataExechangeClient>) = 0 ;
     virtual void  readSuffix() = 0;
     virtual Block getHeader (bool isAnalyze) = 0;
     virtual Block getInputHeader() = 0;

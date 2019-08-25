@@ -43,6 +43,7 @@ namespace  DB {
 
 
     }
+    /***
 
     ExechangeTaskDataDest TaskInputStream::readTaskDest() {
         ExechangeTaskDataDest ret;
@@ -138,31 +139,79 @@ namespace  DB {
         return  ret;
 
     }
-    DataReceiverInfo TaskInputStream::readDataReceiverInfo(){
-        DataReceiverInfo ret ;
+    ***/
+    TaskSource  TaskInputStream::readTaskSource(){
+        TaskSource ret ;
         readStringBinary(ret.ip,*in);
         readVarUInt(ret.dataPort,*in);
 
         return  ret;
     }
+    StageSource TaskInputStream::readStageSource(){
 
-    ScanTaskDataSource TaskInputStream::readTaskScanSource(){
-        ScanTaskDataSource ret;
-        size_t distributKeySize ;
-        readVarUInt(distributKeySize, *in);
-        for(size_t i =0;i<distributKeySize;++i){
-            std::string distributeKey ;
-            readStringBinary(distributeKey,*in);
-            ret.distributeKeys.push_back(distributeKey);
-        }
-        ret.partition =  readScanPartition();
+         StageSource source;
+         size_t  keyNum ;
+         size_t  partitionNum;
+         size_t  taskSourcesNum;
+         readVarUInt(keyNum,*in);
+         for(size_t i=0;i< keyNum; ++i){
+             std::string key ;
+             readStringBinary(key,*in);
+             source.newDistributeKeys.push_back(key);
+         }
+         readVarUInt(partitionNum,*in);
+         for(size_t i=0;i< partitionNum;++i){
+             UInt32 partitionId ;
+             readVarUInt(partitionId,*in);
+             source.newPartitionIds.push_back(partitionId);
+         }
+         readVarUInt(taskSourcesNum,*in);
+         for(size_t i=0;i<taskSourcesNum;++i){
+             std::string taskId ;
+             readStringBinary(taskId,*in);
+             TaskSource taskSource  = readTaskSource();
+             source.taskSources.insert({taskId,taskSource});
 
-        return  ret ;
+         }
+        return  source;
+
+
     }
+
+    ScanSource TaskInputStream::readScanSource(){
+        ScanSource source;
+
+        size_t  keyNum ;
+        size_t  partitionIdNum;
+        size_t  partitionNum;
+        readVarUInt(keyNum,*in);
+        for(size_t i=0;i< keyNum; ++i){
+            std::string key ;
+            readStringBinary(key,*in);
+            source.distributeKeys.push_back(key);
+        }
+        readVarUInt(partitionIdNum,*in);
+        for(size_t i=0;i< partitionIdNum;++i){
+            UInt32 partitionId ;
+            readVarUInt(partitionId,*in);
+            source.partitionIds.push_back(partitionId);
+        }
+        readVarUInt(partitionNum,*in);
+        for(size_t i=0;i<partitionNum;++i){
+            UInt32  partitionId;
+            readVarUInt(partitionId,*in);
+            ScanPartition scanPartition  = readScanPartition();
+            source.partition.insert({partitionId,scanPartition});
+
+        }
+        return  source;
+
+    }
+
     ScanPartition TaskInputStream::readScanPartition(){
         ScanPartition ret ;
         readVarUInt(ret.partitionId,*in);
-        readStringBinary(ret.taskId,*in);
+        //readStringBinary(ret.taskId,*in);
         ret.info = readScanTableInfo();
         return  ret;
 
@@ -173,6 +222,31 @@ namespace  DB {
         readStringBinary(ret.dbName,*in);
         readStringBinary(ret.tableName,*in);
         return  ret;
+    }
+    Distribution TaskInputStream::readFatherDistribution(){
+        //std::vector<std::string> distributeKeys;
+
+        //std::vector<UInt32> parititionIds;
+
+        Distribution ret ;
+        size_t keyNum ;
+        size_t partitionIdNum;
+        readVarUInt(keyNum,*in);
+        readVarUInt(partitionIdNum,*in);
+
+        for(size_t i=0;i<keyNum;++i){
+            std::string key;
+            readStringBinary(key,*in);
+            ret.distributeKeys.push_back(key);
+        }
+
+        for(size_t i=0;i<partitionIdNum;++i){
+            size_t partitionId;
+            readVarUInt(partitionId,*in);
+            ret.parititionIds.push_back(partitionId);
+        }
+        return  ret ;
+
 
     }
 
@@ -180,9 +254,21 @@ namespace  DB {
 
         std::string taskId ;
         readStringBinary(taskId,*in);
-        auto exechangSource  = readTaskExechangeSource();
-        auto scanSource = readTaskScanSource();
-        auto dest = readTaskDest();
+
+        std::map<std::string  , StageSource>  stageSources;
+        ScanSource scanSource;
+        size_t stageSourceNum ;
+
+        readVarUInt(stageSourceNum,*in);
+        for(size_t i=0;i<stageSourceNum;++i){
+            std::string stageId;
+            readStringBinary(stageId,*in);
+            StageSource source = readStageSource();
+            stageSources.insert({stageId,source});
+        }
+
+        scanSource = readScanSource();
+
         size_t ExecNodeNum ;
         readVarUInt(ExecNodeNum,*in);
         std::vector<std::shared_ptr<ExecNode>> nodes;
@@ -190,8 +276,9 @@ namespace  DB {
            auto node =  readExecNode();
             nodes.emplace_back(node);
         }
+        Distribution fatherDistribution  = readFatherDistribution();
 
-        return std::make_shared<Task>(exechangSource,scanSource,dest,nodes,taskId,context);
+        return std::make_shared<Task>(fatherDistribution,stageSources,scanSource,nodes,taskId,context);
 
     }
 

@@ -31,53 +31,62 @@ private:
     /// From where to read data for INSERT.
     std::shared_ptr<ReadBuffer> maybe_compressed_in;
     std::shared_ptr<IBlockInputStream> block_in;
+    std::shared_ptr<IBlockOutputStream> block_out;
+    //std::vector<Block> send_buffer;
+
+
 
     DataServer * server;
     std::string senderId ; // senderId is set in receive hello;
 
-
+    Task * task ;
     String client_name;
     UInt64 client_version_major = 0;
     UInt64 client_version_minor = 0;
     UInt64 client_revision = 0;
-    std::string child_task_id ;
-    int upstream_task_partition;
+    std::string father_task_id ;
+
 
     Poco::Logger * log;
     Context * connection_context;
 
     std::exception_ptr exception;
+    bool  finished = false;
+    std::string dataChannel ; // stageId_curShuffleKey_partionNum_destShuffleKey_partionNum;
 
+    std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer ; // partitioned buffer
+    size_t father_task_partition;
 public:
-    DataConnectionHandler(const Poco::Net::StreamSocket & socket_,DataServer * server_);
 
+    DataConnectionHandler(const Poco::Net::StreamSocket & socket_,DataServer * server_);
+    //std::function<()> setBufferCall;
 
     void run() override;
     void initBlockInput();
     void runImpl(); // receive data and fill
 
     bool receiveBlock();
-    void receiveHello();
-
-    void setStartToReceive(bool start) { startToReceive = start;}
-    //bool getStartToReceive() { return  startToReceive;}
-
-    void setEndOfReceive(bool end)  { endOfReceive = end;}
+    //void receiveHello();
+    void receivePartitionID();
+    void receivePackage();
 
 
-    bool startToReceive = false;
-    bool endOfReceive = false;
+    void sendBlock(DB::Block &block);
+
+
+    //bool startToReceive = false;
+    //bool endOfReceive = false;
     UInt64 recievedRows ;
     std::function<void(Block & ,std::string ) >  receiveBlockCall;
     std::function<void(std::string)> finishCall;
     std::function<bool ()> highWaterMarkCall;
 
     ThreadPool pool{1};
-    void sendCommandToClient(Protocol::DataControl::Enum  type);
+    //void sendCommandToClient(Protocol::DataControl::Enum  type);
 
-    void checkHighWaterMark();
+    //void checkHighWaterMark();
 
-    bool getEndOfReceive();
+   // bool getEndOfReceive();
 
     void  sendException(const Exception & e) ;
     void  sendEndOfStream();

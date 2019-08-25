@@ -25,7 +25,7 @@ public:
     void init();
     Block getHeader() override;
     std::shared_ptr<ExecNode>  createExecNode() override;
-    void buildBaseDistribution(){
+    void buildDistributionAndScanSource(){
         std::vector<std::string> keys;
         if(tableName == "stu"){
             partitionNum = 2;
@@ -37,33 +37,39 @@ public:
             partitionNum = 1 ;
 
         }
-        distribution = std::make_shared<ScanDistribution>(keys ,partitionNum);
-    }
-    void buildFullDistribution(){
+        std::vector<UInt32 > partitionId;
 
-        std::map<int,ScanPartition> &  scanPartitions =  (static_cast<ScanDistribution *>(distribution.get()))->getScanPartitions();
+        for(size_t i=0;i<partitionNum;++i){
+            partitionId.push_back(i);
+        }
+        distribution = std::make_shared<Distribution>(keys ,partitionId);
 
-        for(int i=0;i< partitionNum ;++i){
+        for(size_t i=0;i< partitionNum ;++i){
 
             ScanPartition  scanPartition;
-
             scanPartition.partitionId = i;
             scanPartition.info.dbName = dbName;
             scanPartition.info.tableName = tableName;
             scanPartition.info.host = "127.0.0.1"; //for local test
 
-            scanPartitions.insert({i,scanPartition});
+            scanSource.partitionIds.push_back(i);
+            scanSource.partition.insert({i,scanPartition});
+            scanSource.distributeKeys  = distribution->distributeKeys;
         }
 
-        //static_cast<ScanDistribution *>(distribution.get())->setScanPartitions(scanPartitions);
+
     }
+
+public:
+    ScanSource scanSource;
 private:
-    int partitionNum;
+    size_t partitionNum;
     std::string dbName ;
     std::string tableName;
     std::vector<std::string> hosts;
     std::set<std::string> required_column ;
     std::string query;
+
     Context * context ;
 
 };

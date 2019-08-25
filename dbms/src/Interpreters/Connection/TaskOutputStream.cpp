@@ -26,18 +26,26 @@ namespace DB {
 
         //task.getExecSources()
 
-        ExechangeTaskDataSource exechangeSource  = task.getExecSources();
-        ExechangeTaskDataDest dest =  task.getExecDest();
-        ScanTaskDataSource  scanSource =  task.getScanSource();
+        //ExechangeTaskDataSource exechangeSource  = task.getExecSources();
+        //ExechangeTaskDataDest dest =  task.getExecDest();
+        //ScanTaskDataSource  scanSource =  task.getScanSource();
+        auto stageSource = task.stageSource;
+        auto scanSource  = task.scanSource;
 
         writeStringBinary(task.getTaskId(),*out);
 
-        write(exechangeSource);
+
+        writeVarUInt(stageSource.size(),*out);
+        for(auto it : stageSource){
+            writeStringBinary(it.first,*out);
+            write(it.second);
+        }
+
         write(scanSource);
-        write(dest);
 
         write(task.getExecNodes());
 
+        write(task.fatherDistribution);
         out->next();
 
 
@@ -73,7 +81,62 @@ namespace DB {
 
 
     }
+    void TaskOutputStream::write(ScanSource & scanSource) {
+        //std::vector<std::string> distributeKeys;
+        //std::vector<UInt32> partitionIds;
+        //std::map<UInt32,ScanPartition> partition;
 
+        writeVarUInt(scanSource.distributeKeys.size(),*out);
+        for(size_t i=0;i< scanSource.distributeKeys.size();++i){
+            writeStringBinary(scanSource.distributeKeys[i],*out);
+        }
+        writeVarUInt(scanSource.partitionIds.size(),*out);
+        for(size_t i=0;i< scanSource.partitionIds.size();++i){
+            writeVarUInt(scanSource.partitionIds[i],*out);
+        }
+        writeVarUInt(scanSource.partition.size(),*out);
+        for(auto it : scanSource.partition){
+            writeVarUInt(it.first,*out);
+            write(it.second);
+        }
+
+
+    }
+    void TaskOutputStream::write(StageSource  & stageSource){
+       // std::vector<std::string> newDistributeKeys;
+       // std::vector<UInt32> newPartitionIds;
+       // std::map<std::string,TaskSource> taskSources; //
+
+       writeVarUInt(stageSource.newDistributeKeys.size(),*out);
+       for(size_t i=0;i< stageSource.newDistributeKeys.size();++i){
+           writeStringBinary(stageSource.newDistributeKeys[i],*out);
+       }
+       writeVarUInt(stageSource.newPartitionIds.size(),*out);
+       for(size_t i=0;i< stageSource.newPartitionIds.size();++i){
+           writeVarUInt(stageSource.newPartitionIds[i],*out);
+       }
+       writeVarUInt(stageSource.taskSources.size(),*out);
+       for(auto it : stageSource.taskSources){
+           writeStringBinary(it.first,*out);
+           write(it.second);
+       }
+
+    }
+    void TaskOutputStream::write(DB::Distribution fatherDistribution) {
+        //
+
+        writeVarUInt(fatherDistribution.distributeKeys.size(),*out);
+        for(size_t i =0;i<fatherDistribution.distributeKeys.size();++i ){
+            writeStringBinary(fatherDistribution.distributeKeys[i],*out);
+        }
+        writeVarUInt(fatherDistribution.parititionIds.size(),*out);
+        for(size_t i =0;i<fatherDistribution.parititionIds.size();++i ){
+            writeVarUInt(fatherDistribution.parititionIds[i],*out);
+        }
+
+
+    }
+    /*
 
     void  TaskOutputStream::write(ExechangeTaskDataSource & source){
         writeVarUInt(source.distributeKeys.size(),*out);
@@ -88,10 +151,7 @@ namespace DB {
         write(source.receiver);
 
     }
-    void TaskOutputStream::write(DataReceiverInfo & info){
-        writeStringBinary(info.ip,*out);
-        writeVarUInt(info.dataPort,*out);
-    }
+
     void TaskOutputStream::write(ExechangePartition & partition) {
         writeVarUInt(partition.partitionId,*out);
         writeVarUInt(partition.childTaskIds.size(),*out);
@@ -166,9 +226,10 @@ namespace DB {
         write(source.partition);
 
     }
+     */
     void TaskOutputStream::write(ScanPartition & partition){
         writeVarUInt(partition.partitionId,*out);
-        writeStringBinary(partition.taskId,*out);
+        //writeStringBinary(partition.taskId,*out);
         write(partition.info);
     }
     void TaskOutputStream::write(scanTableInfo & info){
@@ -177,6 +238,11 @@ namespace DB {
         writeStringBinary(info.host,*out);
     }
 
+
+       void TaskOutputStream::write(TaskSource & source){
+        writeStringBinary(source.ip,*out);
+        writeVarUInt(source.dataPort,*out);
+    }
 
 
 

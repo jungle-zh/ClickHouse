@@ -22,7 +22,7 @@
 #include <Interpreters/executeQuery.h>
 #include <Interpreters/Quota.h>
 #include <Interpreters/TablesStatus.h>
-#include <Interpreters/DataReceiver.h>
+#include <Interpreters/DataExechangeServer.h>
 #include <Interpreters/InterpreterSelectQueryNew.h>
 #include <Storages/StorageMemory.h>
 #include <Storages/StorageReplicatedMergeTree.h>

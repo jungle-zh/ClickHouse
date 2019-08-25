@@ -23,10 +23,11 @@ namespace DB{
         LOG_INFO(log,"TaskServer started ..");
         dataPortCnt = 7000;
     }
-    DataReceiverInfo TaskServer::applyResource() {
-        DataReceiverInfo info;
-        info.ip = "127.0.0.1";
-        info.dataPort = dataPortCnt++;
-        return  info;
+    TaskSource TaskServer::getExechangeServerInfo() {
+        TaskSource source;
+        source.ip = "127.0.0.1";
+        source.dataPort = dataPortCnt++;
+        return  source;
     }
+
 }

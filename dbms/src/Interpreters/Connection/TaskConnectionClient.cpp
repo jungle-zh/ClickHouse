@@ -65,9 +65,9 @@ namespace DB {
     void TaskConnectionClient::sendTask(Task & task){
 
         writeVarUInt(Protocol::TaskClient::TaskReq, *out);
-        if(task.isScanTask()){
+        if(task.hasScan){
             writeStringBinary("scanTask",*out);
-        } else if(task.isResultTask()){
+        } else if(task.isResult){
             writeStringBinary("resultTask",*out);
         } else {
             writeStringBinary("midTask",*out);
@@ -79,6 +79,7 @@ namespace DB {
     }
 
 
+    /*
     DataReceiverInfo TaskConnectionClient::applyResource(std::string taskId){
 
 
@@ -96,6 +97,25 @@ namespace DB {
         info.dataPort = port;
         return info;
 
+
+    }
+     */
+    TaskSource TaskConnectionClient::getExechangeSourceInfo(std::string taskId){
+
+        writeVarUInt(Protocol::TaskClient::DataExechangeSource, *out);
+        writeStringBinary(taskId, *out);
+
+        out->next(); // flush buffer
+
+        UInt32 port = 0;
+        std::string ip ;
+        readVarUInt(port, *in);
+        readStringBinary(ip,*in);
+        TaskSource info ;
+        info.taskId = taskId;
+        info.ip = ip;
+        info.dataPort = port;
+        return info;
 
     }
 }

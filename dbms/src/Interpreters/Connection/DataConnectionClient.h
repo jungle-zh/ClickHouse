@@ -30,9 +30,10 @@ namespace DB {
 
 
         bool connected = false;
+        std::shared_ptr<IBlockInputStream> block_in;
         std::shared_ptr<IBlockOutputStream> block_out; //NativeBlockOutputStream
-
-        std::shared_ptr<WriteBuffer> maybe_compressed_out;
+        std::shared_ptr<ReadBuffer> maybe_compressed_in;
+        //std::shared_ptr<WriteBuffer> maybe_compressed_out;
         Protocol::Compression compression;
         std::unique_ptr<Poco::Net::StreamSocket> socket;
         std::shared_ptr<ReadBuffer> in;
@@ -53,9 +54,12 @@ namespace DB {
         bool connect();
         void disconnect();
 
-        bool receiveStopCommand();
-        void sendBlock(Block & block); // logic thread call
-        void sendHello(std::string taskId,int partionId); // send taskId(include stageId)
+       // bool receiveStopCommand();
+       // void sendBlock(Block & block); // logic thread call
+       // void sendHello(std::string taskId,int partionId); // send taskId(include stageId)
+        void sendPartitionId(std::string taskId,size_t partionId);
+        Block receiveBlock();
+        Block read();
         void receiveHello();
         int  stageId ;
         void startListen();
@@ -64,10 +68,10 @@ namespace DB {
         std::thread  listener; // listen remote command
 
         Poco::Logger * log;
-        bool stopSend = true;
+        bool finished = false;
         Task * task;
         Context * context;
-        ThreadPool pool{1};
+
 
     };
 

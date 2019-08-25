@@ -3,11 +3,11 @@
 //
 
 
-#include <Interpreters/DataReceiver.h>
-#include <Interpreters/DataSender.h>
+#include <Interpreters/DataExechangeServer.h>
+#include <Interpreters/DataExechangeClient.h>
 #include <Interpreters/ExecNode/ExecNode.h>
 #include <Interpreters/ExecNode/JoinExecNode.h>
-#include <Interpreters/ExecNode/TaskReceiverExecNode.h>
+#include <Interpreters/ExecNode/DataClientExecNode.h>
 #include <Common/typeid_cast.h>
 #include <Interpreters/ExecNode/AggExecNode.h>
 #include <Interpreters/ExecNode/ProjectExecNode.h>
@@ -17,18 +17,21 @@
 namespace DB {
 
 
-    Task::Task(std::string taskId_, Context *context_) {
+    Task::Task(Distribution fatherDistribution_,std::map<std::string,StageSource>  stageSource_, ScanSource scanSource_,
+            std::string taskId_, Context *context_) {
+        fatherDistribution = fatherDistribution_;
+        stageSource = stageSource_;
+        scanSource = scanSource_;
         taskId = taskId_;
         log = &Logger::get("Task");
         context = context_;
-        buffer = std::make_shared<ConcurrentBoundedQueue<Block>> ();
+        buffer = std::make_shared<ConcurrentBoundedQueue<Block>>();
     };
-    Task::Task(DB::ExechangeTaskDataSource source, DB::ScanTaskDataSource source1, DB::ExechangeTaskDataDest dest,
+    Task::Task(Distribution fatherDistribution_,std::map<std::string,StageSource>  stageSource_, ScanSource scanSource_,
                std::vector<std::shared_ptr<DB::ExecNode>> nodes, std::string taskId_,Context * context_) {
-
-        exechangeTaskDataSource = source;
-        scanTaskDataSource = source1;
-        exechangeTaskDataDest = dest;
+        fatherDistribution = fatherDistribution_;
+        stageSource = stageSource_;
+        scanSource = scanSource_;
         execNodes  = nodes;
         taskId  = taskId_;
         log = &Logger::get("Task");
@@ -43,23 +46,60 @@ namespace DB {
                 tmp = nodes[i];
             }
         }
-        buffer = std::make_shared<ConcurrentBoundedQueue<Block>> ();
-    }
-
-    void Task::setExechangeDest(ExechangeTaskDataDest & dest ) {
-        exechangeTaskDataDest = dest ;
-
-    }
-    void Task::setScanSource(ScanTaskDataSource & source){
-        scanTaskDataSource = source ;
+        buffer = std::make_shared<ConcurrentBoundedQueue<Block>>();
+        for(auto partitionId : fatherDistribution.parititionIds){
+            std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer = std::make_shared<ConcurrentBoundedQueue<Block>>();
+            partitionBuffer.insert({partitionId,buffer});
+        }
 
     }
-    void Task::setExechangeSource(ExechangeTaskDataSource & source){
 
-        exechangeTaskDataSource = source ;
-        //exechangeTaskDataSources.insert({source.childStageId,source});
-        //childStageIds.push_back(source.childStageId);
+    void Task::checkStageSourceDistribution(){
+        if(stageSource.size() >0){
+
+            if(exechangeType == DataExechangeType::tunion){
+
+            } else if(exechangeType == DataExechangeType::toneshufflejoin
+              || exechangeType == DataExechangeType::ttwoshufflejoin
+              || exechangeType == DataExechangeType::tone2onejoin){
+
+                std::vector<std::string> newDistributeKeys;
+                std::vector<UInt32> newPartitionIds;
+                bool isFirst = true;
+                bool isSameDistribution = true;
+                for(auto e : stageSource){
+                    if(isFirst){
+                        newDistributeKeys =  e.second.newDistributeKeys ;
+                        newPartitionIds = e.second.newPartitionIds;
+                        isFirst = false;
+                    } else {
+                        for(size_t  i=0 ;i < newDistributeKeys.size() ;++i){
+                            if(newDistributeKeys[i] != e.second.newDistributeKeys[i]){
+                                isSameDistribution = false;
+                            }
+                        }
+                        for(size_t  i=0 ;i < newPartitionIds.size() ;++i){
+                            if(newPartitionIds[i] != e.second.newPartitionIds[i]){
+                                isSameDistribution = false;
+                            }
+                        }
+
+
+                    }
+
+                }
+                if(!isSameDistribution){
+                    throw Exception("join stage is not the same distribution");
+                }
+
+            }
+
+        }
+
     }
+
+
+
     void Task::initFinal(){
 
 
@@ -83,41 +123,61 @@ namespace DB {
 
 
 
-        if(!isResultTask()){
-            sender = std::make_shared<DataSender>(exechangeTaskDataDest,this,context);
-            LOG_DEBUG(log,"task :" + taskId + " is not result task ,and connect to father task ");
-            sender->tryConnect();    //jungle comment : block until success, create dest partion number connection ,shuffle result block using dest destribution key and send
+        if(!isResult){
+            server = std::make_shared<DataExechangeServer>(partitionBuffer,this,context); // will create tcp server and accept connection
+            server->init();
         }
-        if(exechangeTaskDataSource.inputTaskIds.size() > 0){
-            receiver = std::make_shared<DataReceiver>(exechangeTaskDataSource,this,context); // will create tcp server and accept connection
-            receiver->init();  // if has join then call receiveHashTable until read all  to HashTable
-            createBottomExecNodeByBuffer();
-        }
+        if(hasExechange)
+            client = std::make_shared<DataExechangeClient>(stageSource,this,context);
+        if(!hasScan)
+            createExecNodeByClient();
         LOG_DEBUG(log,"task :" + taskId + " start to receive data and execute ");
 
         auto curNode = root;
         while(curNode){
-            curNode->readPrefix();
+            curNode->readPrefix(client); //joinNode need to prepare;
             curNode = curNode->getChild();
         }
 
-
     }
 
 
-
-    std::shared_ptr<DataReceiver> findHashTableReceiver(){
-        return  std::shared_ptr<DataReceiver>();
+    std::map<UInt32, Block> Task::repartition(Block block){
+        (void)block;
     }
-
-
     void Task::execute(){
 
-        while(Block res = root->read()){ // read until Databuffer  , read all until child send empty block
-             sender->send(res);           // logic thread  may be block in sendData if upstream buffer rich high waiter mark
+        pool.schedule(std::bind(&Task::produce, this));
+        pool.schedule(std::bind(&Task::consume, this));
+        pool.wait();
+
+    }
+    void Task::produce(){
+
+        while(!taskFinished && !buffer->isFull()){ // read until Databuffer  , read all until child send empty block
+            Block res = root->read();
+            buffer->push(res);
+            if(!res){
+                taskFinished = true;
+                break;
+            }
         }
-        Block end ;
-        sender->send(end); // maybe two task send two empty block;
+
+    }
+    std::shared_ptr<ConcurrentBoundedQueue<Block>> Task::getPartitionBuffer(size_t partitionId){
+
+    }
+    void Task::consume(){
+        while(!buffer->isEmpty() || !taskFinished){
+            Block block;
+            buffer->pop(block);
+            std::map<UInt32, Block> blocks = repartition(block);
+
+            for(auto p : blocks){
+                if(!partitionBuffer[p.first]->isFull())
+                    partitionBuffer[p.first]->push(p.second);
+            }
+        }
     }
 
     void Task::execute(std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer){
@@ -151,6 +211,7 @@ namespace DB {
         return res;
     }
 
+    /*
     void Task::receiveHashTable(Block &block ,std::string childTaskId) {
 
         hashTableLock.lock();
@@ -193,10 +254,10 @@ namespace DB {
     bool Task::highWaterMark() { // when receive buffer is more than 80%
         return  ( (float)(buffer->size()) / (float)(buffer->max())) > 0.8;
     }
+    */
+    void Task::createExecNodeByClient(){
 
-    void Task::createBottomExecNodeByBuffer(){
-
-        std::shared_ptr<TaskReceiverExecNode> node = std::make_shared<TaskReceiverExecNode>(buffer,this)  ;
+        std::shared_ptr<DataClientExecNode> node = std::make_shared<DataClientExecNode>(client,this,mainTableStageIds)  ;
         auto  cur = root;
         auto  pre = root ;
         while(cur){

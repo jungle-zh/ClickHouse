@@ -4,12 +4,14 @@
 
 #include <Interpreters/Connection/DataConnectionHandlerFactory.h>
 #include <Interpreters/Connection/DataConnectionHandler.h>
-#include "DataReceiver.h"
+#include "DataExechangeServer.h"
 
 namespace DB {
 
- void DataReceiver::init() {
+ void DataExechangeServer::init() {
 
+
+     /*
      while(server->connections().size() < childTaskIds.size()){
          std::this_thread::sleep_for(std::chrono::milliseconds(100));// wait for all child to connect
      }
@@ -77,17 +79,17 @@ namespace DB {
          }
      }
 
-
+    */
 
  }
 
- void DataReceiver::startToAccept() {
-     server = std::make_shared<DataServer>(port,context,task);
+ void DataExechangeServer::startToAccept() {
+     server = std::make_shared<DataServer>(partitionBuffer,port,context,task);
      server->start(); // start receive data connection and create handler
      LOG_DEBUG(log," task " +  task->getTaskId() + " receiver start to accept on port " << port);
  }
 
- bool DataReceiver::beloneTo(const std::string taskId, std::string stageId) {
+ bool DataExechangeServer::beloneTo(const std::string taskId, std::string stageId) {
 
      auto stringVec = split(taskId,"_");
      std::string res ;
@@ -100,7 +102,7 @@ namespace DB {
 
  }
 
- bool DataReceiver::beloneTo(const std::string taskId, std::vector<std::string> stageIds) {
+ bool DataExechangeServer::beloneTo(const std::string taskId, std::vector<std::string> stageIds) {
 
      for(auto s : stageIds){
          if(beloneTo(taskId,s))
@@ -108,7 +110,7 @@ namespace DB {
      }
      return false;
  }
-   std::vector<std::string> DataReceiver::split(const std::string& str, const std::string& delim) {
+   std::vector<std::string> DataExechangeServer::split(const std::string& str, const std::string& delim) {
         std::vector<std::string>  res;
         if("" == str) return res;
         //先将要切割的字符串从string类型转换为char*类型

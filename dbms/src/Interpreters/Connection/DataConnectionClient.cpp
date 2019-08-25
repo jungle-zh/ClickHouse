@@ -13,6 +13,8 @@
 #include <Poco/Net/NetException.h>
 #include <Interpreters/Task.h>
 #include <Interpreters/Context.h>
+#include <DataStreams/NativeBlockInputStream.h>
+#include <IO/CompressedReadBuffer.h>
 #include "DataConnectionClient.h"
 
 namespace DB {
@@ -28,15 +30,10 @@ namespace DB {
     //settings = settings_;
     //compression_settings =  CompressionSettings(settings) ;
     }
-    void  DataConnectionClient::sendHello(std::string taskId, int partionId) {
+    void  DataConnectionClient::sendPartitionId(std::string taskId, int partionId) {
 
 
-        writeVarUInt(Protocol::Client::Hello, *out);
-        writeStringBinary((DBMS_NAME " ") ,*out);
-        writeVarUInt(DBMS_VERSION_MAJOR, *out);
-        writeVarUInt(DBMS_VERSION_MINOR, *out);
-        writeVarUInt(ClickHouseRevision::get(), *out);
-
+        writeVarUInt(Protocol::DataControl::PARTITION_ID, *out);
         writeStringBinary(taskId,*out);
         writeVarUInt(partionId,*out);
 
@@ -110,6 +107,47 @@ namespace DB {
         connected = true;
         return connected;
     }
+    Block DataConnectionClient::read(){
+
+        UInt32 packet_type = Protocol::DataControl::BLOCK_REQUEST;
+        writeVarUInt(packet_type,*out);
+
+        return  receiveBlock();
+
+    }
+    Block DataConnectionClient::receiveBlock() {
+
+        if (!block_in)
+        {
+            int client_revision = 3;
+            if (compression == Protocol::Compression::Enable)
+                maybe_compressed_in = std::make_shared<CompressedReadBuffer>(*in);
+            else
+                maybe_compressed_in = in;
+
+            block_in = std::make_shared<NativeBlockInputStream>(
+                    *maybe_compressed_in,
+                    client_revision);
+        }
+
+        UInt64 packet_type = 0;
+        readVarUInt(packet_type, *in);
+        assert(packet_type == Protocol::Client::Data );
+
+        //String child_task_id;
+        //readStringBinary(child_task_id, *in);
+
+        //LOG_DEBUG(log,"current task:" + server->getTask()->getTaskId() + " receive child task： " + child_task_id + " data");
+        /// Read one block from the network and write it down
+        Block block = block_in->read();
+
+        if(!block){
+            LOG_DEBUG(log,"current task:" + task->getTaskId()  + " read all data");
+            finished = true;
+        }
+        return  block;
+    }
+    /***
     void  DataConnectionClient::sendBlock(DB::Block &block) { // must be call in logic thread
 
 
@@ -131,8 +169,6 @@ namespace DB {
 
         writeVarUInt(Protocol::Client::Data, *out); // with one block
         writeStringBinary(task->getTaskId(), *out);
-
-        //size_t prev_bytes = out->count();
 
         block_out->write(block);
         //maybe_compressed_out->next();
@@ -163,14 +199,14 @@ namespace DB {
     void DataConnectionClient::startListen() {
         pool.schedule(std::bind(&DataConnectionClient::listen, this));
     }
-    void DataConnectionClient::listen() { // io thread, only read
+    void DataConnectionClient::listen() {
 
         while (true) {
             /// We are waiting for a packet from the client. Thus, every `POLL_INTERVAL` seconds check whether we need to shut down.
             while (!static_cast<ReadBufferFromPocoSocket &>(*in).poll(
                     settings.poll_interval * 1000000) );
 
-            /// If we need to shut down, or client disconnects.
+
             if (in->eof())
                 break;
 
@@ -187,6 +223,6 @@ namespace DB {
 
         }
     }
-
+    ***/
 
 }

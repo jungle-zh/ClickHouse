@@ -7,7 +7,7 @@
 #include <IO/ReadBufferFromPocoSocket.h>
 #include <DataStreams/NativeBlockOutputStream.h>
 #include <IO/WriteBufferFromPocoSocket.h>
-#include <Interpreters/DataReceiver.h>
+#include <Interpreters/DataExechangeServer.h>
 #include <common/logger_useful.h>
 #include <IO/VarInt.h>
 #include <Core/Protocol.h>
@@ -38,6 +38,9 @@ namespace DB {
         log = &Poco::Logger::get("DataConnectionHandler");
 
         recievedRows = 0;
+        //send_buffer.resize(100000);
+        task  = server_->getTask();
+        //buffer  = std::make_shared<ConcurrentBoundedQueue<Block>>();
         //block_out = std::make_shared<NativeBlockOutputStream>(std::make_shared<WriteBufferFromPocoSocket>(socket()),1);
 
     };
@@ -71,7 +74,10 @@ namespace DB {
 
         try
         {
-            receiveHello(); // get task id
+           // receiveHello(); // get task id
+            receivePartitionID();
+            buffer = server->getBufferByPartition(father_task_partition);
+            //buffer  = task->getPartitionBuffer(father_task_partition);
         }
         catch (const Exception & e) /// Typical for an incorrect username, password, or address.
         {
@@ -98,23 +104,6 @@ namespace DB {
         }
 
         server->addConnection(this);
-        //sendHello();
-
-
-        while(1){
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            if(startToReceive){
-
-                //out send start signal to data connection client
-                // receiveStart();
-                sendCommandToClient(Protocol::DataControl::START);
-                break;
-            }
-        }
-
-
-
 
         while (1) {
             /// We are waiting for a packet from the client. Thus, every `POLL_INTERVAL` seconds check whether we need to shut down.
@@ -126,17 +115,20 @@ namespace DB {
                 break;
 
 
-            if(!receiveBlock())  // return false  at end of data
+            //if(!receiveBlock())  // return false  at end of data
+            //   break;
+
+            receivePackage();
+
+            if(finished)
                 break;
 
-
-
         }
-        setEndOfReceive(true);
+        //setEndOfReceive(true);
 
     }
 
-
+    /*
     void DataConnectionHandler::checkHighWaterMark(){ // only write
         auto cmd = [&](void){
             if(highWaterMarkCall()){
@@ -148,8 +140,8 @@ namespace DB {
         pool.schedule(cmd);
 
     }
-
-    void DataConnectionHandler::sendCommandToClient(Protocol::DataControl::Enum  type){
+    */
+    /*void DataConnectionHandler::sendCommandToClient(Protocol::DataControl::Enum  type){
 
 
         std::string  rep ;
@@ -168,8 +160,7 @@ namespace DB {
         LOG_DEBUG(log, "task:" + server->getTask()->getTaskId() + " send " + cmd + " to child task: " +  child_task_id + " success" );
 
 
-    }
-
+    }*/
     void DataConnectionHandler::initBlockInput()
     {
         if (!block_in)
@@ -184,6 +175,57 @@ namespace DB {
                     client_revision);
         }
     }
+    void DataConnectionHandler::receivePackage(){
+
+        UInt32 packet_type = 0;
+        readVarUInt(packet_type, *in);
+        switch (packet_type){
+            case Protocol::DataControl::BLOCK_REQUEST:{
+
+                if(finished)
+                    throw  Exception("dataChannel:" + dataChannel + " already finished produce data" );
+                Block res ;
+                buffer->pop(res); // will block if buffer is empty;  partitioned block buffer
+                sendBlock(res);
+                if(!res){
+                    finished = true;
+                    LOG_DEBUG(log,"dataChannel:"+ dataChannel + " finish produce data");
+                }
+
+            }
+        }
+
+
+
+    }
+
+    void  DataConnectionHandler::sendBlock(DB::Block &block) { // must be call in logic thread
+
+
+
+        if (!block_out)
+        {
+            //if (compression == Protocol::Compression::Enable)
+            //maybe_compressed_out = std::make_shared<CompressedWriteBuffer>(*out, compression_settings);
+            //else
+            // maybe_compressed_out = out;
+            int server_revision = 1;
+            block_out = std::make_shared<NativeBlockOutputStream>(*out, server_revision, block.cloneEmpty());
+        }
+
+
+
+        writeVarUInt(Protocol::Client::Data, *out); // with one block
+        //writeStringBinary(task->getTaskId(), *out);
+
+        //size_t prev_bytes = out->count();
+
+        block_out->write(block);
+        //maybe_compressed_out->next();
+        out->next();
+    }
+
+    /*
     bool DataConnectionHandler::receiveBlock() {
 
         initBlockInput();
@@ -211,53 +253,19 @@ namespace DB {
             return false;
         }
     }
-
-    bool DataConnectionHandler::getEndOfReceive() {
-        return endOfReceive;
-    }
+    */
 
 
-    void DataConnectionHandler::receiveHello()
+    void DataConnectionHandler::receivePartitionID()
     {
         /// Receive `hello` packet.
-        UInt64 packet_type = 0;
+        UInt32 packet_type = 0;
 
+        readVarUInt(packet_type,*in);
+        assert(packet_type == Protocol::DataControl::PARTITION_ID);
+        readStringBinary(father_task_id, *in);
+        readVarUInt(father_task_partition,*in);
 
-        readVarUInt(packet_type, *in);
-
-        if (packet_type != Protocol::Client::Hello)
-        {
-            /** If you accidentally accessed the HTTP protocol for a port destined for an internal TCP protocol,
-              * Then instead of the packet type, there will be G (GET) or P (POST), in most cases.
-              */
-            if (packet_type == 'G' || packet_type == 'P')
-            {
-               // writeString("HTTP/1.0 400 Bad Request\r\n\r\n"
-               //             "Port " + server->config().getString("tcp_port") + " is for clickhouse-client program.\r\n"
-               //                                                               "You must use port " + server->config().getString("http_port") + " for HTTP.\r\n",
-               //             *out);
-
-                throw Exception("Client has connected to wrong port", ErrorCodes::DATA_CLIENT_HAS_CONNECTED_TO_WRONG_PORT);
-            }
-            else
-                throw NetException("Unexpected packet from client", ErrorCodes::DATA_UNEXPECTED_PACKET_FROM_CLIENT);
-        }
-
-        readStringBinary(client_name, *in);
-        readVarUInt(client_version_major, *in);
-        readVarUInt(client_version_minor, *in);
-        readVarUInt(client_revision, *in);
-        readStringBinary(child_task_id,*in);
-        readVarUInt(upstream_task_partition,*in);
-
-
-        LOG_DEBUG(&Logger::get("DataConnectionHandler"), "Connected " << client_name
-                                    << " version " << client_version_major
-                                    << "." << client_version_minor
-                                    << "." << client_revision
-                                    << " task id " << child_task_id
-                                    << " partition " << upstream_task_partition
-                                    << ".");
 
     }
 

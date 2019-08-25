@@ -28,7 +28,8 @@ namespace DB {
         }
         Context * context(){ return  server_context;}
         bool  isCancelled(){ return false;}
-        DataReceiverInfo  applyResource();
+        //DataReceiverInfo  applyResource();
+        TaskSource getExechangeServerInfo() ;
         //DataConnectionHandlerFactory * getDataConnectionHandlerFactory(){ return  dataFactory;}
 
     private:

@@ -57,6 +57,13 @@ public:
     ConcurrentBoundedQueue(size_t max_fill = 10000)
         : fill_count(0, max_fill), empty_count(max_fill, max_fill),max_size(max_fill) {}
 
+    bool isEmpty(){
+        return  queue.size() == 0 ;
+    }
+
+    bool isFull(){
+        return  queue.size() >= max_size;
+    }
     void push(const T & x)
     {
         empty_count.wait();

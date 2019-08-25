@@ -26,15 +26,19 @@ public:
 public:
     void init();
     void write(Task &  task);
-    void write(ExechangeTaskDataSource & source);
-    void write(ExechangePartition & partition);
-    void write(DataReceiverInfo & info);
-    void write(ExechangeTaskDataDest & desc );
-    void write(ScanTaskDataSource & source);
+    //void write(ExechangeTaskDataSource & source);
+    //void write(ExechangePartition & partition);
+    //void write(DataReceiverInfo & info);
+    //void write(ExechangeTaskDataDest & desc );
+    //void write(ScanTaskDataSource & source);
+    void write(StageSource  & stageSource);
+    void write(ScanSource  & stageSource);
     void write(ScanPartition & partition);
-    void write(scanTableInfo & info);
+    void write(scanTableInfo & partition);
+    void write(TaskSource & info);
     void write(std::vector<std::shared_ptr<ExecNode>> execnodes);
     void write(std::shared_ptr<ExecNode> execNode);
+    void write(Distribution fatherDistribution);
 
 private:
     //std::shared_ptr<Poco::Net::StreamSocket> socket;

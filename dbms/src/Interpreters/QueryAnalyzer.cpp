@@ -773,7 +773,7 @@ namespace DB {
         if( ScanPlanNode* scanPlanNode = typeid_cast<ScanPlanNode*> (root.get())){
             //get distribution from static module
 
-            scanPlanNode->buildBaseDistribution(); //only partitionKey and num basc info
+            scanPlanNode->buildDistributionAndScanSource(); //only partitionKey and num basc info
 
         } else if( JoinPlanNode* joinPlanNode = typeid_cast<JoinPlanNode*>(root.get())){
 
@@ -787,7 +787,7 @@ namespace DB {
                    joinPlanNode->getChild(0)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
 
                auto leftDis = joinPlanNode->getChild(0)->getDistribution();
-               joinNodeDistribution =  std::make_shared<ExechangeDistribution>(leftDis->distributeKeys,leftDis->partitionNum);
+               joinNodeDistribution =  std::make_shared<Distribution>(leftDis->distributeKeys,leftDis->parititionIds);
 
                std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(DataExechangeType::tone2onejoin,joinNodeDistribution); // exechangeNode sender distribution,
                if( joinPlanNode->getChild(0)->exechangeCost() > joinPlanNode->getChild(1)->exechangeCost()){                                       // submit father stage will set executor info in distribution for child
@@ -811,7 +811,7 @@ namespace DB {
            }else if( joinPlanNode->getChild(0)->getDistribution()->keyEquals(joinPlanNode->joinKeys)){
 
                auto leftDis = joinPlanNode->getChild(0)->getDistribution();
-               joinNodeDistribution =  std::make_shared<ExechangeDistribution>(leftDis->distributeKeys,leftDis->partitionNum);
+               joinNodeDistribution =  std::make_shared<Distribution>(leftDis->distributeKeys,leftDis->parititionIds);
 
                std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(DataExechangeType::toneshufflejoin,joinNodeDistribution); // exechangeNode sender distribution
                enode->addChild(joinPlanNode->getChild(1));                                                                                  // submit father stage will set executor info in distribution for child
@@ -837,7 +837,7 @@ namespace DB {
            }*/
            else {
 
-               joinNodeDistribution = std::make_shared<ExechangeDistribution>(joinPlanNode->joinKeys,64);
+               joinNodeDistribution = std::make_shared<Distribution>(joinPlanNode->joinKeys,64);
 
                std::shared_ptr<ExechangeNode> enode0 = std::make_shared<ExechangeNode>(DataExechangeType::ttwoshufflejoin,joinNodeDistribution);
                enode0->addChild(joinPlanNode->getChild(0));
@@ -855,13 +855,13 @@ namespace DB {
         } else if(MergePlanNode* mergePlanNode = typeid_cast<MergePlanNode*>(root.get())){
 
             (void)mergePlanNode;
-            std::shared_ptr<Distribution> distribution = std::make_shared<ExechangeDistribution>();
+            std::shared_ptr<Distribution> distribution = std::make_shared<Distribution>();
             AggPlanNode* aggPlanNode = typeid_cast<AggPlanNode*>(root->getChild(0).get());
             assert(aggPlanNode != NULL);
 
-            if(root->getChild(0)->getDistribution()->partitionNum > 1){  //need to merge
+            if(root->getChild(0)->getDistribution()->parititionIds.size() > 1){  //need to merge
 
-                distribution->partitionNum = 1;
+                distribution->parititionIds.push_back(0);
                 distribution->distributeKeys = std::vector<std::string>();
 
                 std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(DataExechangeType::taggmerge,distribution);// submit stage will set executor info in distribution
@@ -881,11 +881,11 @@ namespace DB {
         } else if(UnionPlanNode* unionPlanNode = typeid_cast<UnionPlanNode*>(root.get())){
 
             (void )unionPlanNode;
-            std::shared_ptr<Distribution> distribution = std::make_shared<ExechangeDistribution>();
+            std::shared_ptr<Distribution> distribution = std::make_shared<Distribution>();
             std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(DataExechangeType::tunion,distribution); // submit stage will set executor info in distribution
 
 
-            distribution->partitionNum = 1;
+            distribution->parititionIds.push_back(0);
             distribution->distributeKeys = std::vector<std::string>();
             for (auto child : root->getChilds()) {
                 enode->addChild(child);
@@ -948,13 +948,14 @@ namespace DB {
                 auto etype = (typeid_cast<ExechangeNode *>(enode.get()))->getDateExechangeType();
                 assert( etype == DataExechangeType::ttwoshufflejoin);
                 currentStage->setSourceExechangeType(etype);
-                currentStage->setExechangeDistribution(enode->getDistribution());
+                currentStage->hasExechange = true;
+                currentStage->setDistribution(enode->getDistribution());
 
                 assert(enode->getChilds().size() == 2 ) ; // 0 is left ,1 is right
 
                 auto lstage = std::make_shared<Stage>(jobId,stageid++,context);
                 splitStageByExechangeNode(enode->getChild(0),lstage);
-                currentStage->addChild(lstage);
+                currentStage->addChild(lstage->stageId,lstage);
                 currentStage->addMainTableChildStageId(lstage->stageId);
                 lstage->setFather(currentStage);
                 lstage->setDestExechangeType(etype);
@@ -962,11 +963,12 @@ namespace DB {
 
                 auto rstage = std::make_shared<Stage>(jobId,stageid++,context);
                 splitStageByExechangeNode(enode->getChild(1),rstage);
-                currentStage->addChild(rstage);
+                currentStage->addChild(rstage->stageId,rstage);
                 currentStage->addRightTableChildStageId(rstage->stageId);
                 joinPlanNode->setHashTableStageId(rstage->stageId);
                 rstage->setFather(currentStage);
                 rstage->setDestExechangeType(etype);
+
 
 
             }else {
@@ -977,12 +979,13 @@ namespace DB {
 
                     currentStage->addPlanNode(root);
                     currentStage->setSourceExechangeType(left->getDateExechangeType());
-                    currentStage->setExechangeDistribution(left->getDistribution());
+                    currentStage->hasExechange = true;
+                    currentStage->setDistribution(left->getDistribution());
 
                     assert(left->getChilds().size() == 1);
                     auto childStage = std::make_shared<Stage>(jobId,stageid++,context);
                     splitStageByExechangeNode(left->getChild(0),childStage);
-                    currentStage->addChild(childStage);
+                    currentStage->addChild(childStage->stageId,childStage);
                     currentStage->addRightTableChildStageId(childStage->stageId);
                     joinPlanNode->setHashTableStageId(childStage->stageId);
                     childStage->setDestExechangeType(left->getDateExechangeType());
@@ -995,12 +998,13 @@ namespace DB {
 
                     currentStage->addPlanNode(root);
                     currentStage->setSourceExechangeType(right->getDateExechangeType());
-                    currentStage->setExechangeDistribution(right->getDistribution());
+                    currentStage->hasExechange = true;
+                    currentStage->setDistribution(right->getDistribution());
 
                     assert(right->getChilds().size() == 1);
                     auto childStage = std::make_shared<Stage>(jobId,stageid++,context);
                     splitStageByExechangeNode(right->getChild(0),childStage);
-                    currentStage->addChild(childStage);
+                    currentStage->addChild(childStage->stageId,childStage);
                     currentStage->addRightTableChildStageId(childStage->stageId);
                     joinPlanNode->setHashTableStageId(childStage->stageId);
                     childStage->setDestExechangeType(right->getDateExechangeType());
@@ -1022,13 +1026,14 @@ namespace DB {
 
             currentStage->addPlanNode(root);
             currentStage->setSourceExechangeType(enode->getDateExechangeType());
-            currentStage->setExechangeDistribution(enode->getDistribution());
+            currentStage->hasExechange = true;
+            currentStage->setDistribution(enode->getDistribution());
             auto childStage =  std::make_shared<Stage>(jobId,stageid++,context);
 
             assert(enode->getChilds().size() == 1); // aggPlanNode
             splitStageByExechangeNode(enode->getChild(0),childStage);
 
-            currentStage->addChild(childStage);
+            currentStage->addChild(childStage->stageId,childStage);
             currentStage->addMainTableChildStageId(childStage->stageId);
             childStage->setDestExechangeType(enode->getDateExechangeType());
             childStage->setFather(currentStage);
@@ -1040,7 +1045,8 @@ namespace DB {
             assert(enode != NULL);
             currentStage->addPlanNode(root);
             currentStage->setSourceExechangeType(enode->getDateExechangeType());
-            currentStage->setExechangeDistribution(enode->getDistribution());
+            currentStage->hasExechange = true;
+            currentStage->setDistribution(enode->getDistribution());
 
             std::vector<std::shared_ptr<PlanNode>> childs = enode->getChilds();
 
@@ -1049,7 +1055,7 @@ namespace DB {
 
                 auto childStage =  std::make_shared<Stage>(jobId,stageid++,context);
                 splitStageByExechangeNode(childs[i],childStage);
-                currentStage->addChild(childStage);
+                currentStage->addChild(childStage->stageId,childStage);
                 currentStage->addMainTableChildStageId(childStage->stageId);
                 childStage->setDestExechangeType(enode->getDateExechangeType());
                 childStage->setFather(currentStage);
@@ -1059,12 +1065,14 @@ namespace DB {
         } else if(ScanPlanNode* scanPlanNode = typeid_cast<ScanPlanNode*>(root.get())) { // bottom , stop recursive
 
             currentStage->addPlanNode(root);
-            currentStage->setScanDistribution(scanPlanNode->getDistribution());
+            currentStage->setDistribution(scanPlanNode->getDistribution());
+            currentStage->hasScan = true;
+            currentStage->scanSource  = scanPlanNode->scanSource;
 
-            //no exechange receiver  , look  resultPlanNode as the receiver
-        }  else if(ResultPlanNode* resultPlanNode = typeid_cast<ResultPlanNode*>(root.get())){ // top
+        } else if(ResultPlanNode* resultPlanNode = typeid_cast<ResultPlanNode*>(root.get())){ // top
             (void)resultPlanNode;
             currentStage->addPlanNode(root);
+            currentStage->isResultStage_ = true;
             splitStageByExechangeNode(root->getChild(0),currentStage);
         } else if(!typeid_cast<ExechangeNode*>(root.get())){
             assert(root->getChilds().size() == 1);
@@ -1151,9 +1159,9 @@ namespace DB {
         auto unionPlanNode = std::make_shared<UnionPlanNode>();
         unionPlanNode->setHeader(child->getHeader());
 
-        std::shared_ptr<Distribution> distribution = std::make_shared<ExechangeDistribution>();
+        std::shared_ptr<Distribution> distribution = std::make_shared<Distribution>();
         std::shared_ptr<ExechangeNode> enode = std::make_shared<ExechangeNode>(DataExechangeType::tunion,distribution); // submit stage will set executor info in distribution
-        distribution->partitionNum = 1;
+        distribution->parititionIds.push_back(0) ;
         distribution->distributeKeys = std::vector<std::string>();
 
         enode->addChild(child);

@@ -9,6 +9,181 @@
 
 namespace DB {
 
+
+
+    void TaskScheduler::assignDistributionToChildStage(std::shared_ptr<Stage> root) {
+
+        for(auto childId : root->getChildStageIds()){
+           auto child = root->getChildStage(childId);
+           child->fatherDistribution = root->distribution;
+
+        }
+        for(auto childId : root->getChildStageIds()){
+            auto child = root->getChildStage(childId);
+            assignDistributionToChildStage(child);
+        }
+    }
+
+    std::map<UInt32,TaskReceiverInfo>TaskScheduler::createTaskExecutorByScanDistribution(DB::ScanSource &s) {
+        std::map<UInt32,TaskReceiverInfo> ret ;
+        for (size_t i = 0; i < s.partitionIds.size(); ++i) {
+            TaskReceiverInfo info("127.0.0.1" , 6000);
+            ret.insert({i,info});
+        }
+
+        return  ret ;
+    }
+    std::map<UInt32,TaskReceiverInfo> TaskScheduler::createTaskExecutorByDistribution(Distribution & d) {
+        std::map<UInt32,TaskReceiverInfo> ret ;
+        for (size_t i = 0; i < d.parititionIds.size(); ++i) {
+            TaskReceiverInfo info("127.0.0.1" , 6000);
+            ret.insert({i,info});
+        }
+
+        return  ret ;
+    }
+
+
+    std::shared_ptr<TaskConnectionClient> TaskScheduler::createConnection(TaskReceiverInfo  & receiver ){
+
+        auto connect  = std::make_shared<TaskConnectionClient>(receiver.ip,receiver.taskPort);
+        connect->connect();
+        return connect;
+    }
+    void TaskScheduler::fillStageSource(std::shared_ptr<DB::Stage> current) {
+
+        std::vector<std::string> childIds = current->getChildStageIds();
+
+        for (auto childId : childIds) {
+            auto it = submittedTaskInfo.find(childId);
+            if (it == submittedTaskInfo.end()) {
+                throw Exception("child stage not submit yet ");
+            } else {
+                StageSource source;
+                source.taskSources = it->second;
+                for (size_t i = 0; i < current->distribution->parititionIds.size(); ++i) {
+                    source.newPartitionIds.push_back(current->distribution->parititionIds[i]);
+                }
+                source.newDistributeKeys = current->distribution->distributeKeys;
+
+                current->stageSource.insert({childId, source});
+            }
+
+        }
+
+    }
+
+
+    void TaskScheduler::submitStage(std::shared_ptr<DB::Stage> current) {
+
+        if(current->hasExechange)
+            fillStageSource(current);
+        if(current->hasScan){
+            assert(current->scanSource.partition.size() > 0); //already set
+        }
+
+        std::map<UInt32 ,TaskReceiverInfo> taskExecutorInfo ;
+        if(current->isResultStage_){
+
+        }else if(current->hasScan){
+            taskExecutorInfo =  createTaskExecutorByScanDistribution(current->scanSource);
+        }
+        else if(current->hasExechange){
+            taskExecutorInfo =  createTaskExecutorByDistribution(*current->distribution);
+        }
+
+        current->buildTask();
+
+
+        std::map<std::string,TaskSource> currentStageSource;
+        if(current->isResultStage_){
+
+            std::vector<std::string> taskIds = current->getTaskIds() ;
+            assert(taskIds.size() == 1);
+            std::string taskId = taskIds[0];
+            auto task = current->getTask(taskId);
+
+            pool.schedule(std::bind(&TaskScheduler::startResultTask, this,*task));
+
+        }else if(current->hasScan){
+            size_t  taskNum = current->scanSource.partitionIds.size();
+            assert(taskExecutorInfo.size() == taskNum);
+            for(UInt32 partitionId : current->scanSource.partitionIds){
+                auto taskClient =   createConnection(taskExecutorInfo[partitionId]);
+                Task * task = current->getTasks()[partitionId].get();
+                taskClient->sendTask(*task);
+
+                TaskSource taskSource = taskClient->getExechangeSourceInfo(task->getTaskId());
+                currentStageSource.insert({task->getTaskId(),taskSource});
+            }
+
+        }else if(current->hasExechange){
+            size_t  taskNum = current->distribution->parititionIds.size();
+            assert(taskExecutorInfo.size() == taskNum);
+            for(size_t partitionId : current->distribution->parititionIds){
+                auto taskClient =   createConnection(taskExecutorInfo[partitionId]);
+                Task * task = current->getTasks()[partitionId].get();
+                taskClient->sendTask(*task);
+
+                TaskSource taskSource = taskClient->getExechangeSourceInfo(task->getTaskId());
+                currentStageSource.insert({task->getTaskId(),taskSource});
+            }
+
+        }
+        if(currentStageSource.size())
+            submittedTaskInfo.insert({current->stageId,currentStageSource});
+
+    }
+
+    void TaskScheduler::getStagesWithNoDependence(std::shared_ptr<DB::Stage> current,std::vector<std::shared_ptr<Stage>> & res){
+
+        if(submittedTaskInfo.find(current->stageId) != submittedTaskInfo.end())
+            return;
+
+        bool  hasDepdence = false;
+        for(auto  childId : current->getChildStageIds()){
+            if(submittedTaskInfo.find(childId) == submittedTaskInfo.end()){
+                hasDepdence = true;
+                break;
+            }
+        }
+        if(!hasDepdence){
+            res.push_back(current);
+        }
+
+        for(auto  childId : current->getChildStageIds()){
+            auto child =   current->getChildStage(childId);
+            getStagesWithNoDependence(child,res);
+        }
+
+    }
+
+    void TaskScheduler::schedule(std::shared_ptr<DB::Stage> root){
+
+        assignDistributionToChildStage(root);
+        while(true){
+            std::vector<std::shared_ptr<Stage>> readyStage;
+            getStagesWithNoDependence(root,readyStage);
+            if(readyStage.size() == 0){
+                LOG_DEBUG(log,"all stage finished schedule");
+                break;
+            }
+            for(auto ready : readyStage){
+                submitStage(ready);
+            }
+        }
+    }
+
+    void TaskScheduler::startResultTask(Task & task){
+
+        io.buffer = std::make_shared<ConcurrentBoundedQueue<Block>>();
+        //task.setDataConnectionHandlerFactory(server->getDataConnectionHandlerFactory());
+        task.initFinal();
+        task.execute(io.buffer);
+
+    }
+    /*
+
     void TaskScheduler::applyResourceAndSubmitStage(std::shared_ptr<Stage> root) {
 
         assignDataReciver(root);// stage 的 task receiver 个数 和 stage partitonNum 一样,每个 task 启动的
@@ -70,11 +245,7 @@ namespace DB {
             applyDataReceiverForStageExechangePart(taskReceiver, root);
 
 
-
-
         } else if(root->exechangeDistribution && root->isResultStage()){ // data all come from exechange node
-
-
             assert(root->getExechangeDistribution()->partitionNum == 1);
             std::map<int,ExechangePartition> & parts = root->getExechangeDistribution()->partitionInfo;
             std::map<int,DataReceiverInfo> & receiver = root->getExechangeDistribution()->receiverInfo;
@@ -235,14 +406,7 @@ namespace DB {
 
     }
 
-    void TaskScheduler::startResultTask(Task & task){
 
-        io.buffer = std::make_shared<ConcurrentBoundedQueue<Block>>();
-        //task.setDataConnectionHandlerFactory(server->getDataConnectionHandlerFactory());
-        task.initFinal();
-        task.execute(io.buffer);
-
-    }
 
     void TaskScheduler::submitTask(Task &task) {
 
@@ -302,6 +466,7 @@ namespace DB {
 
 
     }
+     */
 
 
 }

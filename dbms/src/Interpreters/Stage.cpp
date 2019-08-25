@@ -34,21 +34,17 @@ namespace DB {
 
     std::vector<std::string > Stage::getTaskIds(){
 
-        auto dis = exechangeDistribution == NULL ?  scanDistribution : exechangeDistribution;
+
         std::vector<std::string > ret ;
-        for(int i=0;i< dis->partitionNum ;++i){
-            ret.push_back( getTaskId(i));
+        for(size_t i=0;i< distribution->parititionIds.size() ;++i){
+            ret.push_back( getTaskId(distribution->parititionIds[i]));
         }
         return  ret ;
 
     }
-    int  Stage::getPartitionNum() {
+    size_t  Stage::getPartitionNum() {
 
-        if(scanDistribution){
-            return  scanDistribution->partitionNum;
-        } else {
-            return  exechangeDistribution->partitionNum;
-        }
+        return distribution->parititionIds.size();
 
     }
 
@@ -67,8 +63,8 @@ namespace DB {
     void Stage::buildTask() {
 
         buildTaskExecNode();
-        buildTaskSourceAndDest();
-
+        //buildTaskSourceAndDest();
+        buildTaskSource();
 
 
     }
@@ -76,6 +72,49 @@ namespace DB {
         return static_cast<ScanPlanNode * >(planNodes[planNodes.size()-1].get());
     }
 
+    void Stage::buildTaskSource(){
+
+        if(hasExechange && !hasScan ){ // only exechange from stage
+
+            for(size_t i =0;i< distribution->parititionIds.size();++i){
+                auto task = std::make_shared<Task>(*fatherDistribution,stageSource,scanSource,getTaskId(distribution->parititionIds[i]),context);
+                task->hasExechange = hasExechange;
+                task->hasScan = hasScan;
+                task->isResult = isResultStage_;
+
+                task->setExecNodes(execNodes);
+                tasks.insert({i,task});
+            }
+
+        } else if( hasScan && !hasExechange ){ // only scan
+            for(size_t i =0;i< distribution->parititionIds.size();++i){
+                auto task = std::make_shared<Task>(*fatherDistribution,stageSource,scanSource,getTaskId(distribution->parititionIds[i]),context);
+                task->hasExechange = hasExechange;
+                task->hasScan = hasScan;
+                task->isResult = isResultStage_;
+
+
+                task->setExecNodes(execNodes);
+                tasks.insert({i,task});
+            }
+
+        } else if(hasScan && hasExechange ){ // exechange and scan
+
+            for(size_t i =0;i< distribution->parititionIds.size();++i){
+                auto task = std::make_shared<Task>(*fatherDistribution,stageSource,scanSource,getTaskId(distribution->parititionIds[i]),context);
+                task->hasExechange = hasExechange;
+                task->hasScan = hasScan;
+                task->isResult = isResultStage_;
+
+                task->setExecNodes(execNodes);
+                tasks.insert({i,task});
+            }
+        } else {
+            throw Exception("no data input ");
+        }
+    }
+
+    /***
     void Stage::buildTaskSourceAndDest() {
 
         // only scan
@@ -221,6 +260,7 @@ namespace DB {
             }
         }
     }
+     ***/
     void Stage::debugString(std::stringstream  & ss ,size_t blankNum ) {
 
 

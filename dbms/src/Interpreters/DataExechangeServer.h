@@ -12,17 +12,23 @@ namespace DB {
 
 
 class  DataConnectionHandler;
-class DataReceiver {
+class DataExechangeServer {
 
 public:
-    DataReceiver(ExechangeTaskDataSource source,Task *task_ , Context * context_){
+    DataExechangeServer(std::map<UInt32 ,std::shared_ptr<ConcurrentBoundedQueue<Block>> >  partitionBuffer_
+            ,Task *task_ , Context * context_){
 
+        //(void)(dest);
+
+        /*
         childTaskIds = source.partition.childTaskIds;
         exechangeType = source.partition.exechangeType;
         rightTableStageId = source.partition.rightTableChildStageId;
         mainTableStageIds = source.partition.mainTableChildStageId;
         port = source.receiver.dataPort;
         ip = source.receiver.ip;
+        */
+        partitionBuffer = partitionBuffer_;
         task = task_;
         log = &Logger::get("DataReceiver");
         //factory  = factory_;
@@ -35,6 +41,7 @@ public:
 
     //void addConnect(DataConnectionHandler * connect,int childStageId) { connections.insert({childStageId,connect});}
 
+    std::map<UInt32 ,std::shared_ptr<ConcurrentBoundedQueue<Block>> > partitionBuffer;
     std::shared_ptr<DataServer>  server;
     //std::shared_ptr<DataBuffer>  buffer; // read and fill in different thread ,buffer need to be thread safe
     // std::map<std::string,std::shared_ptr<DataBuffer>>  resultBuffer; // result senderId -> dataBuffer
@@ -46,10 +53,10 @@ public:
     //DataConnectionHandlerFactory * factory;
 
 
-    std::vector<std::string> childTaskIds; // stageId_taskId
-    DataExechangeType  exechangeType;
-    std::string rightTableStageId  ;
-    std::vector<std::string> mainTableStageIds ;
+    //std::vector<std::string> childTaskIds; // stageId_taskId
+    //DataExechangeType  exechangeType;
+    //std::string rightTableStageId  ;
+    //std::vector<std::string> mainTableStageIds ;
     //std::map<std::string,DataConnectionHandler * >  connections; // rstageId_taskId  receiver may have multi connection , for example ,join , aggMerge
     Task * task ;
     Poco::Logger *log  ;

@@ -33,12 +33,13 @@ namespace DB {
         Poco::Net::SocketAddress resolved_address;
         void connect();
         void disconnect(){};
-        DataReceiverInfo applyResource(std::string taskId);
+        //  DataReceiverInfo applyResource(std::string taskId);
         void sendTask(Task & task);
         void sendDone(std::string taskId);
         void checkStatus(std::string taskId);
         void sendHello(){};
         void receiveHello(){};
+        TaskSource getExechangeSourceInfo(std::string taskId);
 
 
     };

@@ -23,13 +23,16 @@ namespace DB {
         }
 
     private:
-        ExechangeTaskDataSource readTaskExechangeSource();
-        ExechangePartition readExechangePartition();
-        ScanTaskDataSource readTaskScanSource();
+        //ExechangeTaskDataSource readTaskExechangeSource();
+        //ExechangePartition readExechangePartition();
+        //ScanTaskDataSource readTaskScanSource();
         ScanPartition readScanPartition();
         scanTableInfo readScanTableInfo();
-        DataReceiverInfo readDataReceiverInfo();
-        ExechangeTaskDataDest readTaskDest();
+        TaskSource readTaskSource();
+        StageSource readStageSource();
+        ScanSource readScanSource();
+        Distribution readFatherDistribution();
+
         std::shared_ptr<ExecNode> readExecNode();
 
         std::shared_ptr<Poco::Net::StreamSocket> socket;

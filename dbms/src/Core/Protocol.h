@@ -113,8 +113,9 @@ namespace Protocol
     namespace TaskClient {
         enum Enum
         {
-            AppalyResource = 100,
+            //AppalyResource = 100,
             TaskReq = 101 ,
+            DataExechangeSource = 102
         };
     }
 
@@ -122,9 +123,10 @@ namespace Protocol
 
         enum Enum
         {
-            STOP = 200,
-            START = 201,
-            CLIENT_ACK = 301,
+            BLOCK_REQUEST = 200,
+            PARTITION_ID = 201,
+
+            BLOCK_ACK = 301
          };
     }
 
