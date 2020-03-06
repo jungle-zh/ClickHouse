@@ -35,7 +35,7 @@ namespace DB {
         static  std::shared_ptr<ExecNode>  deserialize(ReadBuffer & buffer,Context * context) ;
         void  serializeAggDesc(WriteBuffer & buffer);
         static AggregateDescriptions deserializeAggDesc (ReadBuffer & buffer);
-        void  readPrefix() override ;
+        void  readPrefix(std::shared_ptr<DataExechangeClient>) override ;
         void  readSuffix() override {};
         Block read() override ;
         Block getHeader (bool isAnalyze)  override;

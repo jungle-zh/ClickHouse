@@ -100,6 +100,13 @@ namespace DB {
 
     }
      */
+    std::string  TaskConnectionClient::askReady(){
+        writeVarUInt(Protocol::TaskClient::IsDataExechangeSourceReady, *out);
+        out->next(); // flush buffer
+        std::string isReady ;
+        readStringBinary(isReady,*in);
+        return  isReady;
+    }
     TaskSource TaskConnectionClient::getExechangeSourceInfo(std::string taskId){
 
         writeVarUInt(Protocol::TaskClient::DataExechangeSource, *out);

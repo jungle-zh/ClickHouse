@@ -68,6 +68,7 @@ class IBlockOutputStream;
 using BlockInputStreamPtr = std::shared_ptr<IBlockInputStream>;
 using BlockOutputStreamPtr = std::shared_ptr<IBlockOutputStream>;
 class Block;
+class TaskServer;
 struct SystemLogs;
 using SystemLogsPtr = std::shared_ptr<SystemLogs>;
 
@@ -96,7 +97,7 @@ private:
 
     std::shared_ptr<IRuntimeComponentsFactory> runtime_components_factory;
     //std::shared_ptr<DataConnectionHandlerFactory> data_connection_handler_factory;
-
+    TaskServer * taskServer;
     ClientInfo client_info;
 
     std::shared_ptr<QuotaForIntervals> quota;           /// Current quota. By default - empty quota, that have no limits.
@@ -131,6 +132,8 @@ public:
 
     ~Context();
 
+    void setTaskServer (TaskServer * taskServer1) {taskServer = taskServer1;}
+    TaskServer * getTaskServer() { return  taskServer;}
     String getPath() const;
     String getTemporaryPath() const;
     String getFlagsPath() const;

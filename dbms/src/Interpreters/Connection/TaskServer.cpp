@@ -22,8 +22,9 @@ namespace DB{
         server_context = context_;
         LOG_INFO(log,"TaskServer started ..");
         dataPortCnt = 7000;
+        context_->setTaskServer(this);
     }
-    TaskSource TaskServer::getExechangeServerInfo() {
+    TaskSource TaskServer::applyExechangeServer() {
         TaskSource source;
         source.ip = "127.0.0.1";
         source.dataPort = dataPortCnt++;

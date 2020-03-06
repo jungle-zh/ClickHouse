@@ -45,10 +45,27 @@ namespace DB {
 
         write(task.getExecNodes());
 
-        write(task.fatherDistribution);
+        std::string hasScan = task.hasScan? "hasScan" : "hasNoScan";
+        std::string hasExechange = task.hasExechange? "hasExechange" : "hasNoExechange";
+        std::string isResult = task.isResult? "isResult" : "isNotResult";
+        writeStringBinary(hasScan,*out);
+        writeStringBinary(hasExechange,*out);
+        writeStringBinary(isResult,*out);
+
+        write(task.mainTableStageIds);
+        write(task.hashTableStageIds);
+
+        write(*(task.fatherDistribution));
         out->next();
 
 
+
+    }
+    void  TaskOutputStream::write(std::vector<std::string> stageIds){
+        writeVarUInt(stageIds.size(),*out);
+        for(size_t i=0;i<stageIds.size();++i){
+            writeStringBinary(stageIds[i],*out);
+        }
 
     }
     void  TaskOutputStream::write(std::vector<std::shared_ptr<ExecNode>> execnodes) {
@@ -242,6 +259,7 @@ namespace DB {
        void TaskOutputStream::write(TaskSource & source){
         writeStringBinary(source.ip,*out);
         writeVarUInt(source.dataPort,*out);
+        writeStringBinary(source.taskId,*out);
     }
 
 

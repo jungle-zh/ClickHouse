@@ -12,6 +12,7 @@
 namespace DB {
 
 class TCPHandler ;
+class ExechangePartition;
 class TaskScheduler {
 
 
@@ -39,13 +40,13 @@ private:
     void buildStageTask(std::shared_ptr<Stage> root);
     void submitStage(std::shared_ptr<Stage> root);
     void submitTask(Task & task);
-    void startResultTask(Task & task);
+    void startResultTask(Task * task);
 
     void checkTaskStatus(std::string taskId); // check task and close connection if task is finished  in seperate thread
 
 
 
-    std::shared_ptr<TaskConnectionClient> createConnection(TaskReceiverInfo  & receiver );
+    std::shared_ptr<TaskConnectionClient> createConnection(TaskReceiverInfo   receiver );
     //std::vector<TaskReceiverInfo> receivers;
 
     std::map<UInt32 ,TaskReceiverInfo> createTaskExecutorByScanDistribution(ScanSource & s);

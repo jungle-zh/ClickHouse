@@ -44,7 +44,7 @@ namespace DB {
     }
 
 
-    std::shared_ptr<TaskConnectionClient> TaskScheduler::createConnection(TaskReceiverInfo  & receiver ){
+    std::shared_ptr<TaskConnectionClient> TaskScheduler::createConnection(TaskReceiverInfo   receiver ){
 
         auto connect  = std::make_shared<TaskConnectionClient>(receiver.ip,receiver.taskPort);
         connect->connect();
@@ -92,18 +92,21 @@ namespace DB {
             taskExecutorInfo =  createTaskExecutorByDistribution(*current->distribution);
         }
 
-        current->buildTask();
+        current->buildTask();// need to add task partitionId and taskId
 
 
         std::map<std::string,TaskSource> currentStageSource;
-        if(current->isResultStage_){
+        if(current->isResultStage_){ // final stage
 
             std::vector<std::string> taskIds = current->getTaskIds() ;
             assert(taskIds.size() == 1);
-            std::string taskId = taskIds[0];
-            auto task = current->getTask(taskId);
+            size_t partitionId = 0;
+            auto task = current->getTask(partitionId);
 
-            pool.schedule(std::bind(&TaskScheduler::startResultTask, this,*task));
+            pool.schedule(std::bind(&TaskScheduler::startResultTask, this,task.get()));
+            pool.wait();
+            TaskSource source;
+            currentStageSource.insert({task->getTaskId(),source});
 
         }else if(current->hasScan){
             size_t  taskNum = current->scanSource.partitionIds.size();
@@ -113,8 +116,15 @@ namespace DB {
                 Task * task = current->getTasks()[partitionId].get();
                 taskClient->sendTask(*task);
 
+                std::string isSourceReady  = "";
+                while(isSourceReady != "ready"){
+                    isSourceReady  = taskClient->askReady();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+
                 TaskSource taskSource = taskClient->getExechangeSourceInfo(task->getTaskId());
                 currentStageSource.insert({task->getTaskId(),taskSource});
+                taskToConnection.insert({task->getTaskId(),taskClient});
             }
 
         }else if(current->hasExechange){
@@ -125,8 +135,15 @@ namespace DB {
                 Task * task = current->getTasks()[partitionId].get();
                 taskClient->sendTask(*task);
 
+                std::string isSourceReady  = "";
+                while(isSourceReady != "ready"){
+                    isSourceReady  = taskClient->askReady();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+
                 TaskSource taskSource = taskClient->getExechangeSourceInfo(task->getTaskId());
                 currentStageSource.insert({task->getTaskId(),taskSource});
+                taskToConnection.insert({task->getTaskId(),taskClient});
             }
 
         }
@@ -160,6 +177,7 @@ namespace DB {
 
     void TaskScheduler::schedule(std::shared_ptr<DB::Stage> root){
 
+
         assignDistributionToChildStage(root);
         while(true){
             std::vector<std::shared_ptr<Stage>> readyStage;
@@ -172,14 +190,18 @@ namespace DB {
                 submitStage(ready);
             }
         }
+
+        std::stringstream ss;
+        debugStage(root,ss,5);
+        LOG_DEBUG(log,ss.str());
     }
 
-    void TaskScheduler::startResultTask(Task & task){
+    void TaskScheduler::startResultTask(Task * task){
 
         io.buffer = std::make_shared<ConcurrentBoundedQueue<Block>>();
         //task.setDataConnectionHandlerFactory(server->getDataConnectionHandlerFactory());
-        task.initFinal();
-        task.execute(io.buffer);
+        task->initFinal();
+        task->execute(io.buffer);
 
     }
     /*
@@ -456,17 +478,19 @@ namespace DB {
         return connect;
     }
 
+
+     */
+
     void TaskScheduler::debugStage(std::shared_ptr<Stage> cur, std::stringstream  & ss, int blankNum) {
 
         cur->debugString(ss,blankNum);
         ss << "\n";
-        for(auto child : cur->getChildStages()){
+        for(auto childId : cur->getChildStageIds()){
+            auto child = cur->getChildStage(childId);
             debugStage(child,ss, blankNum + 5);
         }
 
 
     }
-     */
-
 
 }

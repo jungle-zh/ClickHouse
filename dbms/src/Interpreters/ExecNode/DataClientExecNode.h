@@ -16,10 +16,11 @@ public:
     DataClientExecNode(std::shared_ptr<DataExechangeClient> client_,Task * task_ ,std::vector<std::string> stageIds_){
         client = client_;
         task = task_;
-        log = &Logger::get("TaskReceiverExecNode");
+        log = &Logger::get("DataClientExecNode");
         stageIds  = stageIds_;
         bufferMaxSize = 100000;
         buffer = std::make_shared<ConcurrentBoundedQueue<Block>>();
+        allStageFinished = false;
     }
     ~DataClientExecNode(){};
     std::shared_ptr<DataExechangeClient> client ;
@@ -31,6 +32,7 @@ public:
     std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer;
     size_t bufferMaxSize ;
     Block header;
+    bool allStageFinished;
 
     void  readPrefix(std::shared_ptr<DataExechangeClient>) override{};
     void  readSuffix() override{};

@@ -6,6 +6,7 @@
 
 #include <Poco/Net/TCPServer.h>
 #include <Core/Types.h>
+#include <Common/ConcurrentBoundedQueue.h>
 #include <map>
 #include <common/logger_useful.h>
 
@@ -17,7 +18,6 @@ class DataConnectionHandlerFactory;
 class DataExechangeServer;
 class Context ;
 class DataConnectionHandler;
-class ConcurrentBoundedQueue;
 class Block;
 class Task ;
 class DataServer  {

@@ -9,12 +9,16 @@
 #include <DataStreams/NativeBlockInputStream.h>
 #include <common/ThreadPool.h>
 //#include <Interpreters/Connection/DataServer.h>
-
+#include <Common/ConcurrentBoundedQueue.h>
 namespace DB {
 
 class ReadBuffer;
 class WriteBuffer ;
 class IBlockInputStream;
+class IBlockOutputStream;
+
+class Block;
+class Task;
 class IServer;
 class Context;
 class DataConnectionHandler : public Poco::Net::TCPServerConnection {
@@ -46,7 +50,7 @@ private:
     UInt64 client_revision = 0;
     std::string father_task_id ;
 
-
+    size_t poped_cnt  ;
     Poco::Logger * log;
     Context * connection_context;
 
@@ -90,7 +94,7 @@ public:
 
     void  sendException(const Exception & e) ;
     void  sendEndOfStream();
-    std::string childTaskId(){ return  child_task_id;}
+    std::string fatherTaskId(){ return  father_task_id;}
 };
 
 

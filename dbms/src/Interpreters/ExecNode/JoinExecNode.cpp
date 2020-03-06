@@ -29,9 +29,12 @@ namespace DB {
 
     void JoinExecNode::readPrefix(std::shared_ptr<DataExechangeClient> client) {
 
+        LOG_DEBUG(log,"join start read hashTable :" + hashTableStageId);
         while(Block hashBlock = client->read(hashTableStageId)){
             getJoin()->insertFromBlock(hashBlock);
         }
+
+        LOG_DEBUG(log,"join read all hashTable :" << hashTableStageId  << " block size : " << getJoin()->blocks.size(););
 
     }
 
@@ -44,8 +47,10 @@ namespace DB {
         if(!ExecNode::verify(res,mainTableHeader)){
             throw Exception("join exec child block don't match ");
         }
+
         join->joinBlock(res);
-        LOG_DEBUG(log,"joined block size:" << res.rows());
+
+        LOG_DEBUG(log,"hash table block size: " << join->blocks.size() << ",joined block size:" << res.rows());
         return res;
 
     }

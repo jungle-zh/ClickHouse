@@ -7,6 +7,7 @@
 #include <Interpreters/PlanNode/PlanNode.h>
 #include <Interpreters/ExecNode/ExecNode.h>
 #include <Interpreters/Partition.h>
+#include <map>
 #include "Task.h"
 
 namespace DB {
@@ -55,7 +56,7 @@ namespace DB {
 
         std::map<UInt32 ,std::shared_ptr<Task>> getTasks() { return  tasks; }
 
-        std::shared_ptr<Task> getTask(std::string taskId) { return  tasks[taskId];}
+        std::shared_ptr<Task> getTask(size_t partitionId) { return  tasks[partitionId];}
         std::vector<std::string> getChildStageIds() {return  childIds;}
         std::shared_ptr<Stage> getChildStage(std::string childStageId);
 

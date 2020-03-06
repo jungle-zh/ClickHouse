@@ -24,7 +24,7 @@ public:
     void serialize(WriteBuffer & buffer);
     static  std::shared_ptr<ExecNode> deseralize(ReadBuffer & buffer,Context * context);
 
-     void  readPrefix() override {};
+     void  readPrefix(std::shared_ptr<DataExechangeClient>) override {};
      void  readSuffix() override {};
     Block read() override;
     Block getHeader(bool isAnalyze) override;

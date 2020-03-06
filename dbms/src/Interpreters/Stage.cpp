@@ -64,6 +64,7 @@ namespace DB {
 
         buildTaskExecNode();
         //buildTaskSourceAndDest();
+
         buildTaskSource();
 
 
@@ -77,37 +78,44 @@ namespace DB {
         if(hasExechange && !hasScan ){ // only exechange from stage
 
             for(size_t i =0;i< distribution->parititionIds.size();++i){
-                auto task = std::make_shared<Task>(*fatherDistribution,stageSource,scanSource,getTaskId(distribution->parititionIds[i]),context);
+                size_t partitionId = distribution->parititionIds[i];
+                auto task = std::make_shared<Task>(fatherDistribution,stageSource,scanSource
+                ,getTaskId(partitionId),mainintTableChildStageIds,rightTableChildStageIds,context);
+
                 task->hasExechange = hasExechange;
                 task->hasScan = hasScan;
                 task->isResult = isResultStage_;
 
                 task->setExecNodes(execNodes);
-                tasks.insert({i,task});
+                tasks.insert({partitionId,task});
             }
 
         } else if( hasScan && !hasExechange ){ // only scan
             for(size_t i =0;i< distribution->parititionIds.size();++i){
-                auto task = std::make_shared<Task>(*fatherDistribution,stageSource,scanSource,getTaskId(distribution->parititionIds[i]),context);
+                size_t partitionId = distribution->parititionIds[i];
+                auto task = std::make_shared<Task>(fatherDistribution,stageSource,scanSource
+                ,getTaskId(partitionId),mainintTableChildStageIds,rightTableChildStageIds,context);
                 task->hasExechange = hasExechange;
                 task->hasScan = hasScan;
                 task->isResult = isResultStage_;
 
 
                 task->setExecNodes(execNodes);
-                tasks.insert({i,task});
+                tasks.insert({partitionId,task});
             }
 
         } else if(hasScan && hasExechange ){ // exechange and scan
 
             for(size_t i =0;i< distribution->parititionIds.size();++i){
-                auto task = std::make_shared<Task>(*fatherDistribution,stageSource,scanSource,getTaskId(distribution->parititionIds[i]),context);
+                size_t partitionId = distribution->parititionIds[i];
+                auto task = std::make_shared<Task>(fatherDistribution,stageSource,scanSource
+                ,getTaskId(partitionId) ,mainintTableChildStageIds,rightTableChildStageIds,context);
                 task->hasExechange = hasExechange;
                 task->hasScan = hasScan;
                 task->isResult = isResultStage_;
 
                 task->setExecNodes(execNodes);
-                tasks.insert({i,task});
+                tasks.insert({partitionId,task});
             }
         } else {
             throw Exception("no data input ");

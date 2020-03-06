@@ -35,6 +35,7 @@ namespace DB {
 
         std::shared_ptr<ExecNode> readExecNode();
 
+        std::vector<std::string> readStageIds();
         std::shared_ptr<Poco::Net::StreamSocket> socket;
         std::shared_ptr<ReadBuffer> in;
         int version;

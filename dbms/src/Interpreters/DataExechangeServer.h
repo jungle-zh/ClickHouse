@@ -4,9 +4,11 @@
 
 #pragma once
 
+
 #include <Core/Block.h>
 #include <Interpreters/Task.h>
 #include <Interpreters/Connection/DataServer.h>
+#include <Common/ConcurrentBoundedQueue.h>
 
 namespace DB {
 
@@ -16,7 +18,7 @@ class DataExechangeServer {
 
 public:
     DataExechangeServer(std::map<UInt32 ,std::shared_ptr<ConcurrentBoundedQueue<Block>> >  partitionBuffer_
-            ,Task *task_ , Context * context_){
+            ,Task *task_ ,std::string ip_,UInt32  port_, Context * context_){
 
         //(void)(dest);
 
@@ -25,17 +27,21 @@ public:
         exechangeType = source.partition.exechangeType;
         rightTableStageId = source.partition.rightTableChildStageId;
         mainTableStageIds = source.partition.mainTableChildStageId;
-        port = source.receiver.dataPort;
-        ip = source.receiver.ip;
+
         */
+        port = port_;
+        ip = ip_;
         partitionBuffer = partitionBuffer_;
         task = task_;
-        log = &Logger::get("DataReceiver");
+        log = &Logger::get("DataExechangeServer");
         //factory  = factory_;
         context = context_;
         startToAccept();
     }
 
+    ~DataExechangeServer(){
+        LOG_DEBUG(log," ~desory server ip:" + ip + " , port :" << port);
+    };
     void init();
     void startToAccept(); // receive and deserialize data
 

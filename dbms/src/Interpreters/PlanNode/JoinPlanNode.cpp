@@ -19,7 +19,8 @@ namespace DB {
                     hashTable == "right" ? inputRightHeader : inputLeftHeader,
                     joinKind,
                     strictness,
-                    header
+                    header,
+                    hashTableStage
                 );
     }
     Block JoinPlanNode::getHeader()  {

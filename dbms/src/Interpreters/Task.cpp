@@ -9,6 +9,7 @@
 #include <Interpreters/ExecNode/JoinExecNode.h>
 #include <Interpreters/ExecNode/DataClientExecNode.h>
 #include <Common/typeid_cast.h>
+#include <Interpreters/Connection/TaskServer.h>
 #include <Interpreters/ExecNode/AggExecNode.h>
 #include <Interpreters/ExecNode/ProjectExecNode.h>
 #include "Task.h"
@@ -17,24 +18,33 @@
 namespace DB {
 
 
-    Task::Task(Distribution fatherDistribution_,std::map<std::string,StageSource>  stageSource_, ScanSource scanSource_,
-            std::string taskId_, Context *context_) {
+    Task::Task(std::shared_ptr<Distribution>  fatherDistribution_,std::map<std::string,StageSource>  stageSource_, ScanSource scanSource_,
+            std::string taskId_,std::vector<std::string> mainTableStageIds_ ,std::vector<std::string> hashTableStageIds_ ,Context *context_) {
         fatherDistribution = fatherDistribution_;
         stageSource = stageSource_;
         scanSource = scanSource_;
         taskId = taskId_;
+        mainTableStageIds = mainTableStageIds_;
+        hashTableStageIds =  hashTableStageIds_;
         log = &Logger::get("Task");
         context = context_;
         buffer = std::make_shared<ConcurrentBoundedQueue<Block>>();
+        partionId =0 ; //todo
     };
-    Task::Task(Distribution fatherDistribution_,std::map<std::string,StageSource>  stageSource_, ScanSource scanSource_,
-               std::vector<std::shared_ptr<DB::ExecNode>> nodes, std::string taskId_,Context * context_) {
+    Task::Task(std::shared_ptr<Distribution>  fatherDistribution_,std::map<std::string,StageSource>  stageSource_, ScanSource scanSource_,
+               std::vector<std::shared_ptr<DB::ExecNode>> nodes, std::string taskId_,std::vector<std::string> mainTableStageIds_ ,
+               std::vector<std::string> hashTableStageIds_,bool hasScan_,bool hasExechange_,bool isResult_, Context * context_) {
         fatherDistribution = fatherDistribution_;
         stageSource = stageSource_;
         scanSource = scanSource_;
         execNodes  = nodes;
         taskId  = taskId_;
+        mainTableStageIds = mainTableStageIds_;
+        hashTableStageIds =  hashTableStageIds_;
         log = &Logger::get("Task");
+        hasScan = hasScan_;
+        hasExechange = hasExechange_;
+        isResult = isResult_;
         context = context_;
         std::shared_ptr<ExecNode> tmp = NULL;
         for(size_t i=0 ;i<nodes.size(); ++i){
@@ -47,10 +57,12 @@ namespace DB {
             }
         }
         buffer = std::make_shared<ConcurrentBoundedQueue<Block>>();
-        for(auto partitionId : fatherDistribution.parititionIds){
+        for(auto partitionId : fatherDistribution->parititionIds){
             std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer = std::make_shared<ConcurrentBoundedQueue<Block>>();
             partitionBuffer.insert({partitionId,buffer});
         }
+        partionId = 0; //todo
+        isInited = false;
 
     }
 
@@ -119,16 +131,26 @@ namespace DB {
         init();
     }
 
+    TaskSource Task::getExechangeServerInfo(){
+        return  myServer;
+    }
+
+
     void Task::init(){
 
 
 
         if(!isResult){
-            server = std::make_shared<DataExechangeServer>(partitionBuffer,this,context); // will create tcp server and accept connection
+            myServer = context->getTaskServer()->applyExechangeServer();
+            server = std::make_shared<DataExechangeServer>(partitionBuffer,this,myServer.ip,myServer.dataPort,context); // will create tcp server and accept connection
             server->init();
+
         }
-        if(hasExechange)
-            client = std::make_shared<DataExechangeClient>(stageSource,this,context);
+        if(hasExechange){
+            client = std::make_shared<DataExechangeClient>(stageSource,this,partionId,context);
+            client->tryConnectAll();
+        }
+
         if(!hasScan)
             createExecNodeByClient();
         LOG_DEBUG(log,"task :" + taskId + " start to receive data and execute ");
@@ -139,11 +161,23 @@ namespace DB {
             curNode = curNode->getChild();
         }
 
+        isInited = true;
     }
 
 
     std::map<UInt32, Block> Task::repartition(Block block){
         (void)block;
+
+        std::map<UInt32, Block> blocks; // partition id - > block
+        if ( fatherDistribution->parititionIds.size() == 1) {
+            blocks.insert({fatherDistribution->parititionIds[0], block});
+        } else {
+            throw Exception("not impl yet");
+        }
+
+        return  blocks;
+
+
     }
     void Task::execute(){
 
@@ -164,29 +198,33 @@ namespace DB {
         }
 
     }
-    std::shared_ptr<ConcurrentBoundedQueue<Block>> Task::getPartitionBuffer(size_t partitionId){
 
-    }
     void Task::consume(){
+        size_t  cnt = 0 ;
         while(!buffer->isEmpty() || !taskFinished){
             Block block;
             buffer->pop(block);
             std::map<UInt32, Block> blocks = repartition(block);
 
             for(auto p : blocks){
+                cnt ++;
                 if(!partitionBuffer[p.first]->isFull())
                     partitionBuffer[p.first]->push(p.second);
+                LOG_DEBUG(log,"task :" << taskId  << " push to partiontionBuffer " << p.first << "  " <<  cnt << " block");
             }
         }
+
     }
 
     void Task::execute(std::shared_ptr<ConcurrentBoundedQueue<Block>> buffer){
-
+        size_t  cnt = 1 ;
         while(Block res = root->read()){ // read until Databuffer  , read all until child send empty block
             buffer->push(res);
+            cnt ++;
         }
         Block end ;
         buffer->push(end);
+        LOG_DEBUG(log,"task :" << taskId  << " pull  " << cnt << " block");
     }
     void Task::finish(){
 
@@ -271,23 +309,22 @@ namespace DB {
 
         INSERT_BLANK(blankNum);
         ss << "task id :" << getTaskId();
-        ss << "     receive from:"<< exechangeTaskDataSource.receiver.ip <<":"<<exechangeTaskDataSource.receiver.dataPort;
-        ss << "     send to  :";
-        for(auto pair : exechangeTaskDataDest.receiverInfo){
-            int partitionId =  pair.first;
-            ss << partitionId;
-            ss << ",";
-            DataReceiverInfo receiverInfo = pair.second;
-            ss << receiverInfo.ip << ":" << receiverInfo.dataPort;
-            ss << "|";
+        for(auto e : stageSource){
+            ss << " pull from:"<< e.first ;
 
         }
+
         //ss << "\n";
-        ss << "     distribute keys:";
-        for(auto key : exechangeTaskDataDest.distributeKeys){
-            ss << key ;
-            ss << "#";
+
+        if(fatherDistribution){
+            ss << "   father  distribute keys:";
+            for(auto key : fatherDistribution->distributeKeys){
+                ss << key ;
+                ss << "#";
+            }
         }
+
+
         //ss << "\n";
         ss << "      execnode :";
         for(auto e : execNodes){

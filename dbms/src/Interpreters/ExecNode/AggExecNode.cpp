@@ -139,8 +139,8 @@ namespace DB {
 
 
 
-    void AggExecNode::readPrefix() {
-
+    void AggExecNode::readPrefix(std::shared_ptr<DataExechangeClient> client) {
+        (void) client;
         if(actions){
             actions->execute(inputHeader);
 

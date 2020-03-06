@@ -124,8 +124,8 @@ namespace DB {
     }
 
 
-    void MergeExecNode::readPrefix() {
-
+    void MergeExecNode::readPrefix(std::shared_ptr<DataExechangeClient> client) {
+        (void) client;
         ColumnNumbers keys;
         for (const auto & pair : aggregationKeys)
             keys.push_back(inputHeader.getPositionByName(pair.name));

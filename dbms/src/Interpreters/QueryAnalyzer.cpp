@@ -165,7 +165,7 @@ namespace DB {
                 for (size_t i = 0; i < unionQuery->list_of_selects->children.size(); ++i) {
                     ASTSelectQuery *selectQuery = typeid_cast<ASTSelectQuery *>(
                             unionQuery->list_of_selects->children[i].get());
-                    auto subqueryRoot = analyse(selectQuery);
+                    auto subqueryRoot = analyse(selectQuery); //todo  header map to alias_table_name.column_name and  check unique
                     childNode->addChild(subqueryRoot);
                     childNode->setHeader(subqueryRoot->getHeader());// UnionPlanNode is header is child's header
                 }
@@ -564,7 +564,7 @@ namespace DB {
         ASTs asts = query->select_expression_list->children;
         for (size_t i = 0; i < asts.size(); ++i)
         {
-            String result_name = asts[i]->getAliasOrColumnName();
+            String result_name = asts[i]->getAliasOrColumnName(); // project to alias name
             //if (required_result_columns.empty() || required_result_columns.count(result_name))
             {
                 result_columns.emplace_back(asts[i]->getColumnName(), result_name);
@@ -1072,6 +1072,9 @@ namespace DB {
         } else if(ResultPlanNode* resultPlanNode = typeid_cast<ResultPlanNode*>(root.get())){ // top
             (void)resultPlanNode;
             currentStage->addPlanNode(root);
+            std::shared_ptr<Distribution> resultDistribution = std::make_shared<Distribution>();
+            resultDistribution->parititionIds.push_back(0);
+            currentStage->setDistribution(resultDistribution);
             currentStage->isResultStage_ = true;
             splitStageByExechangeNode(root->getChild(0),currentStage);
         } else if(!typeid_cast<ExechangeNode*>(root.get())){

@@ -38,6 +38,7 @@ namespace DB {
         log = &Poco::Logger::get("DataConnectionHandler");
 
         recievedRows = 0;
+        poped_cnt = 0;
         //send_buffer.resize(100000);
         task  = server_->getTask();
         //buffer  = std::make_shared<ConcurrentBoundedQueue<Block>>();
@@ -179,14 +180,17 @@ namespace DB {
 
         UInt32 packet_type = 0;
         readVarUInt(packet_type, *in);
+
         switch (packet_type){
             case Protocol::DataControl::BLOCK_REQUEST:{
-
+                LOG_DEBUG(log,"task " << task->getTaskId() << " receive BLOCK_REQUEST ");
                 if(finished)
                     throw  Exception("dataChannel:" + dataChannel + " already finished produce data" );
                 Block res ;
                 buffer->pop(res); // will block if buffer is empty;  partitioned block buffer
                 sendBlock(res);
+                poped_cnt ++;
+                LOG_DEBUG(log,"task " << task->getTaskId() << " data server poped " << poped_cnt << " block");
                 if(!res){
                     finished = true;
                     LOG_DEBUG(log,"dataChannel:"+ dataChannel + " finish produce data");

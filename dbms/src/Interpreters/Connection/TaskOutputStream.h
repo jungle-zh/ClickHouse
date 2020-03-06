@@ -39,6 +39,7 @@ public:
     void write(std::vector<std::shared_ptr<ExecNode>> execnodes);
     void write(std::shared_ptr<ExecNode> execNode);
     void write(Distribution fatherDistribution);
+    void write(std::vector<std::string> stageIds);
 
 private:
     //std::shared_ptr<Poco::Net::StreamSocket> socket;

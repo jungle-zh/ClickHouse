@@ -38,20 +38,28 @@ namespace DB {
            throw Exception("not find stage in connections");
 
 
-       for(auto taskConnection :stageConnecions->second ){
+       for(auto taskid2Connection :stageConnecions->second ){
 
-            if(finishedTaskConnection.find(taskConnection.first) == finishedTaskConnection.end()){
-                Block res =  taskConnection.second->read(); // read corresponding partition buffer ;
+            if(finishedTask.find(taskid2Connection.first) == finishedTask.end()){
+                Block res =  taskid2Connection.second->read(); // read corresponding partition buffer ;
                 if(res)
                     return res;
-                else
-                    finishedTaskConnection.insert(taskConnection.first);
+                else {
+                    LOG_DEBUG(log,"task "+ taskid2Connection.first + " read done ");
+                    finishedTask.insert(taskid2Connection.first);
+                }
+
             }
 
        }
+       finishedStage.insert(stageId);
+
+
+
+        LOG_DEBUG(log,"stage "+ stageConnecions->first + " read done ");
 
         Block empty;
-        return  empty;
+        return  empty; // this stage read done
 
     }
 

@@ -25,16 +25,18 @@ namespace DB {
     }
     void  DataClientExecNode::readFromRemote(){
 
+        if(allStageFinished)
+            return;
         assert(bufferMaxSize - buffer->size() > 0 );
         for(size_t i=0;i< bufferMaxSize - buffer->size();++i){
 
-            bool allStageFinished = true;
+            //bool allStageFinished = true;
             for(auto stageId : stageIds){
                 if(finishedStage.find(stageId) == finishedStage.end()){
                     Block block = client->read(stageId);
-                    buffer->push(block);
+                    //buffer->push(block);
                     if(block){
-                        allStageFinished = false;
+                        //allStageFinished = false;
                         buffer->push(block);
                     } else{
                         finishedStage.insert(stageId);
@@ -42,10 +44,12 @@ namespace DB {
                 }
             }
 
-            if(allStageFinished){
+            if(finishedStage.size() == stageIds.size()){
+                allStageFinished = true;
                 Block empty;
                 buffer->push(empty);
-                LOG_DEBUG(log,"task :" + task->getTaskId() +" all stage data read finish" );
+                LOG_DEBUG(log,"task :" + task->getTaskId() +" all stage data read done" );
+                break;
             }
 
         }
@@ -56,8 +60,13 @@ namespace DB {
         if(buffer->size()){
             return  readFromBuffer();
         } else {
-            readFromRemote();
-            return  readFromBuffer();
+            if(allStageFinished){
+                throw Exception("allStageFinished ,should not read more");
+            } else {
+                readFromRemote();
+                return  readFromBuffer();
+            }
+
         }
     }
 

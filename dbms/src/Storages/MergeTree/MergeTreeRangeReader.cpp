@@ -45,12 +45,12 @@ size_t MergeTreeRangeReader::DelayedStream::readRows(Block & block, size_t num_r
 
 size_t MergeTreeRangeReader::DelayedStream::read(Block & block, size_t from_mark, size_t offset, size_t num_rows)
 {
-    if (position() == from_mark * index_granularity + offset)
+    if (position() == from_mark * index_granularity + offset) // jungle comment : stream is lazy , add to num_delayed_rows
     {
         num_delayed_rows += num_rows;
         return 0;
     }
-    else
+    else   // not continue reading when does this happen ?
     {
         size_t read_rows = finalize(block);
 
@@ -65,7 +65,7 @@ size_t MergeTreeRangeReader::DelayedStream::read(Block & block, size_t from_mark
 
 size_t MergeTreeRangeReader::DelayedStream::finalize(Block & block)
 {
-    if (current_offset && !continue_reading)
+    if (current_offset && !continue_reading)  // jungle comment : continue reading will not go into it
     {
         size_t granules_to_skip = current_offset / index_granularity;
         current_mark += granules_to_skip;
@@ -82,7 +82,7 @@ size_t MergeTreeRangeReader::DelayedStream::finalize(Block & block)
     current_offset += num_delayed_rows;
     num_delayed_rows = 0;
 
-    return readRows(block, rows_to_read);
+    return readRows(block, rows_to_read); // jungle comment :  num_delayed_rows  maybe cross the current_mark
 }
 
 
@@ -124,8 +124,8 @@ size_t MergeTreeRangeReader::Stream::read(Block & block, size_t num_rows, bool s
     {
         checkNotFinished();
 
-        size_t read_rows = readRows(block, num_rows);
-        offset_after_current_mark += num_rows;
+        size_t read_rows = readRows(block, num_rows); //jungle comment ,current_mark and offset_after_current_mark is current reading pos
+        offset_after_current_mark += num_rows;        //it
 
         if (offset_after_current_mark == index_granularity || skip_remaining_rows_in_current_granule)
         {

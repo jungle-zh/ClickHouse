@@ -144,6 +144,7 @@ namespace  DB {
         TaskSource ret ;
         readStringBinary(ret.ip,*in);
         readVarUInt(ret.dataPort,*in);
+        readStringBinary(ret.taskId,*in);
 
         return  ret;
     }
@@ -249,6 +250,18 @@ namespace  DB {
 
 
     }
+    std::vector<std::string> TaskInputStream::readStageIds(){
+        std::vector<std::string> res;
+        size_t stageIdNum;
+        readVarUInt(stageIdNum,*in);
+        for(size_t i=0;i< stageIdNum;++i){
+            std::string stageId;
+            readStringBinary(stageId,*in);
+            res.push_back(stageId);
+        }
+        return  res;
+
+    }
 
     std::shared_ptr<Task> TaskInputStream::read(){
 
@@ -276,9 +289,29 @@ namespace  DB {
            auto node =  readExecNode();
             nodes.emplace_back(node);
         }
-        Distribution fatherDistribution  = readFatherDistribution();
 
-        return std::make_shared<Task>(fatherDistribution,stageSources,scanSource,nodes,taskId,context);
+        std::string hasScan ;
+        std::string hasExechange ;
+        std::string isResult ;
+        bool  hasScan_ = false;
+        bool  hasExechange_ = false;
+        bool  isResult_ = false;
+
+        readStringBinary(hasScan,*in);
+        readStringBinary(hasExechange,*in);
+        readStringBinary(isResult, *in);
+        if(hasScan == "hasScan")
+            hasScan_ = true;
+        if(hasExechange == "hasExechange")
+            hasExechange_ = true;
+        if(isResult == "isResult")
+            isResult_ = true;
+
+        std::vector<std::string> mainTableStageIds = readStageIds();
+        std::vector<std::string> hashTableStageIds = readStageIds();
+        Distribution f  = readFatherDistribution();
+        std::shared_ptr<Distribution> fatherDis = std::make_shared<Distribution>(f.distributeKeys,f.parititionIds);
+        return std::make_shared<Task>(fatherDis,stageSources,scanSource,nodes,taskId,mainTableStageIds,hashTableStageIds,hasScan_,hasExechange_,isResult_,context);
 
     }
 

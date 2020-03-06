@@ -30,7 +30,7 @@ namespace DB {
     //settings = settings_;
     //compression_settings =  CompressionSettings(settings) ;
     }
-    void  DataConnectionClient::sendPartitionId(std::string taskId, int partionId) {
+    void  DataConnectionClient::sendPartitionId(std::string taskId, size_t partionId) {
 
 
         writeVarUInt(Protocol::DataControl::PARTITION_ID, *out);
@@ -108,10 +108,10 @@ namespace DB {
         return connected;
     }
     Block DataConnectionClient::read(){
-
+        LOG_DEBUG(log,"task :" << task->getTaskId() << " send BLOCK_REQUEST");
         UInt32 packet_type = Protocol::DataControl::BLOCK_REQUEST;
         writeVarUInt(packet_type,*out);
-
+        out->next();
         return  receiveBlock();
 
     }

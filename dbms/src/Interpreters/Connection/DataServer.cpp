@@ -28,9 +28,9 @@ namespace DB {
     void DataServer::addConnection(DataConnectionHandler * conn) {
 
 
-        connections_.insert({conn->childTaskId(),conn}) ;
-        task->addChildTask(conn->childTaskId());
-        LOG_INFO(log,"task :" + task->getTaskId() + " receive data connection from child task :" +  conn->childTaskId());
+        connections_.insert({conn->fatherTaskId(),conn}) ;
+        task->addChildTask(conn->fatherTaskId());
+        LOG_INFO(log,"task :" + task->getTaskId() + " receive data connection from child task :" +  conn->fatherTaskId());
     }
     std::shared_ptr<ConcurrentBoundedQueue<Block>> DataServer::getBufferByPartition(size_t partitionId){
 

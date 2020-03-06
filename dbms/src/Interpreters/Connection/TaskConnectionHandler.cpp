@@ -65,6 +65,8 @@ namespace DB {
             receivePackage();
         }
 
+        LOG_DEBUG(log,"task  " + taskId + " connection handler finish loop ...");
+
 
     }
 
@@ -85,6 +87,18 @@ namespace DB {
                 break;
             }
 
+            case Protocol::TaskClient::IsDataExechangeSourceReady:{
+                std::string ready ;
+                if(  task->isInited ){
+                    ready = "ready";
+                } else{
+                    ready =  "notReady";
+                }
+
+                writeStringBinary(ready,*out);
+                out->next();
+                break;
+            }
             case Protocol::TaskClient::TaskReq: {
                 readStringBinary(taskType,*in);
                 std::string taskTmpId ;
@@ -108,7 +122,7 @@ namespace DB {
     void TaskConnectionHandler::receiveTaskSourceInfoRequest() {
 
 
-        TaskSource resource =  server->getExechangeServerInfo() ; // need to be thread safe ,apply ip and host  for task dataReceiver
+        TaskSource resource = task->getExechangeServerInfo() ; // need to be thread safe ,apply ip and host  for task dataReceiver
 
         writeVarUInt(resource.dataPort, *out);
         writeStringBinary(resource.ip, *out);
@@ -134,7 +148,7 @@ namespace DB {
 
             task->init();
             task->execute();
-
+            LOG_DEBUG(log,"task execute finish " + task->getTaskId());
         }catch (...){
             exception = std::current_exception();
         }

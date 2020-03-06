@@ -7,8 +7,8 @@
 
 namespace DB {
 
-    void FilterExecNode::readPrefix() {
-
+    void FilterExecNode::readPrefix(std::shared_ptr<DataExechangeClient> client) {
+        (void) client;
         //children.push_back(input);
 
         /// Determine position of filter column.

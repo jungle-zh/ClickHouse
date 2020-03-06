@@ -115,7 +115,8 @@ namespace Protocol
         {
             //AppalyResource = 100,
             TaskReq = 101 ,
-            DataExechangeSource = 102
+            IsDataExechangeSourceReady = 102,
+            DataExechangeSource = 103
         };
     }
 

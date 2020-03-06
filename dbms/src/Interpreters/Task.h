@@ -27,10 +27,14 @@ class  Context;
     class Task {
     public:
 
-        Task(Distribution fatherDistribution,std::map<std::string  , StageSource>  stageSource, ScanSource scanSource
-                ,std::string taskId_ ,Context * context_);
-        Task(Distribution fatherDistribution,std::map<std::string  , StageSource>  stageSource, ScanSource scanSource,
-                std::vector<std::shared_ptr<ExecNode>> nodes,std::string taskId_,Context * context);
+        Task(std::shared_ptr<Distribution> fatherDistribution,std::map<std::string  , StageSource>  stageSource, ScanSource scanSource
+                ,std::string taskId,std::vector<std::string> mainTableStageIds_ ,std::vector<std::string> hashTableStageIds_,Context * context_);
+        Task(std::shared_ptr<Distribution>  fatherDistribution,std::map<std::string  , StageSource>  stageSource, ScanSource scanSource,
+                std::vector<std::shared_ptr<ExecNode>> nodes,std::string taskId_,std::vector<std::string> mainTableStageIds_ ,std::vector<std::string> hashTableStageIds_
+                ,bool hasScan,bool hasExechage,bool isResult,Context * context);
+        ~Task(){
+            LOG_DEBUG(log,"task destory :" + taskId);
+        }
         void init();  // start receiver
         void checkStageSourceDistribution();
         void initFinal( );
@@ -41,7 +45,7 @@ class  Context;
         void finish();
 
         void setExecNodes(std::vector<std::shared_ptr<ExecNode>> execNodes_){  execNodes = execNodes_;}
-        std::shared_ptr<ConcurrentBoundedQueue<Block>> getPartitionBuffer(size_t destPartitionId);
+        //std::shared_ptr<ConcurrentBoundedQueue<Block>> getPartitionBuffer(size_t destPartitionId);
         std::vector<std::shared_ptr<ExecNode>> getExecNodes() { return  execNodes ;}
         std::string getTaskId() { return taskId;}
         //Task(ExechangeTaskDataSource source, ExechangeTaskDataDest dest, std::vector<std::shared_ptr<ExecNode>> nodes);
@@ -50,7 +54,7 @@ class  Context;
         bool  hasScan = false;
         bool  hasExechange = false;
         bool  isResult  = false;
-        Distribution fatherDistribution;
+        std::shared_ptr<Distribution> fatherDistribution;
         std::map<std::string  , StageSource> stageSource ; // stageSource's
         ScanSource scanSource;
 
@@ -65,10 +69,15 @@ class  Context;
         void debugString(std::stringstream  & ss ,size_t blankNum );
         void debugDest(std::stringstream  & ss);
         std::map<UInt32, Block> repartition(Block block);
+        TaskSource getExechangeServerInfo();
         //void setDataConnectionHandlerFactory(DataConnectionHandlerFactory * factory_){  dataConnectionHandlerFactory = factory_;}
         std::vector<std::string> split1(const std::string& str, const std::string& delim) ;
 
+        std::vector<std::string> mainTableStageIds;
+        std::vector<std::string> hashTableStageIds;
 
+        TaskSource myServer;
+        bool  isInited ;
 
     private:
 
@@ -82,8 +91,6 @@ class  Context;
         std::shared_ptr<DataExechangeClient> client;
         std::shared_ptr<DataExechangeServer> server ;
 
-        std::vector<std::string> mainTableStageIds;
-        std::vector<std::string> hashTableStageIds;
 
         ThreadPool pool{2};
 

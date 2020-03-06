@@ -148,7 +148,9 @@ namespace DB {
                     size_t arg_num ;
                     readVarUInt(arg_num,buffer);
                     for(size_t i =0; i< arg_num;++i){
-                        readStringBinary(action.argument_names[i],buffer);
+                        std::string argument_name ;
+                        readStringBinary(argument_name,buffer);
+                        action.argument_names.push_back(argument_name);
                     }
                     readStringBinary(action.function_name,buffer);
 

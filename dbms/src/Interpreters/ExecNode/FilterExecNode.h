@@ -30,7 +30,7 @@ public:
 
 
 
-    void  readPrefix() override;
+    void  readPrefix(std::shared_ptr<DataExechangeClient>) override;
     void  readSuffix() override{};
     Block read() override ;
     Block getHeader(bool isAnalyze) override {

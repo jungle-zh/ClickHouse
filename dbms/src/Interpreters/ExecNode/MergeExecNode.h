@@ -29,7 +29,7 @@ public:
     }
     ~MergeExecNode(){};
 
-    void  readPrefix() override;
+    void  readPrefix(std::shared_ptr<DataExechangeClient> client) override;
     void  readSuffix() override{};
     Block read() override ;
     Block getHeader (bool  isAnalyze)  override;

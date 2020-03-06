@@ -40,7 +40,7 @@ namespace DB {
         void sendHello(){};
         void receiveHello(){};
         TaskSource getExechangeSourceInfo(std::string taskId);
-
+        std::string askReady();
 
     };
 

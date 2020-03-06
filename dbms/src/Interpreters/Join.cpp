@@ -893,6 +893,7 @@ void Join::joinBlock(Block & block) const
         throw Exception("Logical error: unknown combination of JOIN", ErrorCodes::LOGICAL_ERROR);
 
     if(resultHeader){//todo
+        LOG_DEBUG(log,"join result header:" + resultHeader.dumpNames());
         block.adjustAsHeader(resultHeader);
     }
 }

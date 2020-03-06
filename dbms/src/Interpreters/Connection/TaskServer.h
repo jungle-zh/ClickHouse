@@ -29,7 +29,7 @@ namespace DB {
         Context * context(){ return  server_context;}
         bool  isCancelled(){ return false;}
         //DataReceiverInfo  applyResource();
-        TaskSource getExechangeServerInfo() ;
+        TaskSource applyExechangeServer() ;
         //DataConnectionHandlerFactory * getDataConnectionHandlerFactory(){ return  dataFactory;}
 
     private:

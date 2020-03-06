@@ -32,6 +32,7 @@ struct ServerNode {
 
 struct TaskReceiverInfo {
 
+    TaskReceiverInfo(){}
     TaskReceiverInfo(std::string ip_,UInt32 port_){
 
         ip = ip_;
@@ -63,18 +64,21 @@ struct ExechangePartition{
  */
 
 struct scanTableInfo {
+    scanTableInfo(){}
     std::string host ;// todo :current set one host one shard
     std::string dbName ;
     std::string tableName;
 
 };
 struct ScanPartition{
+    ScanPartition(){}
     UInt32 partitionId;
     //std::string taskId;
     scanTableInfo info ;
 };
 
 struct ScanSource {
+    ScanSource(){}
     std::vector<std::string> distributeKeys;
     std::vector<UInt32> partitionIds;
     std::map<UInt32,ScanPartition> partition;
@@ -86,11 +90,15 @@ struct TaskSource {
     bool equals(TaskSource & other){
         return  ip == other.ip && dataPort == other.dataPort;
     }
+    TaskSource(){
+
+    }
     std::string taskId;
     std::string ip;  //dynamic allocate
     UInt16 dataPort;
 };
 struct StageSource {
+    StageSource(){}
     std::vector<std::string> newDistributeKeys;
     std::vector<UInt32> newPartitionIds;
     std::map<std::string,TaskSource> taskSources; //

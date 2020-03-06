@@ -353,7 +353,7 @@ public:
     using MapsAll = MapsTemplate<WithUsedFlag<false, RowRefList>>;
     using MapsAnyFull = MapsTemplate<WithUsedFlag<true, RowRef>>;
     using MapsAllFull = MapsTemplate<WithUsedFlag<true, RowRefList>>;
-
+    BlocksList blocks;
 private:
     friend class NonJoinedBlockInputStream;
 
@@ -370,7 +370,7 @@ private:
 
     /** Blocks of "right" table.
       */
-    BlocksList blocks;
+
 
     MapsAny maps_any;            /// For ANY LEFT|INNER JOIN
     MapsAll maps_all;            /// For ALL LEFT|INNER JOIN

@@ -162,8 +162,8 @@ void TCPHandler::runImpl()
 
             /// Processing Query
 
-            //state.io = executeQuery(state.query, query_context, false, state.stage); // origin
-            auto interpreterNew = executeQuery(query_context,state.query);// will start result task and submit child task
+            state.io = executeQuery(state.query, query_context, false, state.stage); // origin
+            //auto interpreterNew = executeQuery(query_context,state.query);// will start result task and submit child task
 
             if (state.io.out)
                 state.need_receive_data_for_insert = true;
@@ -176,8 +176,8 @@ void TCPHandler::runImpl()
                 processInsertQuery(global_settings);
             }
             else {
-                //processOrdinaryQuery(); // origin
-                pullQueryResultAndSend(interpreterNew);  // new
+                processOrdinaryQuery(); // origin
+                //pullQueryResultAndSend(interpreterNew);  // new
             }
 
 
